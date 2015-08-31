@@ -479,7 +479,7 @@ ENDPROC(__turn_mmu_on)
 /*
  * Calculate the start of physical memory.
  */
-__calc_phys_offset:
+ENTRY(__calc_phys_offset)
 	adr	x0, 1f
 	ldp	x1, x2, [x0]
 	sub	x28, x0, x1			// x28 = PHYS_OFFSET - PAGE_OFFSET

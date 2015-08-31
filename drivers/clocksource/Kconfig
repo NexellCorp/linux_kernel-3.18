@@ -223,4 +223,11 @@ config CLKSRC_VERSATILE
 	  ARM Versatile, RealView and Versatile Express reference
 	  platforms.
 
+config CLKSRC_NXP_TIMER
+	bool "Support for SlsiAP timer generation"
+	def_bool y if PLAT_SLSIAP
+	select CLKSRC_OF if OF
+	help
+	  This is a new clocksource driver for the SlsiAP timer.
+
 endmenu

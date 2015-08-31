@@ -1,0 +1,28 @@
+#
+# Copyright 2009 Nexell.
+#
+config ARCH_S5P6818_BOARD
+	bool "s5p6818 Board Feactures"
+	default n
+	depends on ARCH_S5P6818
+
+choice
+    prompt "Type"
+    default ARCH_S5P6818_SVT
+    depends on ARCH_S5P6818_BOARD
+
+   	config ARCH_S5P6818_SVT
+		bool "SVT: Validation Board"
+		help
+   	 		Support for the Validation Board (SVT).
+
+   	config ARCH_S5P6818_ASB
+		bool "ASB: Validation Board"
+		help
+   	 		Support for the Validation Board (ASB).
+endchoice
+
+if ARCH_S5P6818_SVT
+source "drivers/platform/nexell/s5p6818/board/svt/Kconfig"
+endif
+

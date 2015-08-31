@@ -126,6 +126,38 @@ static void smp_store_cpu_info(unsigned int cpuid)
 	store_cpu_topology(cpuid);
 }
 
+#ifdef CONFIG_ARCH_S5P6818
+static DEFINE_PER_CPU(struct clock_event_device, percpu_clockevent);
+
+static void broadcast_timer_set_mode(enum clock_event_mode mode,
+	struct clock_event_device *evt)
+{
+}
+
+static void __cpuinit broadcast_timer_setup(struct clock_event_device *evt)
+{
+	evt->name	= "dummy_timer";
+	evt->features	= CLOCK_EVT_FEAT_ONESHOT |
+			  CLOCK_EVT_FEAT_PERIODIC |
+			  CLOCK_EVT_FEAT_DUMMY;
+	evt->rating	= 400;
+	evt->mult	= 1;
+	evt->set_mode	= broadcast_timer_set_mode;
+
+	clockevents_register_device(evt);
+}
+
+static void __cpuinit percpu_timer_setup(void)
+{
+	unsigned int cpu = smp_processor_id();
+	struct clock_event_device *evt = &per_cpu(percpu_clockevent, cpu);
+
+	evt->cpumask = cpumask_of(cpu);
+
+	broadcast_timer_setup(evt);
+}
+#endif
+
 /*
  * This is the secondary CPU boot entry.  We're using this CPUs
  * idle thread stack, but a set of temporary page tables.
@@ -178,6 +210,13 @@ asmlinkage void secondary_start_kernel(void)
 	 */
 	set_cpu_online(cpu, true);
 	complete(&cpu_running);
+
+#ifdef CONFIG_ARCH_S5P6818
+	/*
+	 * Setup the percpu timer for this CPU.
+	 */
+	percpu_timer_setup();
+#endif
 
 	local_dbg_enable();
 	local_irq_enable();
@@ -444,6 +483,16 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 	/* Don't bother if we're effectively UP */
 	if (max_cpus <= 1)
 		return;
+
+#ifdef CONFIG_ARCH_S5P6818
+	if (ncores > 1 && max_cpus) {
+		/*
+		 * Enable the local timer or broadcast device for the
+		 * boot CPU, but only if we have more than one CPU.
+		 */
+		percpu_timer_setup();
+	}
+#endif
 
 	/*
 	 * Initialise the present map (which describes the set of CPUs

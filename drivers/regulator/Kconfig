@@ -78,6 +78,20 @@ config REGULATOR_ACT8865
 	  This driver controls a active-semi act8865 voltage output
 	  regulator via I2C bus.
 
+config REGULATOR_NXE2000
+	tristate "Nexell NXE2000 Power regulator"
+	select MFD_NXE2000
+	help
+	  This driver supports regulator driver for the Nexell NXE2000
+	  Power Management device.
+
+config REGULATOR_MP8845C
+	tristate "MPS MP8845C Power regulator"
+	select MFD_MP8845C
+	help
+	  This driver supports regulator driver for the MPS MP8845C
+	  Power Management device.
+
 config REGULATOR_AD5398
 	tristate "Analog Devices AD5398/AD5821 regulators"
 	depends on I2C

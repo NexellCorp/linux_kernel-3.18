@@ -1,0 +1,728 @@
+/*
+ * s5p6818 clocks
+ *
+ * Copyright 2009 Nexell Co.
+ *		http://www.nexell.co.kr
+ *
+ * Licensed under GPLv2 or later.
+ */
+
+	pin_config {
+		reg = <0xc001a000 0x4000>;
+	  	#address-cells = <1>;
+        #size-cells = <1>;
+		ranges;
+
+    	pio_a:pins@1a000 { device_type = "gpio";  reg = <PHYS_BASE_GPIOA 0x1000>; };
+    	pio_b:pins@1b000 { device_type = "gpio";  reg = <PHYS_BASE_GPIOB 0x1000>; };
+    	pio_c:pins@1c000 { device_type = "gpio";  reg = <PHYS_BASE_GPIOC 0x1000>; };
+		pio_d:pins@1d000 { device_type = "gpio";  reg = <PHYS_BASE_GPIOD 0x1000>; };
+    	pio_e:pins@1e000 { device_type = "gpio";  reg = <PHYS_BASE_GPIOE 0x1000>; };
+    	alive:pins@10800 { device_type = "alive"; reg = <PHYS_BASE_ALIVE 0x1000>; };
+	};
+
+	clocks {
+		compatible = "nexell,s5pxx18,clocks";
+		reg = <0xc00bb000 0x30000>;
+	  	#address-cells = <1>;
+        #size-cells = <1>;
+		ranges;
+
+		pll0: pll0 {
+			#clock-cells = <0>;
+			clock-names = "sys-pll0";
+			clock-output-names = "pll0";
+		};
+
+		pll1: pll1 {
+			#clock-cells = <0>;
+			clock-names = "sys-pll1";
+			clock-output-names = "pll1";
+		};
+
+		pll2: pll2 {
+			#clock-cells = <0>;
+			clock-names = "sys-pll2";
+			clock-output-names = "pll2";
+		};
+
+		pll3: pll3 {
+			#clock-cells = <0>;
+			clock-names = "sys-pll3";
+			clock-output-names = "pll3";
+		};
+
+		bclk: bclk {
+			#clock-cells = <0>;
+			clock-names = "sys-bbclk";
+			clock-output-names = "bclk";
+		};
+
+		pclk: pclk {
+			#clock-cells = <0>;
+			clock-names = "sys-bpclk";
+			clock-output-names = "pclk";
+		};
+
+		apb_pclk: apb_pclk {
+			#clock-cells = <0>;
+			clock-names = "sys-bbclk";
+			clock-output-names = "apb_pclk";
+		};
+
+		timer0:timer@b9000 {
+			#clock-cells = <0>;
+			clock-output-names = "timer0";
+			cell-id = <CLK_ID_TIMER_0>;
+			reg = <PHYS_BASE_CLK_14 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_TIMER>;
+		};
+
+		timer1:timer@bb000 {
+			#clock-cells = <0>;
+			clock-output-names = "timer1";
+			cell-id = <CLK_ID_TIMER_1>;
+			reg = <PHYS_BASE_CLK_0 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_TIMER>;
+		};
+
+		timer2:timer@bc000 {
+			#clock-cells = <0>;
+			clock-output-names = "timer2";
+			cell-id = <CLK_ID_TIMER_2>;
+			reg = <PHYS_BASE_CLK_1 0x1000>;
+			clk-step = <1>;
+			clk-input = <CLK_INPUT_TIMER>;
+		};
+
+		timer3:timer@bdD000 {
+			#clock-cells = <0>;
+			clock-output-names = "timer3";
+			cell-id = <CLK_ID_TIMER_3>;
+			reg = <PHYS_BASE_CLK_2 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_TIMER>;
+		};
+
+		uart0:uart@a9000 {
+      		#clock-cells = <0>;
+			clock-output-names = "uart0";
+			cell-id = <CLK_ID_UART_0>;
+			reg = <PHYS_BASE_CLK_22 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_UART>;
+		};
+
+		uart1:uart@a8000 {
+			#clock-cells = <0>;
+			clock-output-names = "uart1";
+			cell-id = <CLK_ID_UART_1>;
+			reg = <PHYS_BASE_CLK_24 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_UART>;
+		};
+
+		uart2:uart@aa000 {
+			#clock-cells = <0>;
+			clock-output-names = "uart2";
+			cell-id = <CLK_ID_UART_2>;
+			reg = <PHYS_BASE_CLK_23 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_UART>;
+		};
+
+		uart3:uart@ab000 {
+			#clock-cells = <0>;
+			clock-output-names = "uart3";
+			cell-id = <CLK_ID_UART_3>;
+			reg = <PHYS_BASE_CLK_25 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_UART>;
+		};
+
+		uart4:uart@6e000 {
+			#clock-cells = <0>;
+			clock-output-names = "uart4";
+			cell-id = <CLK_ID_UART_4>;
+			reg = <PHYS_BASE_CLK_26 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_UART>;
+		};
+
+		uart5:uart@84000 {
+			#clock-cells = <0>;
+			clock-output-names = "uart5";
+			cell-id = <CLK_ID_UART_5>;
+			reg = <PHYS_BASE_CLK_27 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_UART>;
+		};
+
+		pwm0:pwm0@ba000 {
+			#clock-cells = <0>;
+			clock-output-names = "pwm0";
+			cell-id = <CLK_ID_PWM_0>;
+			reg = <PHYS_BASE_CLK_13 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_PWM>;
+		};
+
+		pwm1:pwm1@ba000 {
+			#clock-cells = <0>;
+			clock-output-names = "pwm1";
+			cell-id = <CLK_ID_PWM_1>;
+			reg = <PHYS_BASE_CLK_13 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_PWM>;
+		};
+
+		pwm2:pwm2@be000 {
+			#clock-cells = <0>;
+			clock-output-names = "pwm2";
+			cell-id = <CLK_ID_PWM_2>;
+			reg = <PHYS_BASE_CLK_3 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_PWM>;
+		};
+
+		pwm3:pwm3@be000 {
+			#clock-cells = <0>;
+			clock-output-names = "pwm3";
+			cell-id = <CLK_ID_PWM_3>;
+			reg = <PHYS_BASE_CLK_3 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_PWM>;
+		};
+
+		i2c0:i2c@ae000 {
+			#clock-cells = <0>;
+			clock-output-names = "i2c0";
+			cell-id = <CLK_ID_I2C_0>;
+			reg = <PHYS_BASE_CLK_6 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_I2C>;
+		};
+
+		i2c1:i2c@af000 {
+			#clock-cells = <0>;
+			clock-output-names = "i2c1";
+			cell-id = <CLK_ID_I2C_1>;
+			reg = <PHYS_BASE_CLK_7 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_I2C>;
+		};
+
+		i2c2:i2c@b0000 {
+			#clock-cells = <0>;
+			clock-output-names = "i2c2";
+			cell-id = <CLK_ID_I2C_2>;
+			reg = <PHYS_BASE_CLK_8 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_I2C>;
+		};
+
+		i2s0:i2s@b2000 {
+			#clock-cells = <0>;
+			clock-output-names = "i2s0";
+			cell-id = <CLK_ID_I2S_0>;
+			reg = <PHYS_BASE_CLK_15 0x1000>;
+			clk-step   = <2>;
+			clk-input  = <CLK_INPUT_I2S>;
+			clk-input1 = <CLK_INPUT_I2S_IN1>;
+		};
+
+		i2s1:i2s@b3000 {
+			#clock-cells = <0>;
+			clock-output-names = "i2s1";
+			cell-id = <CLK_ID_I2S_1>;
+			reg = <PHYS_BASE_CLK_16 0x1000>;
+			clk-step   = <2>;
+			clk-input  = <CLK_INPUT_I2S>;
+			clk-input1 = <CLK_INPUT_I2S_IN1>;
+		};
+
+		i2s2:i2s@b4000 {
+			#clock-cells = <0>;
+			clock-output-names = "i2s2";
+			cell-id = <CLK_ID_I2S_2>;
+			reg = <PHYS_BASE_CLK_17 0x1000>;
+			clk-step   = <2>;
+			clk-input  = <CLK_INPUT_I2S>;
+			clk-input1 = <CLK_INPUT_I2S_IN1>;
+		};
+
+		sdhc0:sdhc@c5000 {
+			#clock-cells = <0>;
+			clock-output-names = "sdhc0";
+			cell-id = <CLK_ID_SDHC_0>;
+			reg = <PHYS_BASE_CLK_18 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_SDHC>;
+		};
+
+		sdhc1:sdhc@cc000 {
+			#clock-cells = <0>;
+			clock-output-names = "sdhc1";
+			cell-id = <CLK_ID_SDHC_1>;
+			reg = <PHYS_BASE_CLK_19 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_SDHC>;
+		};
+
+		sdhc2:sdhc@cd000 {
+			#clock-cells = <0>;
+			clock-output-names = "sdhc2";
+			cell-id = <CLK_ID_SDHC_2>;
+			reg = <PHYS_BASE_CLK_20 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_SDHC>;
+		};
+
+		spi0:spi@ac000 {
+			#clock-cells = <0>;
+			clock-output-names = "spi0";
+			cell-id = <CLK_ID_SPI_0>;
+			reg = <PHYS_BASE_CLK_37 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_SPI>;
+		};
+
+		spi1:spi@ad000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_SPI_1>;
+			reg = <PHYS_BASE_CLK_38 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_SPI>;
+			clock-output-names = "spi1";
+		};
+
+		spi2:spi@a7000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_SPI_2>;
+			reg = <PHYS_BASE_CLK_39 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_SPI>;
+			clock-output-names = "spi2";
+		};
+
+		vip0:vip@c1000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_VIP_0>;
+			reg = <PHYS_BASE_CLK_30 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_VIP0>;
+			clock-output-names = "vip0";
+		};
+
+		vip1:vip@c2000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_VIP_1>;
+			reg = <PHYS_BASE_CLK_31 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_VIP1>;
+			clock-output-names = "vip1";
+		};
+
+		mipi:mipi@ca000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_MIPI>;
+			reg = <PHYS_BASE_CLK_9 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_MIPI>;
+			clock-output-names = "mipi";
+		};
+
+/*
+		gmac:gmac@c8000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_GMAC>;
+			reg = <PHYS_BASE_CLK_10 0x1000>;
+			clk-step   = <2>;
+			clk-input  = <CLK_INPUT_GMAC>;
+			clk-input1 = <CLK_INPUT_GMAC_IN1>;
+			clock-output-names = "gmac";
+		};
+*/
+
+		spdiftx:spdiftx@b8000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_SPDIF_TX>;
+			reg = <PHYS_BASE_CLK_11 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_SPDIFTX>;
+			clock-output-names = "spdif-tx";
+		};
+
+		mpegtsi:mpegtsi@b7000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_MPEGTSI>;
+			reg = <PHYS_BASE_CLK_12 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_MPEGTS>;
+			clock-output-names = "mpeg-tsi";
+		};
+
+		vr:vr@c3000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_VR>;
+			reg = <PHYS_BASE_CLK_21 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_VR>;
+			clock-output-names = "vr";
+		};
+
+		deinterlace:deinterlace@b5000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_DIT>;
+			reg = <PHYS_BASE_CLK_28 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_DIT>;
+			clock-output-names = "deinterlace";
+		};
+
+		ppm:pppm@c4000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_PPM>;
+			reg = <PHYS_BASE_CLK_29 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_PPM>;
+			clock-output-names = "ppm";
+		};
+
+		ehci:ehci@6b000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_USB2HOST>;
+			reg = <PHYS_BASE_CLK_32 0x1000>;
+			clk-step   = <2>;
+			clk-input  = <CLK_INPUT_EHCI>;
+			clk-input1 = <CLK_INPUT_EHCI_IN1>;
+			clock-output-names = "ehci";
+		};
+
+		vpu:vpu@c7000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_CODA>;
+			reg = <PHYS_BASE_CLK_33 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_VPU>;
+			clock-output-names = "vpu";
+		};
+
+		crypto:crypto@c6000 {
+			#clock-cells = <0>;
+			cell-id = <CLK_ID_CRYPTO>;
+			reg = <PHYS_BASE_CLK_34 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_CRYPTO>;
+			clock-output-names = "crypto";
+		};
+
+		scaler:scaler@b6000 {
+			#clock-cells = <0>;
+			clock-output-names = "scaler";
+			cell-id = <CLK_ID_CRYPTO>;
+			reg = <PHYS_BASE_CLK_35 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_SCALER>;
+		};
+
+		pdm:pdm@cb000 {
+			#clock-cells = <0>;
+			clock-output-names = "pdm";
+			cell-id = <CLK_ID_PDM>;
+			reg = <PHYS_BASE_CLK_36 0x1000>;
+			clk-step  = <1>;
+			clk-input = <CLK_INPUT_PDM>;
+		};
+
+		otg:otg@6b000 {
+			#clock-cells = <0>;
+			clock-output-names = "otg";
+			cell-id = <CLK_ID_USBOTG>;
+			reg = <PHYS_BASE_CLK_32 0x1000>;
+			clk-step   = <2>;
+			clk-input  = <CLK_INPUT_OTG>;
+			clk-input1 = <CLK_INPUT_OTG_IN1>;
+		};
+	};
+
+	amba {
+		compatible = "arm,amba-bus";
+		reg = <0xC0000000 0x2000>;
+	  	#address-cells = <1>;
+        #size-cells = <1>;
+        interrupt-parent = <&gic>;
+		ranges;
+
+		pl08xdma0:pl08xdma@00000 {
+			compatible = "arm,pl08xdmac", "arm,primecell";
+			reg = <PHYS_BASE_DMA0 0x1000>;
+			interrupts = <0 IRQ_DMA0 0>;
+			#dma-cells = <1>;
+
+			/* ID and bus config */
+			arm,primecell-periphid = <0x00041080>;
+			master_lli_buses = <PL08X_AHB1>;
+
+			/* memeory copy config */
+			master_mem_buses = <PL08X_AHB1>;
+			memcpy_bus_id = "memcpy";
+			memcpy_cctl = <PRIMECELL_MEMORU_CCTL>;
+
+			/* slave channels */
+			ch0 {
+				slave_bus_id = PL08X_DMA_NAME_UART1_TX;
+				slave_min_signal = <PL08X_DMA_ID_UART1_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch1 {
+				slave_bus_id = PL08X_DMA_NAME_UART1_RX;
+				slave_min_signal = <PL08X_DMA_ID_UART1_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch2 {
+				slave_bus_id = PL08X_DMA_NAME_UART0_TX;
+				slave_min_signal = <PL08X_DMA_ID_UART0_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch3 {
+				slave_bus_id = PL08X_DMA_NAME_UART0_RX;
+				slave_min_signal = <PL08X_DMA_ID_UART0_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch4 {
+				slave_bus_id = PL08X_DMA_NAME_UART2_TX;
+				slave_min_signal = <PL08X_DMA_ID_UART2_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch5 {
+				slave_bus_id = PL08X_DMA_NAME_UART2_RX;
+				slave_min_signal = <PL08X_DMA_ID_UART2_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch6 {
+				slave_bus_id = PL08X_DMA_NAME_SSP0_TX;
+				slave_min_signal = <PL08X_DMA_ID_SSP0_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch7 {
+				slave_bus_id = PL08X_DMA_NAME_SSP0_RX;
+				slave_min_signal = <PL08X_DMA_ID_SSP0_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch8 {
+				slave_bus_id = PL08X_DMA_NAME_SSP1_TX;
+				slave_min_signal = <PL08X_DMA_ID_SSP1_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch9 {
+				slave_bus_id = PL08X_DMA_NAME_SSP1_RX;
+				slave_min_signal = <PL08X_DMA_ID_SSP1_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch10 {
+				slave_bus_id = PL08X_DMA_NAME_SSP2_TX;
+				slave_min_signal = <PL08X_DMA_ID_SSP2_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch11 {
+				slave_bus_id = PL08X_DMA_NAME_SSP2_RX;
+				slave_min_signal = <PL08X_DMA_ID_SSP2_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch12 {
+				slave_bus_id = PL08X_DMA_NAME_I2S0_TX;
+				slave_min_signal = <PL08X_DMA_ID_I2S0_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch13 {
+				slave_bus_id = PL08X_DMA_NAME_I2S0_RX;
+				slave_min_signal = <PL08X_DMA_ID_I2S0_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch14 {
+				slave_bus_id = PL08X_DMA_NAME_I2S1_TX;
+				slave_min_signal = <PL08X_DMA_ID_I2S1_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch15 {
+				slave_bus_id = PL08X_DMA_NAME_I2S1_RX;
+				slave_min_signal = <PL08X_DMA_ID_I2S1_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+		};
+
+		pl08xdma1:pl08xdma@01000 {
+			compatible = "arm,pl08xdmac", "arm,primecell";
+			reg = <PHYS_BASE_DMA1 0x1000>;
+			interrupts = <0 IRQ_DMA1 0>;
+			#dma-cells = <1>;
+
+			/* ID and bus config */
+			arm,primecell-periphid = <0x00041080>;
+			master_lli_buses = <PL08X_AHB1>;
+			master_mem_buses = <PL08X_AHB1>;
+
+			/* memeory copy config */
+			memcpy_bus_id = "memcpy";
+			memcpy_cctl = <PRIMECELL_MEMORU_CCTL>;
+
+			/* slave channels */
+			ch0 {
+				slave_bus_id = PL08X_DMA_NAME_I2S2_TX;
+				slave_min_signal = <PL08X_DMA_ID_I2S2_TX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch1 {
+				slave_bus_id = PL08X_DMA_NAME_I2S2_RX;
+				slave_min_signal = <PL08X_DMA_ID_I2S2_RX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch2 {
+				slave_bus_id = PL08X_DMA_NAME_AC97_PCMOUT;
+				slave_min_signal = <PL08X_DMA_ID_AC97_PCMOUT>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch3 {
+				slave_bus_id = PL08X_DMA_NAME_AC97_PCMIN;
+				slave_min_signal = <PL08X_DMA_ID_AC97_PCMIN>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch4 {
+				slave_bus_id = PL08X_DMA_NAME_AC97_MICIN;
+				slave_min_signal = <PL08X_DMA_ID_AC97_MICIN>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch5 {
+				slave_bus_id = PL08X_DMA_NAME_SPDIFRX;
+				slave_min_signal = <PL08X_DMA_ID_SPDIFRX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch6 {
+				slave_bus_id = PL08X_DMA_NAME_SPDIFTX;
+				slave_min_signal = <PL08X_DMA_ID_SPDIFTX>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch7 {
+				slave_bus_id = PL08X_DMA_NAME_MPEGTSI0;
+				slave_min_signal = <PL08X_DMA_ID_MPEGTSI0>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch8 {
+				slave_bus_id = PL08X_DMA_NAME_MPEGTSI1;
+				slave_min_signal = <PL08X_DMA_ID_MPEGTSI1>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch9 {
+				slave_bus_id = PL08X_DMA_NAME_MPEGTSI2;
+				slave_min_signal = <PL08X_DMA_ID_MPEGTSI2>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch10 {
+				slave_bus_id = PL08X_DMA_NAME_MPEGTSI3;
+				slave_min_signal = <PL08X_DMA_ID_MPEGTSI3>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch11 {
+				slave_bus_id = PL08X_DMA_NAME_CRYPTO_BR;
+				slave_min_signal = <PL08X_DMA_ID_CRYPTO_BR>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch12 {
+				slave_bus_id = PL08X_DMA_NAME_CRYPTO_BW;
+				slave_min_signal = <PL08X_DMA_ID_CRYPTO_BW>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch13 {
+				slave_bus_id = PL08X_DMA_NAME_CRYPTO_HR;
+				slave_min_signal = <PL08X_DMA_ID_CRYPTO_HR>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+
+			ch14 {
+				slave_bus_id = PL08X_DMA_NAME_PDM;
+				slave_min_signal = <PL08X_DMA_ID_PDM>;
+				slave_periph_buses = <PL08X_AHB2>;
+			};
+		};
+
+		gpio_a:gpio@1a000 {
+			compatible = "nexell,nxp-gpio";
+			reg = <PHYS_BASE_GPIOA 0x1000>;
+			#gpio-cells = <2>;	/* Fix */
+			nexell,gpioid = <0>;
+			nexell,gpionums = <32>;
+		};
+
+		gpio_b:gpio@1b000 {
+			compatible = "nexell,nxp-gpio";
+			reg = <PHYS_BASE_GPIOB 0x1000>;
+			#gpio-cells = <2>;	/* Fix */
+			nexell,gpioid = <1>;
+			nexell,gpionums = <32>;
+		};
+
+		gpio_c:gpio@1c000 {
+			compatible = "nexell,nxp-gpio";
+			reg = <PHYS_BASE_GPIOC 0x1000>;
+			#gpio-cells = <2>;	/* Fix */
+			nexell,gpioid = <2>;
+			nexell,gpionums = <32>;
+		};
+
+		gpio_d:gpio@1d000 {
+			compatible = "nexell,nxp-gpio";
+			reg = <PHYS_BASE_GPIOD 0x1000>;
+			#gpio-cells = <2>;	/* Fix */
+			nexell,gpioid = <3>;
+			nexell,gpionums = <32>;
+		};
+
+		gpio_e:gpio@1e000 {
+			compatible = "nexell,nxp-gpio";
+			reg = <PHYS_BASE_GPIOE 0x1000>;
+			#gpio-cells = <2>;	/* Fix */
+			nexell,gpioid = <4>;
+			nexell,gpionums = <32>;
+		};
+
+		gpio_alive:gpio@10800 {
+			compatible = "nexell,nxp-gpio";
+			reg = <PHYS_BASE_ALIVE 0x1000>;
+			#gpio-cells = <2>;	/* Fix */
+			nexell,gpioid = <5>;
+			nexell,gpionums = <6>;
+		};
+	};
+
+

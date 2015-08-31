@@ -1,0 +1,17 @@
+#
+# Copyright 2009 Nexell.
+#
+
+
+choice
+    prompt "SVT"
+    default ARCH_S5P6818_SVT_LINUX
+    depends on ARCH_S5P6818_SVT
+
+   	config ARCH_S5P6818_SVT_LINUX
+		bool "Linux"
+
+   	config ARCH_S5P6818_SVT_ANDROID
+		bool "Android"
+endchoice
+

@@ -247,3 +247,41 @@ config ARM_TEGRA_CPUFREQ
 	default y
 	help
 	  This adds the CPUFreq driver support for TEGRA SOCs.
+
+config ARM_NXP_CPUFREQ
+	bool "SLsiAP CPU Frequency scaling support"
+	depends on PLAT_SLSIAP
+	default y
+	help
+	  This adds the CPUFreq driver for SLsiAP
+	  SoC.
+
+config ARM_NXP_CPUFREQ_DEBUG
+	bool "Dynamic Frequency scaling debug message"
+	depends on ARM_NXP_CPUFREQ
+	default n
+
+config ARM_NXP_CPUFREQ_VOLTAGE_DEBUG
+	bool "Dynamic Voltage scaling debug message"
+	depends on ARM_NXP_CPUFREQ
+	default n
+
+choice
+	prompt "Select CPU PLL device"
+	depends on ARM_NXP_CPUFREQ
+	default NXP_CPUFREQ_PLL_1
+
+	config NXP_CPUFREQ_PLL_0
+		bool "PLL 0"
+
+	config NXP_CPUFREQ_PLL_1
+		bool "PLL 1"
+endchoice
+
+config NXP_CPUFREQ_PLLDEV
+	int
+	default 0 if NXP_CPUFREQ_PLL_0
+	default 1 if NXP_CPUFREQ_PLL_1
+	default 2 if NXP_CPUFREQ_PLL_2
+	default 3 if NXP_CPUFREQ_PLL_3
+
