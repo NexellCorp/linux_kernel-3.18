@@ -4,7 +4,6 @@
 #
 
 obj-y += cpu_init_early.o cpu-sys.o
-obj-$(CONFIG_ION) += ion_mem.o
 
 ifeq ($(CONFIG_ARM64),y)
 obj-y += setup_64.o
