@@ -37,36 +37,36 @@
 #endif
 
 #ifndef __ASSEMBLY__
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_clkpwr.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_clkgen.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_rstcon.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_tieoff.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_mcus.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_timer.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_alive.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_gpio.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_displaytop.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_disptop_clkgen.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_dualdisplay.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_mlc.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_dpc.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_lcdif.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_resconv.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_lvds.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_hdmi.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_mipi.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_i2c.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_i2s.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_sdmmc.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_ssp.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_rtc.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_mpegtsi.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_vip.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_adc.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_ecid.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_tmu.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_ppm.h>
-#include <../../drivers/platform/nexell/s5p6818/cpu/prototype/module/nx_pdm.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_clkpwr.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_clkgen.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_rstcon.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_tieoff.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_mcus.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_timer.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_alive.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_gpio.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_displaytop.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_disptop_clkgen.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_dualdisplay.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_mlc.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_dpc.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_lcdif.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_resconv.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_lvds.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_hdmi.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_mipi.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_i2c.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_i2s.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_sdmmc.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_ssp.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_rtc.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_mpegtsi.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_vip.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_adc.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_ecid.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_tmu.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_ppm.h>
+#include <../../drivers/platform/nexell/s5p6818/prototype/module/nx_pdm.h>
 #endif /* 	__ASSEMBLY__ */
 
 #endif /*	__S5P6818_H__ */
