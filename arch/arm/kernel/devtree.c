@@ -138,10 +138,13 @@ void __init arm_dt_init_cpu_maps(void)
 		} else {
 			i = cpuidx++;
 		}
-
+#if 0
 		if (WARN(cpuidx > nr_cpu_ids, "DT /cpu %u nodes greater than "
 					       "max cores %u, capping them\n",
 					       cpuidx, nr_cpu_ids)) {
+#else
+		if (cpuidx > nr_cpu_ids) {
+#endif			
 			cpuidx = nr_cpu_ids;
 			break;
 		}
