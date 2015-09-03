@@ -522,7 +522,7 @@ static void __init timer_of_init_dt(struct device_node *node)
 {
 	struct timer_of_dev *dev = NULL;
 
-#if defined(CONFIG_ARM64)
+#if !defined(CONFIG_ARM64)
 #if (KERNEL_VERSION(3,18,0) > LINUX_VERSION_CODE)
 	of_clk_init(NULL);
 #endif
