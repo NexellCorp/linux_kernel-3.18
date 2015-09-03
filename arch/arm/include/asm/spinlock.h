@@ -39,7 +39,9 @@ static inline void dsb_sev(void)
 {
 
 	dsb(ishst);
+#ifndef CONFIG_ARCH_S5P6818
 	__asm__(SEV);
+#endif
 }
 
 /*
@@ -73,7 +75,9 @@ static inline void arch_spin_lock(arch_spinlock_t *lock)
 	: "cc");
 
 	while (lockval.tickets.next != lockval.tickets.owner) {
+#ifndef CONFIG_ARCH_S5P6818
 		wfe();
+#endif
 		lockval.tickets.owner = ACCESS_ONCE(lock->tickets.owner);
 	}
 
