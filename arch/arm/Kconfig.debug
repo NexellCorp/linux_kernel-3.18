@@ -985,6 +985,14 @@ choice
 		  options; the platform specific options are deprecated
 		  and will be soon removed.
 
+	config DEBUG_NXP_UART
+		depends on PLAT_SLSIAP
+		bool "Kernel low-level debugging SLsiAP UART"
+		help
+		  Say Y here if you want the debug print routines to direct
+		  their output to DEBUG UARTn. The port must have been initialised
+		  by the boot-loader before use.
+
 endchoice
 
 config DEBUG_EXYNOS_UART
@@ -1281,7 +1289,7 @@ config DEBUG_UNCOMPRESS
 	  When this option is set, the selected DEBUG_LL output method
 	  will be re-used for normal decompressor output on multiplatform
 	  kernels.
-	  
+
 
 config UNCOMPRESS_INCLUDE
 	string

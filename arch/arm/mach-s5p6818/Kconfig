@@ -1,0 +1,51 @@
+#
+# Copyright 2009 Nexell.
+#		http://www.nexell.co.kr
+#
+if ARCH_S5P6818
+
+choice
+	prompt "Memory max order"
+	default S5P6818_MEM_MAX_ORDER_11
+
+	config S5P6818_MEM_MAX_ORDER_11
+		bool "4Mbyte"
+
+	config S5P6818_MEM_MAX_ORDER_12
+    	bool "8Mbyte"
+
+	config S5P6818_MEM_MAX_ORDER_13
+		bool "16Mbyte"
+
+endchoice
+
+config FORCE_MAX_ZONEORDER
+   	int
+   	default 11 if S5P6818_MEM_MAX_ORDER_11
+   	default 12 if S5P6818_MEM_MAX_ORDER_12
+   	default 13 if S5P6818_MEM_MAX_ORDER_13
+
+comment "CPU feature"
+
+config S5P6818_PM_IDLE
+	bool "Replace the suspend status to idle"
+	depends on SUSPEND
+	default n
+
+config PM_DBGOUT
+	bool "Enable Suspend/resume debug message(pm_dbgout)"
+	default n
+
+config ANDROID_PERSISTENT_RAM_CONS_AREA
+    hex "RAM console physical hex address"
+    depends on ANDROID_RAM_CONSOLE
+    default 0x0
+
+config ANDROID_PERSISTENT_RAM_CONS_SIZE
+    int "RAM console size (KB)"
+    depends on ANDROID_RAM_CONSOLE
+    default 16
+
+endif
+
+
