@@ -5,6 +5,7 @@
 # Select Board types
 
 if ARCH_S5P6818
+
 menu "SLsiAP s5p6818"
 
 choice
