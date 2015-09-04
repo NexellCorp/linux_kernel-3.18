@@ -445,6 +445,8 @@ config HOTPLUG_CPU
 
 source kernel/Kconfig.preempt
 
+source "kernel/Kconfig.hz"
+
 config HZ
 	int
 	default 100
