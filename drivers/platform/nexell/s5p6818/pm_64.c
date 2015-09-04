@@ -368,10 +368,8 @@ static int suspend_valid(suspend_state_t state)
 	pm->wake_event = 0;
 
 #ifdef CONFIG_SUSPEND
-	if (!suspend_valid_only_mem(state)) {
-		printk(KERN_ERR "%s: not supported state(%d)\n", __func__, state);
+	if (!suspend_valid_only_mem(state)) 
 		return 0;
-	}
 #endif
 	if (pm_ops && pm_ops->valid)
 		ret = pm_ops->valid(state);
