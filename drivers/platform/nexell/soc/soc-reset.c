@@ -45,7 +45,7 @@ static inline void __iomem* IO_ADDRESS(unsigned long base)
 
 static DEFINE_SPINLOCK(lock);
 #if 1
-#define	DEALY(s)	mdelay(s)
+#define	DEALY(s)	udelay(s)
 #else
 #define	DEALY(s)	{ volatile int loop = 10000 * 10;	while (loop-- > 0) { }	}
 #endif
@@ -132,7 +132,7 @@ void nxp_soc_peri_reset_set(int id)
 
 	NX_RSTCON_SetBaseAddress(addr);
 	NX_RSTCON_SetRST(RSTIndex, RSTCON_ASSERT);
-	DEALY(1);
+	DEALY(10);
 	NX_RSTCON_SetRST(RSTIndex, RSTCON_NEGATE);
 
 	spin_unlock_irqrestore(&lock, flags);
