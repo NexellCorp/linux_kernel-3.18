@@ -520,4 +520,26 @@ config MTD_NAND_XWAY
 	  Enables support for NAND Flash chips on Lantiq XWAY SoCs. NAND is attached
 	  to the External Bus Unit (EBU).
 
+config MTD_NAND_NXP
+	tristate "Nexell nand support"
+	depends on PLAT_SLSIAP
+	help
+	  This enables the NAND flash controller on the NX series
+
+config MTD_NAND_ECC_HW
+	bool "Support hardware ECC"
+	depends on MTD_NAND_NXP
+	help
+	  Enable the use of the NX series's internal ECC generator when
+	  using NAND.
+
+config NAND_RANDOMIZER
+	bool "Support for RANDOMIZER"
+	depends on MTD_NAND_ECC_HW
+	default y
+	help
+	  Enable the use of the RANDOMIZER (SW).
+
+	  If unsure, say Y
+
 endif # MTD_NAND

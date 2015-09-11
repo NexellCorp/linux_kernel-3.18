@@ -1540,6 +1540,8 @@ static int nand_do_read_ops(struct mtd_info *mtd, loff_t from,
 	unsigned int max_bitflips = 0;
 	int retry_mode = 0;
 	bool ecc_fail = false;
+	bool ecc_fail_on_this_page = false;
+
 
 	chipnr = (int)(from >> chip->chip_shift);
 	chip->select_chip(mtd, chipnr);
@@ -1555,7 +1557,14 @@ static int nand_do_read_ops(struct mtd_info *mtd, loff_t from,
 
 	while (1) {
 		unsigned int ecc_failures = mtd->ecc_stats.failed;
+		int retries;
 
+		retries = chip->read_retries;
+		ecc_fail_on_this_page = false;
+		if (chip->need_save_read_retries)
+			retry_mode = chip->read_retry_mode;
+
+		/* read request bytes with one cycle of read command */
 		bytes = min(mtd->writesize - col, readlen);
 		aligned = (bytes == mtd->writesize);
 
@@ -1635,10 +1644,10 @@ read_retry:
 			}
 
 			if (mtd->ecc_stats.failed - ecc_failures) {
-				if (retry_mode + 1 < chip->read_retries) {
-					retry_mode++;
-					ret = nand_setup_read_retry(mtd,
-							retry_mode);
+				if (chip->read_retries && retries > 1) {
+					retries--;
+					retry_mode = (retry_mode+1) & (chip->read_retries-1);
+					ret = nand_setup_read_retry(mtd, retry_mode);
 					if (ret < 0)
 						break;
 
@@ -1647,7 +1656,7 @@ read_retry:
 					goto read_retry;
 				} else {
 					/* No more retry modes; real failure */
-					ecc_fail = true;
+					ecc_fail = ecc_fail_on_this_page = true;
 				}
 			}
 
@@ -1661,12 +1670,21 @@ read_retry:
 
 		readlen -= bytes;
 
-		/* Reset to retry mode 0 */
-		if (retry_mode) {
-			ret = nand_setup_read_retry(mtd, 0);
-			if (ret < 0)
-				break;
-			retry_mode = 0;
+		if (chip->need_save_read_retries) {
+			if (!ecc_fail_on_this_page)
+				chip->read_retry_mode = retry_mode;
+			else
+				/* Change back to origin mode */
+				nand_setup_read_retry(mtd, chip->read_retry_mode);
+		}
+		else {
+			/* Reset to retry mode 0 */
+			if (retry_mode) {
+				ret = nand_setup_read_retry(mtd, 0);
+				if (ret < 0)
+					break;
+				retry_mode = 0;
+			}
 		}
 
 		if (!readlen)
