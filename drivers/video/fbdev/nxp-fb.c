@@ -50,8 +50,10 @@
 #include <linux/dma-buf.h>
 #include <linux/ion.h>
 #include <linux/nxp_ion.h>
+
 extern struct ion_device *get_global_ion_device(void);
 #endif
+extern int nx_fb_init_sysfs(struct fb_info *fb_info);
 
 /*
 #define	DUMP_VAR_SCREENINFO
@@ -147,7 +149,7 @@ struct nxp_fb_param {
 /*---------------------------------------------------------------------------------------------
  * 	FB device
  */
-static int nxp_fb_dev_get_vsync(int module, int fb, struct disp_vsync_info *sync)
+static int nxp_fb_dev_get_vsync(int module, int fb, struct disp_vsync_info *vsi)
 {
 #ifdef CONFIG_NXP_DISPLAY
 	enum disp_dev_type device = DISP_DEVICE_SYNCGEN0;
@@ -158,7 +160,7 @@ static int nxp_fb_dev_get_vsync(int module, int fb, struct disp_vsync_info *sync
 	if (1 == module)
 		device = DISP_DEVICE_SYNCGEN1;
 
-	if (0 > nxp_soc_disp_device_get_vsync_info(device, sync)) {
+	if (0 > nxp_soc_disp_device_get_vsync_info(device, vsi)) {
 		printk(KERN_ERR "Fail to get framebuffer video sync (display.%d)\n", module);
 		return -EINVAL;
 	}
@@ -235,6 +237,17 @@ static int nxp_fb_dev_enable(struct nxp_fb_param *par, bool on, int force)
 		nxp_soc_disp_device_enable_all(module, on ? 1: 0);
 #endif
 	return 0;
+}
+
+static int nxp_fb_dev_pos(struct nxp_fb_param *par, int left, int right, int waitvsync)
+{
+	int module = par->fb_dev.device_id;
+	int layer  = par->fb_dev.layer;
+
+	if (-1 == module)
+		return 0;
+	printk("[%s] %d.%d %d,%d\n", __func__, module, layer, left, right);
+	return nxp_soc_disp_rgb_set_position(module, layer, left, right, waitvsync);
 }
 
 static int nxp_fb_dev_suspend(struct nxp_fb_param *par)
@@ -535,20 +548,20 @@ static int nxp_fb_setup_param(int fb, struct fb_info *info, void *data)
 	struct nxp_fb_plat_data *plat = data;
 	struct nxp_fb_param  *par = info->par;
 	struct nxp_fb_device *dev = &par->fb_dev;
-	struct disp_vsync_info sync = { 0, };
+	struct disp_vsync_info vsi = { 0, };
 	int x_resol, y_resol;
 	int i, ret;
 
 	/* get from output device */
 	if (!plat->force_vsync) {
-		ret = nxp_fb_dev_get_vsync(plat->module, fb, &sync);
+		ret = nxp_fb_dev_get_vsync(plat->module, fb, &vsi);
 		if (0 > ret)
 			return ret;
 	}
 
 	/* get from output device sync */
-	x_resol = sync.h_active_len ? sync.h_active_len : plat->x_resol;
-	y_resol = sync.v_active_len ? sync.v_active_len : plat->y_resol;
+	x_resol = vsi.h_active_len ? vsi.h_active_len : plat->x_resol;
+	y_resol = vsi.v_active_len ? vsi.v_active_len : plat->y_resol;
 
 	/* clear palette buffer */
 	par->info = info;
@@ -576,11 +589,11 @@ static int nxp_fb_setup_param(int fb, struct fb_info *info, void *data)
 	dev->fb_phy_end   = plat->fb_mem_end;
 	dev->fb_pan_phys  = plat->fb_mem_base;
 
-	dev->hs_left	  = sync.h_sync_width + sync.h_back_porch;
-	dev->hs_right	  = sync.h_front_porch;
-	dev->vs_upper	  = sync.v_sync_width + sync.v_back_porch;
-	dev->vs_lower	  = sync.v_front_porch;
-	dev->pixelclk	  = sync.pixel_clock_hz ? sync.pixel_clock_hz : FB_DEV_PIXELCLOCK;
+	dev->hs_left	  = vsi.h_sync_width + vsi.h_back_porch;
+	dev->hs_right	  = vsi.h_front_porch;
+	dev->vs_upper	  = vsi.v_sync_width + vsi.v_back_porch;
+	dev->vs_lower	  = vsi.v_front_porch;
+	dev->pixelclk	  = vsi.pixel_clock_hz ? vsi.pixel_clock_hz : FB_DEV_PIXELCLOCK;
 	dev->skip_vsync   = plat->skip_pan_vsync ? 1 : 0;
 
 	dev->fb_vir_base  = 0;
@@ -650,8 +663,8 @@ static void nxp_fb_setup_info(struct fb_info *info)
 			break;
 	}
 
-	pr_debug("res: %d by %d, virtual: %d by %d, length:%d\n",
-		dev->x_resol, dev->y_resol, x_v, y_v, info->fix.smem_len);
+	pr_debug("res: %d by %d (%dEA), virtual: %d by %d, length:%d\n",
+		dev->x_resol, dev->y_resol, dev->buffer_num, x_v, y_v, info->fix.smem_len);
 }
 
 #ifdef CONFIG_FB_NXP_ION_MEM
@@ -726,14 +739,19 @@ static void nxp_fb_free_dma_buf(struct nxp_fb_device *fb_dev,
 
         dma_buf_unmap_attachment(ctx->attachment, ctx->sg_table,
                 DMA_BIDIRECTIONAL);
+
         ctx->dma_addr = 0;
         ctx->virt     = NULL;
         ctx->sg_table = NULL;
+
         dma_buf_detach(ctx->dma_buf, ctx->attachment);
+
         ctx->attachment = NULL;
         dma_buf_put(ctx->dma_buf);
+
         ctx->dma_buf = NULL;
         ion_free(d->ion_client, ctx->ion_handle);
+
         ctx->ion_handle = NULL;
     }
 }
@@ -746,7 +764,9 @@ static int nxp_fb_ion_alloc_mem(struct nxp_fb_device *fb_dev)
     struct ion_handle *handle;
     struct nxp_fb_dma_buf_data *d = &fb_dev->dma_buf_data;
     struct dma_buf_context *ctx;
-    int length = ((fb_dev->x_resol_max * fb_dev->y_resol_max * fb_dev->pixelbit)>>3);
+    int x_resol = fb_dev->x_resol_max ? : fb_dev->x_resol;
+    int y_resol = fb_dev->y_resol_max ? : fb_dev->y_resol;
+    int length = ((x_resol * y_resol * fb_dev->pixelbit)>>3);
     int i;
 
     size = PAGE_ALIGN(length);
@@ -788,17 +808,19 @@ static int nxp_fb_alloc_mem(struct fb_info *info)
 {
 	struct nxp_fb_param  *par = info->par;
 	struct nxp_fb_device *dev = &par->fb_dev;
+    int x_resol = dev->x_resol_max ? : dev->x_resol;
+    int y_resol = dev->y_resol_max ? : dev->y_resol;
 	unsigned int length;
 
-	length = ((dev->x_resol_max * dev->y_resol_max * dev->pixelbit)>>3) *
-			  dev->buffer_num;
+	length = ((x_resol * y_resol * dev->pixelbit)>>3) * dev->buffer_num;
+
 	if(! length)
 		return 0;
 
-	pr_debug("%s: %s fb %d (%d * %d - %d bpp), len:%d, align:%d, fb_phys=%u\n",
+	pr_debug("%s: %s fb %d (%d * %d - %d bpp), len:%d[align:%d], fb_phys=0x%x\n",
 		__func__, dev_name(par->info->device), dev->device_id,
-		dev->x_resol_max, dev->y_resol_max, dev->pixelbit,
-		length, PAGE_ALIGN(length), dev->fb_phy_base);
+		x_resol, y_resol, dev->pixelbit, length, PAGE_ALIGN(length),
+		dev->fb_phy_base);
 
 #ifdef CONFIG_FB_NXP_ION_MEM
     if (nxp_fb_ion_alloc_mem(dev)) {
@@ -866,6 +888,10 @@ static void nxp_fb_free_mem(struct fb_info *info)
 #endif
 		dev->fb_vir_base = 0;
 		dev->fb_remapped  = 0;
+		dev->fb_phy_base = 0;
+		dev->fb_phy_end = 0;
+		dev->x_resol_max = 0;
+		dev->y_resol_max = 0;
 	}
 }
 
@@ -968,6 +994,7 @@ static int nxp_fb_set_par(struct fb_info *info)
 #ifdef SUPPORT_ALTER_HARDWARE_STATE
 	struct nxp_fb_param  *par = info->par;
 	struct nxp_fb_device *dev = &par->fb_dev;
+	int ret;
 #endif
 
 	pr_debug("%s (xres:%d, yres:%d, bpp:%d)\n",
@@ -996,6 +1023,8 @@ static int nxp_fb_set_par(struct fb_info *info)
         printk("%s: resetting xres(%d) yres(%d) bps(%d)\n",
                 __func__, var->xres, var->yres, var->bits_per_pixel);
 
+		nxp_fb_free_mem(info);
+
         dev->x_resol     = var->xres;
         dev->y_resol     = var->yres;
         dev->pixelbit    = var->bits_per_pixel;
@@ -1004,6 +1033,11 @@ static int nxp_fb_set_par(struct fb_info *info)
         dev->fb_pan_phys = dev->fb_phy_base;	/* pan restore */
 
         nxp_fb_setup_info(info);
+		ret = nxp_fb_alloc_mem(info);
+		if(ret) {
+			printk("Fail, unable to allcate frame buffer...\n");
+			return -EINVAL;
+		}
         nxp_fb_dev_setup(par);
     } else {
         if (par->status != FB_STAT_INIT) {
@@ -1163,21 +1197,39 @@ static int nxp_fb_pan_display(struct fb_var_screeninfo *var, struct fb_info *inf
 	return 0;
 }
 
+#define NXPFB_SET_POS	 	_IOW('N', 104, __u32)
 #ifdef CONFIG_FB_NXP_ION_MEM
-#define NXPFB_GET_FB_FD _IOWR('N', 101, __u32)
-#define NXPFB_SET_FB_FD _IOW('N', 102, __u32)
-#define NXPFB_GET_ACTIVE _IOR('N', 103, __u32)
+#define NXPFB_GET_FB_FD 	_IOWR('N', 101, __u32)
+#define NXPFB_SET_FB_FD 	_IOW('N', 102, __u32)
+#define NXPFB_GET_ACTIVE	_IOR('N', 103, __u32)
 #endif
 
 static int nxp_fb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg)
 {
-    int ret = 0;
-#ifdef CONFIG_FB_NXP_ION_MEM
 	struct nxp_fb_param *par = info->par;
+#ifdef CONFIG_FB_NXP_ION_MEM
 	struct nxp_fb_device *dev = &par->fb_dev;
+#endif	
+    int ret = 0;
 	pr_debug("%s (cmd:0x%x, type:%c, nr:%d) \n\n", __func__, cmd, _IOC_TYPE(cmd), _IOC_NR(cmd));
 
     switch (cmd) {
+    case NXPFB_SET_POS:
+        {
+            int pos[3] = { 0, };	/* left, right, waitsycn */
+
+            if (!access_ok(VERIFY_READ, arg, sizeof(pos)))
+            	memcpy((void*)pos, (void*)arg, sizeof(pos));
+            else {
+            	if (copy_from_user(pos, (void __user *)arg, sizeof(pos))) {
+                	ret = -EFAULT;
+                	break;
+                }
+            }
+            ret = nxp_fb_dev_pos(par, pos[0], pos[1], pos[2]);
+        }
+        break;
+#ifdef CONFIG_FB_NXP_ION_MEM
     case NXPFB_GET_FB_FD:
         {
             int index;
@@ -1188,7 +1240,8 @@ static int nxp_fb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long ar
                 ret = -EFAULT;
                 break;
             }
-            pr_debug("%s: NXPFB_GET_FB_FD current %p, index(%d), client %p, handle %p\n", __func__, current, index, d->ion_client, d->context[index].ion_handle);
+            pr_debug("%s: NXPFB_GET_FB_FD current %p, index(%d), client %p, handle %p\n",
+            	__func__, current, index, d->ion_client, d->context[index].ion_handle);
             /*if (d->context[index].user_fd == 0) {*/
                 fd = ion_share_dma_buf_fd(d->ion_client, d->context[index].ion_handle);
                 if (fd < 0) {
@@ -1207,21 +1260,21 @@ static int nxp_fb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long ar
         }
         break;
     case NXPFB_GET_ACTIVE:
-    {
-        unsigned int offset = dev->fb_pan_phys - dev->dma_buf_data.context[0].dma_addr;
-        unsigned int align  = (dev->x_resol * dev->y_resol * dev->pixelbit) >> 3;
-        unsigned int index = offset / align;
-        pr_debug("%s: NXPFB_GET_ACTIVE %d\n", __func__, index);
-        if (put_user(index, (int __user *)arg)) {
-            ret = -EFAULT;
-            break;
-        }
-        pr_debug("success!!!\n");
-    }
+	    {
+	        unsigned int offset = dev->fb_pan_phys - dev->dma_buf_data.context[0].dma_addr;
+	        unsigned int align  = (dev->x_resol * dev->y_resol * dev->pixelbit) >> 3;
+	        unsigned int index = offset / align;
+	        pr_debug("%s: NXPFB_GET_ACTIVE %d\n", __func__, index);
+	        if (put_user(index, (int __user *)arg)) {
+	            ret = -EFAULT;
+	            break;
+	        }
+	        pr_debug("success!!!\n");
+	    }
         break;
     case NXPFB_SET_FB_FD:
         {
-#if 0
+	#if 0
             u32 import_fd;
             struct ion_handle *handle;
             struct nxp_fb_dma_buf_data dma_buf_data;
@@ -1248,7 +1301,7 @@ static int nxp_fb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long ar
 
             nxp_fb_update_from_dma_buf_data(info, &dma_buf_data);
             nxp_fb_copy_dma_buf_data(dev, &dma_buf_data);
-#else
+	#else
             u32 import_fd;
             struct nxp_fb_dma_buf_data *d;
             int i;
@@ -1270,24 +1323,23 @@ static int nxp_fb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long ar
                     nxp_fb_update_buffer(info, 1);
                 }
             }
-#endif
+	#endif
         }
         break;
-    }
 #endif
+    }
+
 	return ret;
 }
 
 #ifdef CONFIG_FB_NXP_ION_MEM
 int nxp_fb_open(struct fb_info *info, int user)
 {
-    pr_debug("%s entered\n", __func__);
     return 0;
 }
 
 int nxp_fb_release(struct fb_info *info, int user)
 {
-    pr_debug("%s entered\n", __func__);
 #if 0
 	struct nxp_fb_param *par = info->par;
 	struct nxp_fb_device *dev = &par->fb_dev;
@@ -1456,6 +1508,8 @@ static int nxp_fb_probe(struct platform_device *pdev)
 		printk(KERN_ERR "Fail, unable to register frame buffer(%d)\n", pdev->id);
 		goto err_reg;
 	}
+
+	nx_fb_init_sysfs(info);
 
 	/* register to driver data, use platform_get_drvdata */
 	platform_set_drvdata(pdev, info);
