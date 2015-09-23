@@ -24,6 +24,7 @@
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/clk-private.h>
+#include <asm/tlbflush.h>
 
 #include "clk-s5pxx18.h"
 #include "clk-s5p6818-pll.h"
@@ -102,18 +103,28 @@ static struct pll_pms pll2_3_pms [] =
 #define PLL_M_BITPOS    8
 #define PLL_P_BITPOS    18
 
+#if 0
+#define	__BARRIER__()		dmb()
+#else
+#define	__BARRIER__()
+#endif
+
 static void *ref_clk_base = NULL;
 
 static void pll_set_rate(int PLL, int P, int M, int S)
 {
 	struct reg_clkpwr *reg = ref_clk_base;
 
+	// flush_tlb_all();
+
 	/*
 	 * 1. change PLL0 clock to Oscillator Clock
 	 */
 	reg->PLLSETREG[PLL] &= ~(1 << 28); 	// pll bypass on, xtal clock use
 	reg->CLKMODEREG0 = (1 << PLL); 		// update pll
-	while(reg->CLKMODEREG0 & (1<<31)); 	// wait for change update pll
+	__BARRIER__();
+
+	while(readl(&reg->CLKMODEREG0) & (1<<31)); 	// wait for change update pll
 
 	/*
 	 * 2. PLL Power Down & PMS value setting
@@ -124,8 +135,10 @@ static void pll_set_rate(int PLL, int P, int M, int S)
 						(M   << PLL_M_BITPOS) 	|
 						(P   << PLL_P_BITPOS));
 	reg->CLKMODEREG0 = (1 << PLL); 				// update pll
+	__BARRIER__();
 
-	while(reg->CLKMODEREG0 & (1<<31)); 			// wait for change update pll
+	while(readl(&reg->CLKMODEREG0) & (1<<31)); 			// wait for change update pll
+
 	udelay(10);
 
 	/*
@@ -133,8 +146,9 @@ static void pll_set_rate(int PLL, int P, int M, int S)
 	 */
 	reg->PLLSETREG[PLL] &= ~((u32)(1UL<<29)); 	// pll power up
 	reg->CLKMODEREG0 = (1 << PLL); 				// update pll
+	__BARRIER__();
 
-	while(reg->CLKMODEREG0 & (1<<31)); 			// wait for change update pll
+	while(readl(&reg->CLKMODEREG0) & (1<<31)); 			// wait for change update pll
 
 	udelay(PLL_LOCKING_TIME);	// 1000us
 
@@ -143,8 +157,11 @@ static void pll_set_rate(int PLL, int P, int M, int S)
 	 */
 	reg->PLLSETREG[PLL] |= (1<<28); 	// pll bypass off, pll clock use
 	reg->CLKMODEREG0 = (1<<PLL); 		// update pll
+	__BARRIER__();
 
-	while(reg->CLKMODEREG0 & (1<<31)); 	// wait for change update pll
+	while(readl(&reg->CLKMODEREG0) & (1<<31)); 	// wait for change update pll
+
+	flush_tlb_all();
 }
 
 static unsigned long pll_round_rate(int pllno, unsigned long rate, int *p, int *m, int *s)
@@ -538,7 +555,7 @@ static void __init clk_pll_of_setup(struct device_node *node)
 	clk_pll_of_clocks_setup(node);
 	clk_pll_of_clocks_dump(node);
 
-	pr_debug("CPU REF HZ: %lu hz\n", ref_clk);
+	printk("CPU REF HZ: %lu hz (0x%08x:0x%p)\n", ref_clk, PHYS_BASE_CLKPWR, ref_clk_base);
 }
 
 /*
