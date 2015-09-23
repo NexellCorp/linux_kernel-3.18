@@ -92,7 +92,7 @@ static int smp_soc_cpu_boot(unsigned int cpu)
      */
     arch_send_call_function_ipi_mask(cpumask_of(cpu));
 
-    timeout = jiffies + (1000 * HZ);
+    timeout = jiffies + (1 * HZ);
     while (time_before(jiffies, timeout)) {
         smp_rmb();
         if (secondary_pen_release == INVALID_HWID)
