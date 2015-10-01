@@ -80,27 +80,38 @@ static inline void flush_tlb_all(void)
 
 static inline void flush_tlb_mm(struct mm_struct *mm)
 {
+#if defined (CONFIG_SMP) && defined (CONFIG_ARCH_S5P6818)
+	flush_tlb_all();
+#else
 	unsigned long asid = (unsigned long)ASID(mm) << 48;
 
 	dsb(ishst);
 	asm("tlbi	aside1is, %0" : : "r" (asid));
 	dsb(ish);
+#endif
 }
 
 static inline void flush_tlb_page(struct vm_area_struct *vma,
 				  unsigned long uaddr)
 {
+#if defined (CONFIG_SMP) && defined (CONFIG_ARCH_S5P6818)
+	flush_tlb_all();
+#else
 	unsigned long addr = uaddr >> 12 |
 		((unsigned long)ASID(vma->vm_mm) << 48);
 
 	dsb(ishst);
 	asm("tlbi	vae1is, %0" : : "r" (addr));
 	dsb(ish);
+#endif
 }
 
 static inline void __flush_tlb_range(struct vm_area_struct *vma,
 				     unsigned long start, unsigned long end)
 {
+#if defined (CONFIG_SMP) && defined (CONFIG_ARCH_S5P6818)
+	flush_tlb_all();
+#else
 	unsigned long asid = (unsigned long)ASID(vma->vm_mm) << 48;
 	unsigned long addr;
 	start = asid | (start >> 12);
@@ -110,10 +121,14 @@ static inline void __flush_tlb_range(struct vm_area_struct *vma,
 	for (addr = start; addr < end; addr += 1 << (PAGE_SHIFT - 12))
 		asm("tlbi vae1is, %0" : : "r"(addr));
 	dsb(ish);
+#endif
 }
 
 static inline void __flush_tlb_kernel_range(unsigned long start, unsigned long end)
 {
+#if defined (CONFIG_SMP) && defined (CONFIG_ARCH_S5P6818)
+	flush_tlb_all();
+#else
 	unsigned long addr;
 	start >>= 12;
 	end >>= 12;
@@ -123,6 +138,7 @@ static inline void __flush_tlb_kernel_range(unsigned long start, unsigned long e
 		asm("tlbi vaae1is, %0" : : "r"(addr));
 	dsb(ish);
 	isb();
+#endif
 }
 
 /*
@@ -155,11 +171,15 @@ static inline void flush_tlb_kernel_range(unsigned long start, unsigned long end
 static inline void __flush_tlb_pgtable(struct mm_struct *mm,
 				       unsigned long uaddr)
 {
+#if defined (CONFIG_SMP) && defined (CONFIG_ARCH_S5P6818)
+	flush_tlb_all();
+#else
 	unsigned long addr = uaddr >> 12 | ((unsigned long)ASID(mm) << 48);
 
 	dsb(ishst);
 	asm("tlbi	vae1is, %0" : : "r" (addr));
 	dsb(ish);
+#endif
 }
 /*
  * On AArch64, the cache coherency is handled via the set_pte_at() function.
