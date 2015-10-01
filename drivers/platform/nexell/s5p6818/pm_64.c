@@ -117,6 +117,16 @@ static void dump_wake_event(void)
 	}
 }
 
+int pm_wake_is_power_key(int pin)
+{
+	struct pm_soc_data *pm = pm_data;
+
+	if ((1<<pin) & pm->wake_event)
+		return 1;
+
+	return 0;
+}
+
 static void suspend_core_dt(struct pm_soc_data *pm)
 {
 	struct device_node *np;

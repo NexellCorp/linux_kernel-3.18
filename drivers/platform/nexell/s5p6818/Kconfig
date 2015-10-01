@@ -1,11 +1,6 @@
 #
 # Copyright 2009 Nexell.
-#		http://www.nexell.co.kr
 #
-# Select Board types
-
-if ARCH_S5P6818
-
 menu "SLsiAP s5p6818"
 
 choice
@@ -28,5 +23,4 @@ source "drivers/platform/nexell/s5p6818/board/Kconfig"
 
 endmenu
 
-endif
 

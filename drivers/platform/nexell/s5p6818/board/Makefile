@@ -3,8 +3,8 @@
 #	http://www.nexell.co.kr
 #
 
-PROTO_MODULE := drivers/platform/nexell/s5p6818/cpu/prototype/module
-PROTO_BASE   := drivers/platform/nexell/s5p6818/cpu/prototype/base
+PROTO_MODULE := drivers/platform/nexell/s5p6818/prototype/module
+PROTO_BASE   := drivers/platform/nexell/s5p6818/prototype/base
 KBUILD_CFLAGS += -I$(PROTO_MODULE) -I$(PROTO_BASE)
 
 ifeq ($(CONFIG_S5P6818_PROTO_RELEASE),y)

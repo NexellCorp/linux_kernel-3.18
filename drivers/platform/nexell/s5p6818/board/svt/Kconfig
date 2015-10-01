@@ -15,3 +15,19 @@ choice
 		bool "Android"
 endchoice
 
+choice
+    prompt "ASV margin"
+    default S5P6818_MARGIN_SVT_TYPICAL
+    depends on ARCH_S5P6818_SVT
+
+   	config S5P6818_MARGIN_SVT_TYPICAL
+		bool "typical"
+
+   	config S5P6818_MARGIN_SVT_MINUS_3
+		bool "-3%"
+
+   	config S5P6818_MARGIN_SVT_MINUS_5
+		bool "-5%"
+
+endchoice
+
