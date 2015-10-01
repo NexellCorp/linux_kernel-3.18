@@ -242,8 +242,8 @@
 				pixel_clock_hz	= <(800000000/16)>;	/* PLL/div */
 			};
 			clock {
-				clock,src_div0  = <2>;
-				clock,div_val0	= <12>;
+				clock,src_div0  = <0>;
+				clock,div_val0	= <16>;
 				clock,src_div1	= <7>;
 				clock,div_val1	= <1>;
 			};
@@ -374,9 +374,8 @@
 				x_resol			= <1024>;
 				y_resol			= <600>;
 				rotate			= <0>;
-				/*ptr_cnt		= <7>;*/
-				/*pointercal	= <38242, -340, -453008, -184, 39059, -149296, 65536>;*/
-			 };
+				pointercal		= "38242", "-340", "-453008", "-184", "39059", "-149296", "65536";
+			};
 		};
 
         spdiftx@59000 {
