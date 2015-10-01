@@ -782,55 +782,6 @@ static int s3c24xx_i2c_clockrate(struct s3c24xx_i2c *i2c)
 	return 0;
 }
 
-#ifdef CONFIG_CPU_FREQ
-
-#define freq_to_i2c(_n) container_of(_n, struct s3c24xx_i2c, freq_transition)
-
-static int s3c24xx_i2c_cpufreq_transition(struct notifier_block *nb,
-					  unsigned long val, void *data)
-{
-	struct s3c24xx_i2c *i2c = freq_to_i2c(nb);
-	unsigned long flags;
-	int delta_f;
-	int ret;
-
-	delta_f = clk_get_rate(i2c->clk) - i2c->clkrate;
-
-	/* if we're post-change and the input clock has slowed down
-	 * or at pre-change and the clock is about to speed up, then
-	 * adjust our clock rate. <0 is slow, >0 speedup.
-	 */
-
-	if ((val == CPUFREQ_POSTCHANGE && delta_f < 0) ||
-	    (val == CPUFREQ_PRECHANGE && delta_f > 0)) {
-		spin_lock_irqsave(&i2c->lock, flags);
-		ret = s3c24xx_i2c_clockrate(i2c);
-		spin_unlock_irqrestore(&i2c->lock, flags);
-
-		if (ret < 0)
-			dev_err(i2c->dev, "cannot find frequency\n");
-		else
-			dev_info(i2c->dev, "setting freq %d\n", i2c->freq);
-	}
-
-	return 0;
-}
-
-static inline int s3c24xx_i2c_register_cpufreq(struct s3c24xx_i2c *i2c)
-{
-	i2c->freq_transition.notifier_call = s3c24xx_i2c_cpufreq_transition;
-
-	return cpufreq_register_notifier(&i2c->freq_transition,
-					 CPUFREQ_TRANSITION_NOTIFIER);
-}
-
-static inline void s3c24xx_i2c_deregister_cpufreq(struct s3c24xx_i2c *i2c)
-{
-	cpufreq_unregister_notifier(&i2c->freq_transition,
-				    CPUFREQ_TRANSITION_NOTIFIER);
-}
-
-#else
 static inline int s3c24xx_i2c_register_cpufreq(struct s3c24xx_i2c *i2c)
 {
 	return 0;
@@ -839,7 +790,6 @@ static inline int s3c24xx_i2c_register_cpufreq(struct s3c24xx_i2c *i2c)
 static inline void s3c24xx_i2c_deregister_cpufreq(struct s3c24xx_i2c *i2c)
 {
 }
-#endif
 
 #ifdef CONFIG_OF
 #if 0
@@ -1189,7 +1139,7 @@ static int s3c24xx_i2c_resume(struct device *dev)
 	i2c_lock_adapter(&i2c->adap);
 
 	clk_prepare_enable(i2c->clk);
-	
+
 	nxp_soc_peri_reset_set(rsc);
 	ret = s3c24xx_i2c_init(i2c);
 	if (ret) {
