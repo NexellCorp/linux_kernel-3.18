@@ -115,8 +115,6 @@ static void pll_set_rate(int PLL, int P, int M, int S)
 {
 	struct reg_clkpwr *reg = ref_clk_base;
 
-	// flush_tlb_all();
-
 	/*
 	 * 1. change PLL0 clock to Oscillator Clock
 	 */
@@ -160,8 +158,6 @@ static void pll_set_rate(int PLL, int P, int M, int S)
 	__BARRIER__();
 
 	while(readl(&reg->CLKMODEREG0) & (1<<31)); 	// wait for change update pll
-
-	flush_tlb_all();
 }
 
 static unsigned long pll_round_rate(int pllno, unsigned long rate, int *p, int *m, int *s)
