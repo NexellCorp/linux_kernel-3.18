@@ -299,4 +299,10 @@ config XILINX_XADC
 	  The driver can also be build as a module. If so, the module will be called
 	  xilinx-xadc.
 
+config NXP_ADC
+	bool "Analog Devices SLsiAP driver"
+	depends on PLAT_SLSIAP && OF
+	help
+	  Say yes here to build support for Analog Devices SLsiAP.
+
 endmenu

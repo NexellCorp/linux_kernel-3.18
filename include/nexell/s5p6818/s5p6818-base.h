@@ -116,6 +116,7 @@
 #define PHYS_BASE_DREX			(0xC00E0000)
 
 /* IP Reset ID */
+#define RESET_ID_START				0
 #define	RESET_ID_AC97				0
 #define	RESET_ID_CPU1				1
 #define	RESET_ID_CPU2				2
@@ -185,6 +186,8 @@
 #define RESET_ID_PPM				66
 #define RESET_ID_VIP1				67
 #define RESET_ID_VIP0               68
+#define RESET_ID_VIP2				69
+#define RESET_ID_END				(RESET_ID_VIP2)
 
 /*
  * clock
