@@ -407,7 +407,7 @@ static irqreturn_t timer_event_handler(int irq, void *dev_id)
 
 	evt->event_handler(evt);
 #if 0
-	TIMER_TICK_MSG(ch, 100);
+	TIMER_TICK_MSG(ch, HZ);
 #endif
 	return IRQ_HANDLED;
 }
