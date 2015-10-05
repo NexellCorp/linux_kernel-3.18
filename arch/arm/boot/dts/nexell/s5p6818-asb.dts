@@ -330,6 +330,14 @@
 			pmu_domain_config = <0x1 0x4 0x8 0x10 0x20 0x0 0x0 0x0 0x0 0x2 0x0 0x0>;
 			pmu_switch_delay = <0xff>;
 		};
+
+		nxp_reset:reset@12000 {
+			#reset-cells = <1>;
+			compatible = "nexell,nxp-reset";
+			reg = <0xC0012000 0x3>;
+			status = "okay";
+		};
+
 	};	/*** soc ***/
 
 

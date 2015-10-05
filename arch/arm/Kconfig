@@ -805,6 +805,8 @@ config ARCH_S5P6818
 	select NEED_MACH_IO_H
 	select NEED_MACH_GPIO_H
 	select PINCTRL
+	select ARCH_HAS_RESET_CONTROLLER
+	select RESET_CONTROLLER
 	help
 	  Support for SLsiAP s5p6818 octa core (ARM Cortex A53) platform
 	  compatible with ARMv7
