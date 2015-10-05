@@ -7,6 +7,8 @@
  * Licensed under GPLv2 or later.
  */
 
+/dts-v1/;
+
 #include "s5p6818.dtsi"
 
 #define	UART_CLOCK_FREQUENCY	147500000

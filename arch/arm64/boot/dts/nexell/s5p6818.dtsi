@@ -7,8 +7,6 @@
  * Licensed under GPLv2 or later.
  */
 
-/dts-v1/;
-
 #include "../skeleton.dtsi"
 
 #include "../../../../../include/generated/autoconf.h"
@@ -103,12 +101,12 @@
 	};
 
     aliases {
-        uart0 = &serial0;
-        uart1 = &serial1;
-        uart2 = &serial2;
-        uart3 = &serial3;
-        uart4 = &serial4;
-        uart5 = &serial5;
+        uart0 	= &serial0;
+        uart1	= &serial1;
+        uart2 	= &serial2;
+        uart3 	= &serial3;
+        uart4 	= &serial4;
+        uart5 	= &serial5;
         spi0	= &spi_0;
         spi1	= &spi_1;
         spi2	= &spi_2;
@@ -120,11 +118,11 @@
         dwmmc2	= &dw_mmc2;
 		pwmdev0 = &pwm_device0;
 		pwmdev1 = &pwm_device1;
-		pwmdev1 = &pwm_device2;
-		pwmdev1 = &pwm_device3;
-		i2s0 = &i2s_0;
-		i2s1 = &i2s_1;
-		i2s2 = &i2s_2;
+		pwmdev2 = &pwm_device2;
+		pwmdev3 = &pwm_device3;
+		i2s0 	= &i2s_0;
+		i2s1 	= &i2s_1;
+		i2s2 	= &i2s_2;
     };
 
 	soc {
