@@ -38,6 +38,58 @@
 
 #include <asm/irq.h>
 
+
+int phy_loopback_test = 0;
+
+/**
+ * nxpmac_set_phy_loopback - Loopback Test
+ * @speed: 0: disable, 1: 10M, 2: 100M (not tested), 3: 1000M (not tested)
+ */
+static int
+nxpmac_set_phy_loopback(struct phy_device *phydev, int speed)
+{
+	// for realtek phy
+
+	//unsigned long flags;
+
+	if (phydev == NULL)
+		return -1;
+
+	if (speed <= 0 || speed > 3)
+		return -1;
+
+	//spin_lock_irqsave(&priv->lock, flags);
+
+	/* disable PCS loopback */
+	phy_write(phydev, 31, 0);
+	phy_write(phydev, 0, 0x1140);
+	msleep(200);
+
+	/* enable PCS loopback */
+	phy_write(phydev, 31, 0);
+	phy_write(phydev, 0, 0x8000);
+	msleep(50);
+	switch (speed) {
+	case 1:	/* 10M */
+		phy_write(phydev, 0, 0x4100);
+		break;
+	case 2: /* 100M */
+		phy_write(phydev, 0, 0x6100);
+		break;
+	case 3: /* 1000M */
+		phy_write(phydev, 0, 0x4140);
+		break;
+	default:
+		break;
+	}
+	msleep(50);
+	//phy_write(phydev, 0, 0x8000);
+
+	//spin_unlock_irqrestore(&priv->lock, flags);
+
+	return 0;
+}
+
 static const char *phy_speed_to_str(int speed)
 {
 	switch (speed) {
@@ -787,6 +839,9 @@ void phy_state_machine(struct work_struct *work)
 
 		break;
 	case PHY_AN:
+		if (phy_loopback_test)
+			nxpmac_set_phy_loopback(phydev, phy_loopback_test);
+
 		err = phy_read_status(phydev);
 		if (err < 0)
 			break;
