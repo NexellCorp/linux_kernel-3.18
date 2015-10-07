@@ -3045,7 +3045,7 @@ int stmmac_suspend(struct net_device *ndev)
 	netif_device_detach(ndev);
 	netif_stop_queue(ndev);
 
-	napi_disable(&priv->napi);
+	//napi_disable(&priv->napi);		/* commented by freestyle */
 
 	/* Stop TX/RX DMA */
 	priv->hw->dma->stop_tx(priv->ioaddr);
@@ -3100,16 +3100,19 @@ int stmmac_resume(struct net_device *ndev)
 	nxpmac_hw_setup(ndev, false, 0);
 	stmmac_init_tx_coalesce(priv);
 
-	napi_enable(&priv->napi);
+	//napi_enable(&priv->napi);		/* commented by freestyle */
 
 	netif_start_queue(ndev);
 
 	spin_unlock_irqrestore(&priv->lock, flags);
 
 #ifdef CONFIG_NXPMAC_DEBUG_FS
-	ret = stmmac_init_fs(ndev);
-	if (ret < 0)
-		pr_warn("%s: failed debugFS registration\n", __func__);
+	if (!stmmac_fs_dir)
+	{
+		ret = stmmac_init_fs(ndev);
+		if (ret < 0)
+			pr_warn("%s: failed debugFS registration\n", __func__);
+	}
 #endif
 
 	if (priv->phydev)
