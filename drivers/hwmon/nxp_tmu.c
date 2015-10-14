@@ -115,15 +115,10 @@ static int thermal_cpufreq_notifier(struct notifier_block *nb,
 	if (cpumask_test_cpu(policy->cpu, &thermal->allowed_cpus))
 		max_freq = thermal->new_freq;
 
-	/* Never exceed user_policy.max */
-	if (max_freq > policy->user_policy.max)
-		max_freq = policy->user_policy.max;
+	pr_debug("Thermal.%d notify max = %lu (%ld)kHz, policy max = %u (EVENT:%lu)\n",
+		thermal->channel, max_freq, thermal->new_freq, policy->max, event);
 
-	pr_debug("Thermal.%d notify max = %lu (%ld)kHz (EVENT:%lu)\n",
-		thermal->channel, max_freq, thermal->new_freq, event);
-
-	if (policy->max != max_freq)
-		cpufreq_verify_within_limits(policy, 0, max_freq);
+	cpufreq_verify_within_limits(policy, 0, max_freq);
 
 	return 0;
 }
