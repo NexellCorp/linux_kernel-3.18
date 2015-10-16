@@ -1,25 +1,24 @@
 #
 # Copyright 2009 Nexell.
 #
-config ARCH_S5P6818_BOARD
-	bool "s5p6818 Board Feactures"
+config ARCH_S5P6818_TARGET
+	bool "s5p6818 Target Feactures"
 	default n
 	depends on ARCH_S5P6818
 
 choice
     prompt "Type"
-    default ARCH_S5P6818_SVT
-    depends on ARCH_S5P6818_BOARD
+    depends on ARCH_S5P6818_TARGET
 
    	config ARCH_S5P6818_SVT
-		bool "SVT: Validation Board"
+		bool "SVT: validation board"
 		help
-   	 		Support for the Validation Board (SVT).
+   	 		Support for the validation board (SVT).
 
    	config ARCH_S5P6818_ASB
-		bool "ASB: Validation Board"
+		bool "ASB: validation board"
 		help
-   	 		Support for the Validation Board (ASB).
+   	 		Support for the ASB board (ASB).
 endchoice
 
 if ARCH_S5P6818_SVT
