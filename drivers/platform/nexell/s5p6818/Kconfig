@@ -19,7 +19,7 @@ config S5P6818_PM_IDLE
 	depends on SUSPEND
 	default n
 
-source "drivers/platform/nexell/s5p6818/board/Kconfig"
+source "drivers/platform/nexell/s5p6818/target/Kconfig"
 
 endmenu
 
