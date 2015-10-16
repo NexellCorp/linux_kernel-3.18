@@ -68,7 +68,7 @@ static ssize_t store_resol(struct device *device, struct device_attribute *attr,
 }
 
 static struct device_attribute device_attrs[] = {
-	__ATTR(resolution, S_IRUGO|S_IWUSR, NULL, store_resol),
+	__ATTR(resolution, S_IWUSR, NULL, store_resol),
 };
 
 int nx_fb_init_sysfs(struct fb_info *fb_info)
