@@ -1000,6 +1000,10 @@ source "arch/arm/mach-w90x900/Kconfig"
 
 source "arch/arm/mach-zynq/Kconfig"
 
+if ARCH_S5P6818
+source "arch/arm/mach-s5p6818/Kconfig"
+endif
+
 # Definitions to make life easier
 config ARCH_ACORN
 	bool
