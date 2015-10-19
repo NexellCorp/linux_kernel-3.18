@@ -410,7 +410,7 @@ struct nxp_fb_plat_data {
     int lcd_with_mm;    /* with (mm), default 0 */
     int lcd_height_mm;  /* height (mm), default 0 */
     int skip_pan_vsync;
-    int force_vsync;	/* set vsync with fb data, default get from display device */
+    int force_resolotion;	/* set resolutioin with fb data, default get from display device */
 };
 
 struct nxp_lcd_plat_data {

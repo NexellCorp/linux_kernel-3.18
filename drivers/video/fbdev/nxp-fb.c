@@ -35,6 +35,7 @@
 #include <linux/memblock.h>
 #include <linux/highmem.h>
 #include <linux/fdtable.h>
+#include <linux/console.h>
 
 #include <asm/io.h>
 #include <asm/uaccess.h>
@@ -553,7 +554,7 @@ static int nxp_fb_setup_param(int fb, struct fb_info *info, void *data)
 	int i, ret;
 
 	/* get from output device */
-	if (!plat->force_vsync) {
+	if (!plat->force_resolotion) {
 		ret = nxp_fb_dev_get_vsync(plat->module, fb, &vsi);
 		if (0 > ret)
 			return ret;
@@ -1209,7 +1210,7 @@ static int nxp_fb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long ar
 	struct nxp_fb_param *par = info->par;
 #ifdef CONFIG_FB_NXP_ION_MEM
 	struct nxp_fb_device *dev = &par->fb_dev;
-#endif	
+#endif
     int ret = 0;
 	pr_debug("%s (cmd:0x%x, type:%c, nr:%d) \n\n", __func__, cmd, _IOC_TYPE(cmd), _IOC_NR(cmd));
 
@@ -1422,7 +1423,7 @@ static int nxp_fb_get_dt(struct platform_device *pdev)
 	of_property_read_u32(np, "skip_pan_vsync", &plat->skip_pan_vsync);
 	of_property_read_u32(np, "lcd_with_mm", &plat->lcd_with_mm);
 	of_property_read_u32(np, "lcd_height_mm", &plat->lcd_height_mm);
-	of_property_read_u32(np, "force_vsync", &plat->force_vsync);
+	of_property_read_u32(np, "force_resolotion", &plat->force_resolotion);
 
 	dev = &pdev->dev;
 	if (!dev->dma_mask) {

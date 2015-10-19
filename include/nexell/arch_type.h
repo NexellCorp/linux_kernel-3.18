@@ -113,6 +113,17 @@
 #define	DPC_YCORDER_YCbYCr		2	///< Y, Cb, Y, Cr
 #define	DPC_YCORDER_YCrYCb		3	///< Y, Cr, Y, Cb
 
+/*f	the clock source of clock generator. */
+#define	DPC_CLK_SRC_PLL0		0
+#define	DPC_CLK_SRC_PLL1		1
+#define	DPC_CLK_SRC_PLL2		2
+#define	DPC_CLK_SRC_SVCLK		2
+#define	DPC_CLK_SRC_PSVCLK		3
+#define	DPC_CLK_SRC_nPSVCLK		4
+#define	DPC_CLK_SRC_XTI			5	// AVCLK
+#define	DPC_CLK_SRC_nAVCLK		6
+#define	DPC_CLK_SRC_VCLK2		7
+
 /* the PAD output clock. */
 #define	DPC_PADCLKSEL_VCLK		0	///< VCLK
 #define	DPC_PADCLKSEL_VCLK2		1	///< VCLK2
