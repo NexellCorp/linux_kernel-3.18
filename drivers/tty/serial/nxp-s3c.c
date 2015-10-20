@@ -1927,6 +1927,9 @@ static struct s3c24xx_serial_drv_data *s3c24xx_get_driver_data(struct platform_d
 
 	memcpy(ud, drv_data->def_data, sizeof(struct s3c24xx_uart_drv_data));
 
+	ud->hwport = *port_index;
+	ud->init =& s3c24xx_serial_drv_init;
+
 	if (!of_property_read_u32_array(pdev->dev.of_node, "tieoff-id",
 			tieoff, ARRAY_SIZE(tieoff))) {
 		ud->tieoff_user_smc = tieoff[0];
@@ -1958,9 +1961,6 @@ static struct s3c24xx_serial_drv_data *s3c24xx_get_driver_data(struct platform_d
 		pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
 	}
 	*udata = ud;
-
-	ud->hwport = *port_index;
-	ud->init =& s3c24xx_serial_drv_init;
 
 	return drv_data;
 }
