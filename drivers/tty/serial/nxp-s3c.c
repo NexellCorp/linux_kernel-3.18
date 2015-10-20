@@ -1920,6 +1920,7 @@ static struct s3c24xx_serial_drv_data *s3c24xx_get_driver_data(struct platform_d
 		return NULL;
 	}
 
+	*port_index = ret;
 	ud = kzalloc(sizeof(struct s3c24xx_uart_drv_data), GFP_KERNEL);
 	if (!ud)
 		return NULL;
@@ -1956,7 +1957,6 @@ static struct s3c24xx_serial_drv_data *s3c24xx_get_driver_data(struct platform_d
 		pdev->dev.dma_mask = &uart_dmamask;
 		pdev->dev.coherent_dma_mask = DMA_BIT_MASK(32);
 	}
-	*port_index = ret;
 	*udata = ud;
 
 	ud->hwport = *port_index;
