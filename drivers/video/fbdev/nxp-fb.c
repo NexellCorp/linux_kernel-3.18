@@ -554,7 +554,7 @@ static int nxp_fb_setup_param(int fb, struct fb_info *info, void *data)
 	int i, ret;
 
 	/* get from output device */
-	if (!plat->force_resolotion) {
+	if (!plat->force_resolution) {
 		ret = nxp_fb_dev_get_vsync(plat->module, fb, &vsi);
 		if (0 > ret)
 			return ret;
@@ -1423,7 +1423,7 @@ static int nxp_fb_get_dt(struct platform_device *pdev)
 	of_property_read_u32(np, "skip_pan_vsync", &plat->skip_pan_vsync);
 	of_property_read_u32(np, "lcd_with_mm", &plat->lcd_with_mm);
 	of_property_read_u32(np, "lcd_height_mm", &plat->lcd_height_mm);
-	of_property_read_u32(np, "force_resolotion", &plat->force_resolotion);
+	of_property_read_u32(np, "force_resolution", &plat->force_resolution);
 
 	dev = &pdev->dev;
 	if (!dev->dma_mask) {
