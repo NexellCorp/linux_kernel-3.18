@@ -226,6 +226,7 @@
 			reset-id = <RESET_ID_UART0>;
 			tieoff-id = <TIEOFF_UART0_USESMC TIEOFF_UART0_SMCTXENB TIEOFF_UART0_SMCRXENB>;
 		};
+
 		serial1:serial@a0000 {
 			compatible = "nexell,nxp-uart";
 			reg = <PHYS_BASE_UART1 0x1000>;
@@ -233,9 +234,9 @@
 			clock-names = "uart1";
 			clocks = <&uart1>;
 			dma-names = "tx", "rx";
-			dmas = <&pl08xdma0 4 &pl08xdma0 4>;
-			reset-id = <RESET_ID_UART0>;
-			tieoff-id = <TIEOFF_UART0_USESMC TIEOFF_UART0_SMCTXENB TIEOFF_UART0_SMCRXENB>;
+			dmas = <&pl08xdma0 0 &pl08xdma0 1>;
+			reset-id = <RESET_ID_UART1>;
+			tieoff-id = <TIEOFF_UART1_USESMC TIEOFF_UART1_SMCTXENB TIEOFF_UART1_SMCRXENB>;
 			status = "disabled";
 		};
 
@@ -245,7 +246,7 @@
 			interrupts = <0 IRQ_UART2 0>;
 			clock-names = "uart2";
 			clocks = <&uart2>;
-			dmas = <&pl08xdma0 2 &pl08xdma0 3>;
+			dmas = <&pl08xdma0 4 &pl08xdma0 5>;
 			reset-id = <RESET_ID_UART2>;
 			tieoff-id = <TIEOFF_UART2_USESMC TIEOFF_UART2_SMCTXENB TIEOFF_UART2_SMCRXENB>;
 			status = "disabled";
@@ -283,7 +284,6 @@
 			tieoff-id = <TIEOFF_UART5_USESMC TIEOFF_UART5_SMCTXENB TIEOFF_UART5_SMCRXENB>;
 			status = "disabled";
 		};
-
 
 		#ifdef CONFIG_I2C_NXP_PORT0
 		#ifdef CONFIG_I2C_NXP_PORT0_GPIO_MODE

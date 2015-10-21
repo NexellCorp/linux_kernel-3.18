@@ -390,70 +390,6 @@
 			status = "disabled";
 		};
 
-		rtc@10c00 {
-			compatible = "nexell,nxp-rtc";
-			reg = <PHYS_BASE_RTC 0x100>;
-			interrupts = <IRQ_RTC>;
-			status = "disabled";
-		};
-
-		wdt@19000 {
-			compatible = "nexell,nxp-wdt";
-			reg = <PHYS_BASE_WDT 0x1000>;
-			interrupts = <0 IRQ_WDT 0>;
-			clock-names = "pclk";
-			clocks = <&pclk>;
-			status = "disabled";
-		};
-
-		pwm_device0:pwmdev0@18000 {
-			compatible = "nexell,nxp-pwm";
-			reg = <PHYS_BASE_PWM 0x1000>;
-			#pwm-cells = <2>;
-			reset-id = <RESET_ID_PWM>;
-			clock-names = "pwm0";
-			clocks =  <&pwm0>;
-			status = "okay";
-		};
-
-		pwm_device1:pwmdev1@18000 {
-			compatible = "nexell,nxp-pwm";
-			reg = <PHYS_BASE_PWM 0x1000>;
-			#pwm-cells = <2>;
-			reset-id = <RESET_ID_PWM>;
-			clock-names = "pwm1";
-			clocks =  <&pwm1>;
-			status = "disabled";
-		};
-		pwm_device2:pwmdev2@18000 {
-			compatible = "nexell,nxp-pwm";
-			reg = <PHYS_BASE_PWM 0x1000>;
-			#pwm-cells = <2>;
-			reset-id = <RESET_ID_PWM>;
-			clock-names = "pwm2";
-			clocks =  <&pwm2>;
-			status = "disabled";
-		};
-		pwm_device3:pwmdev3@18000 {
-			compatible = "nexell,nxp-pwm";
-			reg = <PHYS_BASE_PWM 0x1000>;
-			#pwm-cells = <2>;
-			reset-id = <RESET_ID_PWM>;
-			clock-names = "pwm3";
-			clocks =  <&pwm3>;
-			status = "disabled";
-		};
-
-		ppm@54000 {
-			compatible = "nexell,nxp-ppm";
-			reg = <PHYS_BASE_PPM 0x1000>;
-			interrupts = <IRQ_PPM>;
-			clock-names = "ppm";
-			clocks = <&ppm>;
-			in_pol = "invert";
-			status = "disabled";
-		};
-
 		adc:adc@53000 {
 			compatible = "nexell,nxp-adc";
 			reg = <PHYS_BASE_ADC 0x1000>;
@@ -542,6 +478,70 @@
 			status = "disabled";
 		};
 		#endif
+
+		rtc@10c00 {
+			compatible = "nexell,nxp-rtc";
+			reg = <PHYS_BASE_RTC 0x100>;
+			interrupts = <IRQ_RTC>;
+			status = "disabled";
+		};
+
+		wdt@19000 {
+			compatible = "nexell,nxp-wdt";
+			reg = <PHYS_BASE_WDT 0x1000>;
+			interrupts = <0 IRQ_WDT 0>;
+			clock-names = "pclk";
+			clocks = <&pclk>;
+			status = "disabled";
+		};
+
+		pwm_device0:pwmdev0@18000 {
+			compatible = "nexell,nxp-pwm";
+			reg = <PHYS_BASE_PWM 0x1000>;
+			#pwm-cells = <2>;
+			reset-id = <RESET_ID_PWM>;
+			clock-names = "pwm0";
+			clocks =  <&pwm0>;
+			status = "okay";
+		};
+
+		pwm_device1:pwmdev1@18000 {
+			compatible = "nexell,nxp-pwm";
+			reg = <PHYS_BASE_PWM 0x1000>;
+			#pwm-cells = <2>;
+			reset-id = <RESET_ID_PWM>;
+			clock-names = "pwm1";
+			clocks =  <&pwm1>;
+			status = "disabled";
+		};
+		pwm_device2:pwmdev2@18000 {
+			compatible = "nexell,nxp-pwm";
+			reg = <PHYS_BASE_PWM 0x1000>;
+			#pwm-cells = <2>;
+			reset-id = <RESET_ID_PWM>;
+			clock-names = "pwm2";
+			clocks =  <&pwm2>;
+			status = "disabled";
+		};
+		pwm_device3:pwmdev3@18000 {
+			compatible = "nexell,nxp-pwm";
+			reg = <PHYS_BASE_PWM 0x1000>;
+			#pwm-cells = <2>;
+			reset-id = <RESET_ID_PWM>;
+			clock-names = "pwm3";
+			clocks =  <&pwm3>;
+			status = "disabled";
+		};
+
+		ppm@54000 {
+			compatible = "nexell,nxp-ppm";
+			reg = <PHYS_BASE_PPM 0x1000>;
+			interrupts = <IRQ_PPM>;
+			clock-names = "ppm";
+			clocks = <&ppm>;
+			in_pol = "invert";
+			status = "disabled";
+		};
 
   		pdm@14000 {
 			compatible = "nexell,nxp-pdm";
@@ -641,6 +641,7 @@
 			reset-id = <RESET_ID_USB20HOST>;
 			hsic_en = <0>;
 			hsic_exthub_gpio = <0>;
+			ehci_late_loadtime = <0>;
 			status = "okay";
 		};
 
@@ -660,6 +661,7 @@
 			reset-id = <RESET_ID_SDMMC0>;
 			clocks = <&sdhc0>;
 		};
+
 		dw_mmc1:dw_mmc@68000 {
 			compatible = "nexell,dw-mmc";
 			reg = <PHYS_BASE_SDMMC1 0x1000>;

@@ -6,6 +6,7 @@
  *
  * Licensed under GPLv2 or later.
  */
+
 /dts-v1/;
 
 #include "s5p6818.dtsi"
@@ -47,12 +48,12 @@
 			uart3:uart@ab000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
 			uart4:uart@6e000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
 			uart5:uart@84000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
-			i2c0:i2c@ae000 { clock-frequency = <I2C_CLOCK_FREQUENCY>; };
-			i2c1:i2c@af000 { clock-frequency = <I2C_CLOCK_FREQUENCY>; };
-			i2c2:i2c@b0000 { clock-frequency = <I2C_CLOCK_FREQUENCY>; };
-			spi0:spi@ac000 { clock-frequency = <SPI_CLOCK_FREQUENCY>; };
-			spi1:spi@ad000 { clock-frequency = <SPI_CLOCK_FREQUENCY>; };
-			spi2:spi@a7000 { clock-frequency = <SPI_CLOCK_FREQUENCY>; };
+			i2c0:i2c@ae000 	 { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
+			i2c1:i2c@af000   { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
+			i2c2:i2c@b0000   { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
+			spi0:spi@ac000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
+			spi1:spi@ad000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
+			spi2:spi@a7000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
 		};
 
 		#include "s5p6818-asb-pin.dtsi"
@@ -63,11 +64,26 @@
    		};
 
 		serial@a1000 {
-			enable_dma = <1>;
+			dma-enable = <1>;
 		};
 
 		serial@a0000 {
-			enable_dma = <1>;
+			status = "okay";
+			dma-enable = <1>;
+		};
+
+		serial@a2000 {
+			status = "okay";
+			dma-enable = <1>;
+		};
+		serial@a3000 {
+			status = "okay";
+		};
+		serial@6d000 {
+			status = "okay";
+		};
+		serial@6f000 {
+			status = "okay";
 		};
 
 		spi@5b000 {

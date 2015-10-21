@@ -17,17 +17,16 @@
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/slab.h>
+#include <linux/of.h>
+
 #include <sound/soc.h>
 #include <sound/pcm.h>
 #include <sound/initval.h>
-#include <linux/of.h>
 
 #define DRV_NAME "spdif-dit"
 
-#define STUB_RATES	SNDRV_PCM_RATE_8000_192000
-#define STUB_FORMATS	(SNDRV_PCM_FMTBIT_S16_LE | \
-			SNDRV_PCM_FMTBIT_S20_3LE | \
-			SNDRV_PCM_FMTBIT_S24_LE)
+#define STUB_RATES	SNDRV_PCM_RATE_8000_96000
+#define STUB_FORMATS	SNDRV_PCM_FMTBIT_S16_LE
 
 static const struct snd_soc_dapm_widget dit_widgets[] = {
 	SND_SOC_DAPM_OUTPUT("spdif-out"),
@@ -57,8 +56,12 @@ static struct snd_soc_dai_driver dit_stub_dai = {
 
 static int spdif_dit_probe(struct platform_device *pdev)
 {
-	return snd_soc_register_codec(&pdev->dev, &soc_codec_spdif_dit,
-			&dit_stub_dai, 1);
+    int ret = snd_soc_register_codec(&pdev->dev, &soc_codec_spdif_dit,
+            &dit_stub_dai, 1); 
+    if (ret < 0)
+        printk("snd spdif-dit register fail.(ret=%d)\n", ret);
+
+    return ret;
 }
 
 static int spdif_dit_remove(struct platform_device *pdev)
@@ -68,11 +71,13 @@ static int spdif_dit_remove(struct platform_device *pdev)
 }
 
 #ifdef CONFIG_OF
-static const struct of_device_id spdif_dit_dt_ids[] = {
-	{ .compatible = "linux,spdif-dit", },
-	{ }
+static const struct of_device_id nxp_spdif_dit_match[] = {
+        { .compatible = "nexell,spdif-dit" },
+            {},
 };
-MODULE_DEVICE_TABLE(of, spdif_dit_dt_ids);
+MODULE_DEVICE_TABLE(of, nxp_spdif_dit_match);
+#else
+#define nxp_spdif_dit_match NULL
 #endif
 
 static struct platform_driver spdif_dit_driver = {
@@ -81,7 +86,7 @@ static struct platform_driver spdif_dit_driver = {
 	.driver		= {
 		.name	= DRV_NAME,
 		.owner	= THIS_MODULE,
-		.of_match_table = of_match_ptr(spdif_dit_dt_ids),
+        .of_match_table = of_match_ptr(nxp_spdif_dit_match),
 	},
 };
 

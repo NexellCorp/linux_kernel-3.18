@@ -91,6 +91,14 @@
 #include <linux/seq_file.h>
 #include <linux/slab.h>
 #include <linux/amba/pl080.h>
+#ifdef CONFIG_OF
+#include <linux/of_address.h>
+#include <linux/of_dma.h>
+#endif
+#if defined(CONFIG_PLAT_SLSIAP)
+#include <nexell/platform.h>
+#include <nexell/soc-s5pxx18.h>
+#endif
 
 #include "dmaengine.h"
 #include "virt-dma.h"
@@ -99,6 +107,11 @@
 
 static struct amba_driver pl08x_amba_driver;
 struct pl08x_driver_data;
+
+/*
+#define dev_vdbg	dev_dbg
+#define dev_dbg(f, m...)	printk(m)
+*/
 
 /**
  * struct vendor_data - vendor-specific config parameters for PL08x derivatives
@@ -150,6 +163,12 @@ struct pl08x_phy_chan {
 	spinlock_t lock;
 	struct pl08x_dma_chan *serving;
 	bool locked;
+	/* for sleep mode, by jhkim */
+	dma_addr_t src_addr;
+	dma_addr_t dst_addr;
+	unsigned int lli;
+	unsigned int control;
+	unsigned int config;
 };
 
 /**
@@ -192,6 +211,9 @@ struct pl08x_txd {
 	u32 ccfg;
 	bool done;
 	bool cyclic;
+#if defined(CONFIG_PLAT_SLSIAP)
+	int  lli_num;
+#endif
 };
 
 /**
@@ -1137,6 +1159,9 @@ static int pl08x_fill_llis_for_desc(struct pl08x_driver_data *pl08x,
 	if (txd->cyclic) {
 		/* Link back to the first LLI. */
 		last_lli[PL080_LLI_LLI] = txd->llis_bus | bd.lli_bus;
+#if defined(CONFIG_PLAT_SLSIAP)
+		txd->lli_num = num_llis;
+#endif
 	} else {
 		/* The final LLI terminates the LLI. */
 		last_lli[PL080_LLI_LLI] = 0;
@@ -1722,6 +1747,30 @@ static int pl08x_control(struct dma_chan *chan, enum dma_ctrl_cmd cmd,
 		plchan->state = PL08X_CHAN_IDLE;
 
 		if (plchan->phychan) {
+#if defined(CONFIG_PLAT_SLSIAP)
+			if ((plchan->vc.chan.chan_id >= PL08X_DMA_ID_I2S0_TX) && (plchan->vc.chan.chan_id <= PL08X_DMA_ID_I2S2_RX)) {
+				int i = 0;
+				int timeout;
+				struct pl08x_txd *txd = plchan->at;
+				u32 *llis_va = txd->llis_va;
+
+				for (i = 0; i < txd->lli_num; i++) {
+					llis_va[PL080_LLI_LLI] = 0;
+					llis_va += pl08x->lli_words;
+				}
+				/* Wait for channel inactive */
+				for (timeout = 1000; timeout; timeout--) {
+					if (!pl08x_phy_channel_busy(plchan->phychan)) {
+						dev_vdbg(&pl08x->adev->dev, "%d\n", timeout);
+						mdelay(1);
+						break;
+					}
+					mdelay(1);
+				}
+				if (pl08x_phy_channel_busy(plchan->phychan))
+					pr_err("pl08x: channel%u timeout waiting for pause\n", plchan->phychan->id);
+			}
+#endif
 			/*
 			 * Mark physical channel as free and free any slave
 			 * signal
@@ -1788,10 +1837,54 @@ static void pl08x_ensure_on(struct pl08x_driver_data *pl08x)
 	writel(PL080_CONFIG_ENABLE, pl08x->base + PL080_CONFIG);
 }
 
+#if defined(CONFIG_AMBA_PL08X_USE_ISR)
+/*
+    * This tasklet handles the completion of a DMA descriptor by
+	 * calling its callback and freeing it.
+	  */
+static void vchan_useisr(unsigned long arg)
+{
+    struct virt_dma_chan *vc = (struct virt_dma_chan *)arg;
+    struct virt_dma_desc *vd;
+    dma_async_tx_callback cb = NULL;
+    void *cb_data = NULL;
+    LIST_HEAD(head);
+
+	spin_lock(&vc->lock);
+	list_splice_tail_init(&vc->desc_completed, &head);
+	vd = vc->cyclic;
+	if (vd) {
+		vc->cyclic = NULL;
+	    cb = vd->tx.callback;
+	    cb_data = vd->tx.callback_param;
+	}   
+	spin_unlock(&vc->lock);
+
+	if (cb)
+		cb(cb_data);
+
+	while (!list_empty(&head)) {
+		vd = list_first_entry(&head, struct virt_dma_desc, node);
+		cb = vd->tx.callback;
+		cb_data = vd->tx.callback_param;
+		
+		list_del(&vd->node);
+
+		vc->desc_free(vd);
+
+		if (cb)
+			cb(cb_data);
+	}   
+}
+#endif
+
 static irqreturn_t pl08x_irq(int irq, void *dev)
 {
 	struct pl08x_driver_data *pl08x = dev;
 	u32 mask = 0, err, tc, i;
+#if defined(CONFIG_AMBA_PL08X_USE_ISR)
+	struct virt_dma_chan *vc = NULL;
+#endif
 
 	/* check & clear - ERR & TC interrupts */
 	err = readl(pl08x->base + PL080_ERR_STATUS);
@@ -1824,7 +1917,17 @@ static irqreturn_t pl08x_irq(int irq, void *dev)
 			spin_lock(&plchan->vc.lock);
 			tx = plchan->at;
 			if (tx && tx->cyclic) {
+#if !defined(CONFIG_AMBA_PL08X_USE_ISR)
 				vchan_cyclic_callback(&tx->vd);
+#else
+				vc = to_virt_chan(tx->vd.tx.chan);
+
+				vc->cyclic = &tx->vd;
+
+				spin_unlock(&plchan->vc.lock);
+			    vchan_useisr((unsigned long)vc);
+				spin_lock(&plchan->vc.lock);
+#endif
 			} else if (tx) {
 				plchan->at = NULL;
 				/*
@@ -1833,7 +1936,19 @@ static irqreturn_t pl08x_irq(int irq, void *dev)
 				 */
 				pl08x_release_mux(plchan);
 				tx->done = true;
+#if !defined(CONFIG_AMBA_PL08X_USE_ISR)
 				vchan_cookie_complete(&tx->vd);
+#else
+				vc = to_virt_chan(tx->vd.tx.chan);
+				dma_cookie_complete(&tx->vd.tx);
+				dev_vdbg(vc->chan.device->dev, "txd %p[%x]: marked complete\n",
+					&tx->vd, tx->vd.tx.cookie);
+				list_add_tail(&tx->vd.node, &vc->desc_completed);
+
+				spin_unlock(&plchan->vc.lock);
+			    vchan_useisr((unsigned long)vc);
+				spin_lock(&plchan->vc.lock);
+#endif
 
 				/*
 				 * And start the next descriptor (if any),
@@ -2015,6 +2130,191 @@ static inline void init_pl08x_debugfs(struct pl08x_driver_data *pl08x)
 }
 #endif
 
+/* add by jhkim for device tree */
+#ifdef CONFIG_OF
+struct dma_pl08x_filter_args {
+	struct pl08x_driver_data *pdmac;
+	unsigned int chan_id;
+};
+
+static bool pl08x_dt_filter(struct dma_chan *chan, void *chan_id)
+{
+	struct dma_pl08x_filter_args *fargs = chan_id;
+	struct pl08x_dma_chan *plchan;
+	char *name = chan_id;
+
+	if (chan->device != &fargs->pdmac->slave &&
+		chan->device != &fargs->pdmac->memcpy)
+		return false;
+
+	plchan = to_pl08x_chan(chan);
+
+	/* Check that the channel is not taken! */
+	if (!strcmp(plchan->name, name))
+		return true;
+
+	return false;
+}
+
+static struct dma_chan *of_dma_pl08x_xlate(struct of_phandle_args *dma_spec,
+						struct of_dma *ofdma)
+{
+	int count = dma_spec->args_count;
+	struct pl08x_driver_data *pdmac = ofdma->of_dma_data;
+	struct dma_pl08x_filter_args fargs;
+	dma_cap_mask_t cap;
+
+	if (!pdmac)
+		return NULL;
+
+	if (count != 1)
+		return NULL;
+
+	fargs.pdmac = pdmac;
+	fargs.chan_id = dma_spec->args[0];
+
+	dma_cap_zero(cap);
+	dma_cap_set(DMA_SLAVE, cap);
+	dma_cap_set(DMA_CYCLIC, cap);
+
+	return dma_request_channel(cap, pl08x_dt_filter, &fargs);
+}
+
+static int pl08x_get_signal(const struct pl08x_channel_data *cd)
+{
+	return cd->min_signal;	/* return Peripheral ID */
+}
+
+static struct pl08x_platform_data *pl08x_parse_dt(struct device *dev,
+						struct pl08x_driver_data *pl08x)
+{
+	struct device_node *np = dev->of_node, *child_np;
+	struct pl08x_platform_data *pd = NULL;
+	struct pl08x_channel_data *slave = NULL;
+	int size, num_slave = 0, ch = 0, ret;
+	const char *str;
+	u32 val;
+
+	if (!np) {
+		dev_err(dev, "no device tree data supplied\n");
+		return NULL;
+	}
+
+	num_slave = of_get_child_count(np);
+	size = ALIGN(sizeof(*pd)+sizeof(*slave)*num_slave, 4);
+
+	pd = kzalloc(size, GFP_KERNEL);
+	if (!pd) {
+		dev_err(dev, "failed memoary allocation for slave channel!\n");
+		return NULL;
+	}
+	slave = (struct pl08x_channel_data*)
+				ALIGN((unsigned long)pd + sizeof(*pd), 4);
+
+	pd->slave_channels = slave;
+	pd->num_slave_channels = num_slave;
+	pd->get_xfer_signal = pl08x_get_signal;
+
+	if (!of_property_read_u32(np, "master_lli_buses", &val))
+		pd->lli_buses = (u8)val;
+
+	if (!of_property_read_u32(np, "master_mem_buses", &val))
+		pd->mem_buses = (u8)val;
+
+   	of_property_read_string(np, "memcpy_bus_id", &pd->memcpy_channel.bus_id);
+   	of_property_read_u32(np, "memcpy_cctl", &pd->memcpy_channel.cctl_memcpy);
+
+	dev_dbg(dev,"DT buses lli=0x%x, mem=0x%x\n", pd->lli_buses, pd->mem_buses);
+	dev_dbg(dev,"DT memcpy bus_id=%s, cctl=0x%08x\n",
+		pd->memcpy_channel.bus_id, pd->memcpy_channel.cctl_memcpy);
+
+	for_each_child_of_node(np, child_np) {
+
+		if (!of_property_read_string(child_np, "slave_bus_id", &str))
+			slave[ch].bus_id = str;
+
+		if (!of_property_read_u32(child_np, "slave_min_signal", &val))
+			slave[ch].min_signal = (u8)val;
+
+		if (!of_property_read_u32(child_np, "slave_periph_buses", &val))
+			slave[ch].periph_buses = (u8)val;
+
+		dev_dbg(dev,"DT slave.%d bus_id=%s, min_signal=%d, buses=0x%x\n",
+			ch, slave[ch].bus_id, slave[ch].min_signal, slave[ch].periph_buses);
+		ch++;
+	}
+
+	ret = of_dma_controller_register(dev->of_node, of_dma_pl08x_xlate, pl08x);
+	if (ret) {
+		dev_err(dev, "unable to register DMA to the generic DT DMA helpers\n");
+		kfree(pd);
+		return NULL;
+	}
+
+	return pd;
+}
+#else
+static inline struct pl08x_platform_data *pl08x_parse_dt(struct device *dev,
+						struct pl08x_driver_data *pl08x)
+{
+	return NULL;
+}
+
+static struct dma_chan *of_dma_pl08x_xlate(struct of_phandle_args *dma_spec,
+						struct of_dma *ofdma)
+{
+	return NULL;
+}
+#endif
+
+#ifdef CONFIG_PM
+/* add by jhkim for sleep mode */
+static int pl08x_suspend(struct device *dev)
+{
+	struct pl08x_driver_data *pl08x = dev_get_drvdata(dev);
+	int i = 0;
+
+	for (; i < pl08x->vd->channels; i++) {
+		struct pl08x_phy_chan *ch = &pl08x->phy_chans[i];
+		ch->src_addr = readl(ch->base + PL080_CH_SRC_ADDR);
+		ch->dst_addr = readl(ch->base + PL080_CH_DST_ADDR);
+		ch->lli = readl(ch->base + PL080_CH_LLI);
+		ch->control = readl(ch->base + PL080_CH_CONTROL);
+		ch->config = readl(ch->base + PL080_CH_CONFIG);
+	}
+	return 0;
+}
+
+static int pl08x_resume(struct device *dev)
+{
+	struct pl08x_driver_data *pl08x = dev_get_drvdata(dev);
+	int i = 0;
+
+	pl08x_ensure_on(pl08x);
+	writel(0x000000FF, pl08x->base + PL080_ERR_CLEAR);
+	writel(0x000000FF, pl08x->base + PL080_TC_CLEAR);
+
+	for (; i < pl08x->vd->channels; i++) {
+		struct pl08x_phy_chan *ch = &pl08x->phy_chans[i];
+		writel(ch->src_addr, ch->base + PL080_CH_SRC_ADDR);
+		writel(ch->dst_addr, ch->base + PL080_CH_DST_ADDR);
+		writel(ch->lli, ch->base + PL080_CH_LLI);
+		writel(ch->control, ch->base + PL080_CH_CONTROL);
+		writel(ch->config, ch->base + PL080_CH_CONFIG);
+	}
+	return 0;
+}
+
+#else
+#define	pl08x_suspend
+#define	pl08x_resume
+#endif
+
+static const struct dev_pm_ops pl08x_pm_ops = {
+	.suspend = pl08x_suspend,
+	.resume = pl08x_resume,
+};
+
 static int pl08x_probe(struct amba_device *adev, const struct amba_id *id)
 {
 	struct pl08x_driver_data *pl08x;
@@ -2038,6 +2338,8 @@ static int pl08x_probe(struct amba_device *adev, const struct amba_id *id)
 		ret = -ENOMEM;
 		goto out_no_pl08x;
 	}
+
+	pm_runtime_irq_safe(&adev->dev);	/* add by jhkim, pm_runtime bug, when call pm_runtime_get_sync */
 
 	/* Initialize memcpy engine */
 	dma_cap_set(DMA_MEMCPY, pl08x->memcpy.cap_mask);
@@ -2065,6 +2367,11 @@ static int pl08x_probe(struct amba_device *adev, const struct amba_id *id)
 
 	/* Get the platform data */
 	pl08x->pd = dev_get_platdata(&adev->dev);
+
+	/* add by jhkim for device tree */
+	if (!pl08x->pd)
+		pl08x->pd = pl08x_parse_dt(&adev->dev, pl08x);
+
 	if (!pl08x->pd) {
 		dev_err(&adev->dev, "no platform data supplied\n");
 		ret = -EINVAL;
@@ -2287,6 +2594,7 @@ static struct amba_driver pl08x_amba_driver = {
 	.drv.name	= DRIVER_NAME,
 	.id_table	= pl08x_ids,
 	.probe		= pl08x_probe,
+	.drv.pm 	= &pl08x_pm_ops,
 };
 
 static int __init pl08x_init(void)
