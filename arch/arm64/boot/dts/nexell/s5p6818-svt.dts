@@ -64,17 +64,17 @@
    		};
 
 		serial@a1000 {
-			enable_dma = <1>;
+			dma-enable = <1>;
 		};
 
 		serial@a0000 {
 			status = "okay";
-			enable_dma = <1>;
+			dma-enable = <1>;
 		};
 
 		serial@a2000 {
 			status = "okay";
-			enable_dma = <1>;
+			dma-enable = <1>;
 		};
 		serial@a3000 {
 			status = "okay";
