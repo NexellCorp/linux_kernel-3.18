@@ -4,6 +4,7 @@
 #
 
 obj-y += cpu_init_early.o cpu-sys.o
+obj-y += soc/
 obj-y += target/
 
 ifeq ($(CONFIG_ARM64),y)
