@@ -382,7 +382,7 @@ static struct clock_event_device timer_clock_event = {
 	.set_mode		= timer_event_set_mode,
 	.set_next_event	= timer_event_set_next,
 	.resume			= timer_event_resume,
-	.rating			= 250,
+	.rating			= 50,	// Lower than dummy timer (for 6818)
 };
 
 #define	TIMER_TICK_MSG(ch, cn) 	{	\
