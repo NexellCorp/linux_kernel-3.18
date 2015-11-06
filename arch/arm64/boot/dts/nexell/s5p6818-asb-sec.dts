@@ -1,0 +1,604 @@
+/*
+ * s5p6818.dtsi - Device Tree Include file for SLsiAp SoC
+ *
+ * Copyright 2009 Nexell Co.
+ *		http://www.nexell.co.kr
+ *
+ * Licensed under GPLv2 or later.
+ */
+
+/dts-v1/;
+/memreserve/ 0x7ed00000 0x00100000; /* OP-TEE SHM */
+
+#include "s5p6818-sec.dtsi"
+
+#define UART_CLOCK_FREQUENCY	147500000
+#define I2C_CLOCK_FREQUENCY	100000000
+#define SPI_CLOCK_FREQUENCY	100000000
+
+#define PMIC_PDATA_INIT(_id, _rname, _minuv, _maxuv, _always_on, _boot_on,	\
+			_init_uv, _init_enable, _slp_slots)	\
+		regulator-name = _rname;			\
+		regulator-min-microvolt = <_minuv>;		\
+		regulator-max-microvolt = <_maxuv>;		\
+		nx,id = <_id>;					\
+		nx,always_on = <_always_on>;			\
+		nx,boot_on = <_boot_on>;			\
+		nx,init_enable = <_init_enable>;		\
+		nx,init_uV = <_init_uv>;			\
+		nx,sleep_slots = <_slp_slots>;
+
+
+/ {
+	aliases {
+		snd_null_card0 = &snd_null_card_0;
+		snd_null_card1 = &snd_null_card_1;
+		snd_null_card2 = &snd_null_card_2;
+	};
+
+	chosen {
+		linux,initrd-start = <0x0 0x49000000>;
+		linux,initrd-end = <0x0 0x4a000000>;
+	};
+
+/*
+	chosen {
+		bootargs = "earlyprintk=nxp-s3c,0xc00a1000";
+	};
+*/
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x40000000 0x3ee00000>;
+	};
+
+	soc {
+		clocks {
+			uart0:uart@a9000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
+			uart1:uart@a8000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
+			uart2:uart@aa000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
+			uart3:uart@ab000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
+			uart4:uart@6e000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
+			uart5:uart@84000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
+			i2c0:i2c@ae000   { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
+			i2c1:i2c@af000   { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
+			i2c2:i2c@b0000   { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
+			spi0:spi@ac000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
+			spi1:spi@ad000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
+			spi2:spi@a7000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
+		};
+
+		#include "s5p6818-asb-pin.dtsi"
+		#include "s5p6818-asb-pm.dtsi"
+
+		dynamic-freq@bb000 {
+			supply_name  = "vdd_arm";
+			vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
+		};
+
+		serial@a1000 {
+			dma-enable = <1>;
+		};
+
+		serial@a0000 {
+			status = "okay";
+			dma-enable = <1>;
+		};
+
+		serial@a2000 {
+			status = "okay";
+			dma-enable = <1>;
+		};
+		serial@a3000 {
+			status = "okay";
+		};
+		serial@6d000 {
+			status = "okay";
+		};
+		serial@6f000 {
+			status = "okay";
+		};
+
+		dw_mmc@62000 {
+			bus_speed = <50>;
+			cd_gpio = <(PAD_GPIO_ALV + 1)>;
+			clk_dly = <0x01020000>;
+		};
+		dw_mmc@68000 {
+			bus_speed = <50>;
+			cd_gpio = <(PAD_GPIO_C + 0)>;
+			clk_dly = <0x01020000>;
+		};
+		dw_mmc@69000 {
+			bus_speed = <50>;
+			cd_gpio = <(PAD_GPIO_C + 1)>;
+			//bus_wd = <4>;
+			//non-removable;
+			//ddr-mode;
+			clk_dly = <0x01020000>;
+		};
+
+		spi@5b000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			num_cs = <1>;
+			clk_nr = <0>;
+
+
+			spidev@0 {
+				compatible = "spidev";
+				reg = <0>;
+				spi-max-frequency = < 50000000 >;
+				controller-data {
+					spi-cs-gpio = <(PAD_GPIO_C + 30)>;
+					spi-feedback-delay = <02>;
+					hierarchy = <0>; //0 : master, 1 : slave
+				};
+			};
+		};
+		spi@5c000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			num_cs = <1>;
+			clk_nr = <0>;
+			//status = "okay";
+			spidev@0 {
+				compatible = "spidev";
+				reg = <0>;
+				spi-max-frequency = < 50000000 >;
+				controller-data {
+					spi-cs-gpio = <(PAD_GPIO_E + 15)>;
+					spi-feedback-delay = <02>;
+				};
+			};
+		};
+		spi@5f000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			num_cs = <1>;
+			clk_nr = <0>;
+			status = "okay";
+			spidev@0 {
+				compatible = "spidev";
+				reg = <0>;
+				spi-max-frequency = < 50000000 >;
+				controller-data {
+					spi-cs-gpio = <(PAD_GPIO_C + 10)>;
+					spi-feedback-delay = <02>;
+					hierarchy = <1>; //0 : master, 1 : slave
+				};
+			};
+
+		};
+
+		adc:adc@53000 {
+			status = "okay";
+		};
+
+		nand:nand@51000 {
+			nand-bus-width = <8>;
+			nand-ecc-mode = "hw";
+			/*nand-on-flash-bbt = <1>;*/
+
+			nand-tacs = <0x0>;					/* unit: bclk cycle */
+			nand-tcah = <0x0>;
+			nand-tcos = <0xf>;
+			nand-tcoh = <0xf>;
+			nand-tacc = <0x3f>;
+			nand-ecc-bytes = <1024>;
+			nand-ecc-bits = <40>;
+			wp-gpio = <(PAD_GPIO_C+27)>;				/* write protect */
+			status = "okay";
+		};
+
+		gmac0:ethernet@60000 {
+			phy = <&phy0>;
+			status = "okay";
+			#address-cells = <0x1>;
+			#size-cells = <0x0>;
+			phy-addr = <7>;
+			probed-phy-irq = <(IRQ_GPIO_E_START+23)>;
+			reset_gpio = <(PAD_GPIO_C+28)>;				/* mdio reset pin */
+			loopback_mode = <1>;					/* 0: none, 1: 10M */
+			phy0:ethernet-phy@0 {
+				compatible = "ethernet-phy-ieee802.3-c22";
+				/*max-speed = <1000>;*/
+				/*linux,phandle = <2452000>;*/
+				/*interrupt-parent = <40000>;*/
+				/*interrupts = <(IRQ_GPIO_A_START+9) 0>;*/
+				reg = <0>;
+				device_type = "ethernet-phy";
+			};
+		};
+
+		rtc@10c00 {
+			status = "okay";
+		};
+
+		wdt@19000 {
+			status = "okay";
+		};
+
+		ppm@54000 {
+			status = "okay";
+		};
+
+		framebuffer@0 {
+			status = "okay";
+			module = <0>;
+			frame_layer = <0>;
+			frame_format = <MLC_RGBFMT_A8R8G8B8>;
+			back_color = <0x0>;
+			bit_per_pixel	= <(4 * 8)>;
+			lcd_x_resol	= <1024>;
+			lcd_y_resol	= <600>;
+			#ifdef CONFIG_ANDROID
+			frame_buffers = <3>;
+			skip_pan_vsync = <1>;
+			#else
+			frame_buffers = <2>;
+			#endif
+			lcd_with_mm	= <155>;
+			lcd_height_mm = <90>;
+		};
+
+		lvds@0 {
+			status = "okay";
+			lvds_format = <LVDS_LCDFORMAT_JEIDA>; /* 0:VESA, 1:JEIDA, 2:Location */
+			vsync {
+				hor_active_size	= <1024>;
+				hor_sync_width	= <20>;
+				hor_back_porch	= <140>;
+				hor_front_porch	= <160>;
+				hor_sync_invert	= <1>;
+				ver_active_size	= <600>;
+				ver_sync_width	= <3>;
+				ver_back_porch	= <20>;
+				ver_front_porch	= <12>;
+				ver_sync_invert	= <1>;
+				pixel_clock_hz	= <(800000000/12)>;	/* PLL/div */
+			};
+			clock {
+				clock,src_div0  = <2>;
+				clock,div_val0	= <12>;
+				clock,src_div1	= <7>;
+				clock,div_val1	= <1>;
+			};
+		};
+
+		pdm@14000 {
+			status = "okay";
+		};
+
+		i2s_0:i2s0@55000 {
+			master_mode = <1>;
+			mclk_in = <0>;
+			trans_mode = <1>;
+			frame_bit = <48>;
+			sample_rate = <48000>;
+			pre_supply_mclk = <1>;
+			status = "okay";
+		};
+
+		i2s_1:i2s1@56000 {
+			master_mode = <0>;
+			mclk_in = <1>;
+			trans_mode = <1>;
+			frame_bit = <48>;
+			sample_rate = <48000>;
+			pre_supply_mclk = <0>;
+			status = "okay";
+		};
+
+		i2s_2:i2s2@57000 {
+			master_mode = <0>;
+			mclk_in = <1>;
+			trans_mode = <1>;
+			frame_bit = <48>;
+			sample_rate = <48000>;
+			pre_supply_mclk = <0>;
+			status = "okay";
+		};
+
+		iic0:iic@a4000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+		};
+
+		spdiftx@59000 {
+			status = "okay";
+		};
+
+		spdifrx@5a000 {
+			status = "okay";
+		};
+
+		ehci@30000 {
+			hsic_en = <1>;
+			hsic_exthub_gpio = <159>;
+		};
+
+		#ifdef CONFIG_REGULATOR_MP8845C
+		iic0:iic@a4000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			mp8845c@1c {
+				compatible = "nx,mp8845c";
+				reg = <0x1c>;
+				nx,id = <0>;
+				regulators {
+					VCC1P1_ARM_PMIC: vout1 { PMIC_PDATA_INIT(0, "mp8845c_vout0", 600000, 1500000, 1, 1, 1200000, 1, 0xF) };
+				};
+			};
+		};
+
+		iic2:iic@a6000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			mp8845c@1c {
+				compatible = "nx,mp8845c";
+				reg = <0x1c>;
+				nx,id = <1>;
+				regulators {
+					VCC1P0_CORE_PMIC: vout2 { PMIC_PDATA_INIT(1, "mp8845c_vout1", 600000, 1500000, 1, 1, 1100000, 1, 0xF) };
+				};
+			};
+		};
+		#endif // CONFIG_REGULATOR_MP8845C
+
+		#ifdef CONFIG_REGULATOR_NXE2000
+		iic0:iic@a4000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			nxe2000@32 {
+				compatible = "nx,nxe2000";
+				reg = <0x32>;
+				nx,id = <0>;
+				vdd_arm-supply		= <&VCC1P1_ARM_PMIC>;
+				vdd_core-supply		= <&VCC1P0_CORE_PMIC>;
+				regulators {
+					#ifndef CONFIG_REGULATOR_MP8845C
+					VCC1P1_ARM_PMIC:	dcdc1	{ PMIC_PDATA_INIT( 0, "nxe2000_dcdc1",	 900000, 1500000, 1, 1, 1200000, 1, 0x4) };
+					VCC1P0_CORE_PMIC:	dcdc2	{ PMIC_PDATA_INIT( 1, "nxe2000_dcdc2",	1000000, 1500000, 1, 1, 1100000, 1, 0x4) };
+					#endif
+					VCC3P3_PMIC: 		dcdc3	{ PMIC_PDATA_INIT( 2, "nxe2000_dcdc3",	1000000, 3500000, 1, 1, 3300000, 1, 0x0) };
+					VCC1P5_DDR_PMIC:	dcdc4	{ PMIC_PDATA_INIT( 3, "nxe2000_dcdc4",	1000000, 2000000, 1, 1, 1500000, 1, 0xF) };
+					VCC1P5_CORE_PMIC:	dcdc5	{ PMIC_PDATA_INIT( 4, "nxe2000_dcdc5",	1000000, 2000000, 1, 1, 1500000, 1, 0x4) };
+					VCC_LDO1:		ldo1	{ PMIC_PDATA_INIT( 5, "nxe2000_ldo1",	1000000, 3500000, 1, 0, 3300000, 1, 0x0) };
+					VCC_LDO2:		ldo2	{ PMIC_PDATA_INIT( 6, "nxe2000_ldo2",	1000000, 3500000, 1, 1, 1800000, 1, 0x0) };
+					VCC1P8_CORE_PMIC:	ldo3	{ PMIC_PDATA_INIT( 7, "nxe2000_ldo3",	1000000, 3500000, 1, 1, 1800000, 1, 0x2) };
+					VCC1P8_DEVICE_PMIC:	ldo4	{ PMIC_PDATA_INIT( 8, "nxe2000_ldo4",	1000000, 3500000, 1, 1, 1800000, 1, 0x2) };
+					VCC_LDO5:		ldo5	{ PMIC_PDATA_INIT( 9, "nxe2000_ldo5",	1000000, 3500000, 0, 0, 2800000, 0, 0x0) };
+					VCC3P3_ALV:		ldo6	{ PMIC_PDATA_INIT(10, "nxe2000_ldo6",	1000000, 3500000, 1, 1, 3300000, 1, 0xF) };
+					VCC2P8_PMIC:		ldo7	{ PMIC_PDATA_INIT(11, "nxe2000_ldo7",	1000000, 3500000, 1, 1, 3300000, 1, 0x1) };
+					VCC_LDO8:		ldo8	{ PMIC_PDATA_INIT(12, "nxe2000_ldo8",	1000000, 3500000, 1, 0, 3300000, 1, 0x0) };
+					VCC_LDO9:		ldo9	{ PMIC_PDATA_INIT(13, "nxe2000_ldo9",	1000000, 3500000, 1, 0, 3300000, 1, 0x0) };
+					VCC1P2_PMIC:		ldo10	{ PMIC_PDATA_INIT(14, "nxe2000_ldo10",	1000000, 3500000, 1, 0, 1200000, 0, 0x0) };
+					VCC1P0_ALV:		ldortc1	{ PMIC_PDATA_INIT(15, "nxe2000_rtc1",	1700000, 3500000, 1, 1, 1800000, 1, 0xF) };
+					VCC1P8_ALV:		ldortc2	{ PMIC_PDATA_INIT(16, "nxe2000_rtc2",	1000000, 3500000, 1, 1, 1000000, 1, 0xF) };
+				};
+			};
+		};
+		#endif // CONFIG_REGULATOR_NXE2000
+
+		tmu-hwmon@96000 {
+			polling-delay = <100>;
+			trigger-step-up = <1>;
+			/* overtemp, cpufreq, duration:
+			  temperature less -> more, if cpufreq is zero, system poweroff */
+			triggers = <	>;
+			status = "okay";
+		};
+
+		tmu-hwmon@97000 {
+			polling-delay = <100>;
+			trigger-step-up = <1>;
+			/* overtemp, cpufreq, duration:
+			  temperature less -> more, if cpufreq is zero, system poweroff */
+			triggers = < >;
+			status = "okay";
+		};
+
+		gpu@0xC0070000 {
+			compatible = "arm,mali-400", "arm,mali-utgard";
+			reg = <0xC0070000 0x10000>;
+			interrupts = <0 72 4>, <0 72 4>, <0 72 4>, <0 72 4>, <0 72 4>, <0 72 4>, <0 72 4>, <0 72 4>, <0 72 4>, <0 72 4>, <0 72 4>;
+			interrupt-names = "IRQGP", "IRQGPMMU", "IRQPP0", "IRQPPMMU0", "IRQPP1", "IRQPPMMU1", "IRQPP2", "IRQPPMMU2", "IRQPP3", "IRQPPMMU3", "IRQPMU";
+			pmu_domain_config = <0x1 0x4 0x8 0x10 0x20 0x0 0x0 0x0 0x0 0x2 0x0 0x0>;
+			pmu_switch_delay = <0xff>;
+		};
+	};	/*** soc ***/
+
+	nxp-ion {
+		compatible = "nexell,nxp-ion";
+		nr = <3>;
+		names = "ion_noncontig_heap", "ion_contig_heap", "nxp_contig_heap";
+		types = <0 1 6>;
+	};
+
+	nxp-v4l2 {
+		compatible = "nexell,nxp-v4l2";
+
+		capture {
+			nr = <2>;
+
+			capture0 {
+				module = <2>;
+				type = <0>;
+
+				port = <0>;
+				external_sync = <0>;
+
+				h_active =  <720>;
+				h_frontporch = <7>;
+				h_syncwidth = <1>;
+				h_backporch = <10>;
+				v_active =  <480>;
+				v_frontporch = <0>;
+				v_syncwidth = <1>;
+				v_backporch = <0>;
+
+				data_order = <0>;
+				vid = <0>;
+
+				interlace = <0>;
+				late_power_down = <0>;
+
+				sensor {
+					type = <2>;
+					sensor_name = "loopback-sensor";
+				};
+
+				power {
+					enable_io = <(PAD_GPIO_A + 21)>;
+					enable_invert = <1>;
+					reset_io    =   <(PAD_GPIO_A + 22)>;
+					reset_enable = <1>;
+				};
+			};
+
+			capture1 {
+				module          = <1>;
+				type            = <0>;
+
+				port            = <0>;
+				external_sync   = <0>;
+
+				h_active        = <704>;
+				h_frontporch    = <7>;
+				h_syncwidth     = <1>;
+				h_backporch     = <10>;
+				v_active        = <480>;
+				v_frontporch    = <0>;
+				v_syncwidth     = <2>;
+				v_backporch     = <3>;
+
+				data_order      = <0>;
+				vid             = <1>;
+
+				interlace       = <1>;
+				late_power_down = <0>;
+
+				sensor {
+					type        = <0>;
+					sensor_name = "tw9900";
+					i2c_adapter = <1>;
+					addr        = <0x44>;
+				};
+
+				power {
+					enable_io       = <(PAD_GPIO_A + 4)>;
+					enable_invert   = <1>;
+					#reset_io        = <(PAD_GPIO_C + 6)>;
+					#reset_invert    = <1>;
+				};
+			};
+		};
+	};
+
+	pdm-dir {
+		compatible = "nexell,pdm-dir";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0 0>;
+	};
+
+	pdm_recorder {
+		compatible = "nexell,pdm-recorder";
+		sample_rate = <48000>;
+		format = "S16";
+	};
+
+	snd-null {
+		compatible = "nexell,snd-null";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0 0>;
+	};
+
+	snd_null_card_0:snd_null_card@0 {
+		compatible = "nexell,snd-null-card";
+		ch = <0>;
+		sample_rate = <48000>;
+		format = "S16";
+		nexell,i2s-controller = <&i2s_0>;
+	};
+
+	snd_null_card_1:snd_null_card@1 {
+		compatible = "nexell,snd-null-card";
+		ch = <1>;
+		sample_rate = <48000>;
+		format = "S16";
+		nexell,i2s-controller = <&i2s_1>;
+	};
+
+	snd_null_card_2:snd_null_card@2 {
+		compatible = "nexell,snd-null-card";
+		ch = <2>;
+		sample_rate = <48000>;
+		format = "S16";
+		nexell,i2s-controller = <&i2s_2>;
+	};
+
+	spdif-dit {
+		compatible = "nexell,spdif-dit";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0 0>;
+	};
+
+	spdif-transciever {
+		compatible = "nexell,spdif-transciever";
+		sample_rate = <48000>;
+		format = "S16";
+	};
+
+	spdif-dir {
+		compatible = "nexell,spdif-dir";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0 0>;
+	};
+
+	spdif-receiver {
+		compatible = "nexell,spdif-receiver";
+		sample_rate = <48000>;
+		format = "S16";
+	};
+
+	#ifdef CONFIG_KEYBOARD_GPIO
+	gpio-keys {
+		compatible = "gpio-keys";
+		power {
+			label = "Power";
+			gpios = <&gpio_alive 0 0 >;
+			linux,code = <116>; /* KEY_POWER */
+		};
+	};
+	#endif
+	#ifdef CONFIG_KEYBOARD_NXP_IO_KEY
+	io-keypad {
+		compatible = "nexell,nxp-keypad";
+		buttons  = <
+			(PAD_GPIO_ALV + 0)	116 0	/* gpio, keycode, active high */
+		>;
+	};
+	#endif
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		linux,ion {
+			compatible = "cma_for_ion";
+			alignment= <4096>;
+			size = < (192*1024*1024) >;
+		};
+
+	};
+};

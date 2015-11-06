@@ -24,7 +24,7 @@
 
 extern const struct cpu_operations smp_spin_table_ops;
 extern const struct cpu_operations cpu_psci_ops;
-#ifdef CONFIG_PLAT_SLSIAP
+#if defined(CONFIG_PLAT_SLSIAP) && !defined(CONFIG_SUPPORT_OPTEE_OS)
 extern const struct cpu_operations cpu_nxp_ops;
 #endif
 
@@ -35,7 +35,7 @@ static const struct cpu_operations *supported_cpu_ops[] __initconst = {
 	&smp_spin_table_ops,
 #endif
 	&cpu_psci_ops,
-#ifdef CONFIG_PLAT_SLSIAP
+#if defined(CONFIG_PLAT_SLSIAP) && !defined(CONFIG_SUPPORT_OPTEE_OS)
 	&cpu_nxp_ops,
 #endif
 	NULL,

@@ -184,6 +184,11 @@ config ARCH_S5P6818
 config PLAT_SLSIAP
 	bool
 
+config SUPPORT_OPTEE_OS
+	bool "Support OPTEE OS"
+	depends on PLAT_SLSIAP
+	default n if PLAT_SLSIAP
+
 endmenu
 
 menu "Bus support"
