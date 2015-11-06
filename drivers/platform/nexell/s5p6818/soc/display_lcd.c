@@ -193,7 +193,7 @@ static int lcd_get_dt_data(struct platform_device *pdev)
 static int lcd_probe(struct platform_device *pdev)
 {
 	struct nxp_lcd_plat_data *plat = pdev->dev.platform_data;
-	struct disp_lcd_param *plcd;
+	struct disp_lcd_param *plcd = NULL;
 	int device = DISP_DEVICE_LCD;
 	int ret = 0, input;
 

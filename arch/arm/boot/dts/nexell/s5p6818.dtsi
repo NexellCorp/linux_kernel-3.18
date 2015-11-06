@@ -474,7 +474,16 @@
 		lvds@0 {
 			compatible = "nexell,nxp-lvds";
 			display_in = <(6 + CONFIG_NXP_DISPLAY_LVDS_IN)>; /* 6: syncgen0, 7:syncgen1 */
-			device_id = <4>;
+			device_id = <4>;	/* refer to display.h */
+			status = "disabled";
+		};
+		#endif
+
+		#if defined(CONFIG_NXP_DISPLAY_LCD)
+		lcd@0 {
+			compatible = "nexell,nxp-lcd";
+			display_in = <(6 + CONFIG_NXP_DISPLAY_LCD_IN)>; /* 6: syncgen0, 7:syncgen1 */
+			device_id = <1>;	/* refer to display.h */
 			status = "disabled";
 		};
 		#endif
