@@ -34,11 +34,7 @@ static void dummy_timer_setup(void)
 	evt->features	= CLOCK_EVT_FEAT_PERIODIC |
 			  CLOCK_EVT_FEAT_ONESHOT |
 			  CLOCK_EVT_FEAT_DUMMY;
-#ifdef CONFIG_ARCH_S5P6818
-	evt->rating	= 400;
-#else
 	evt->rating	= 100;
-#endif
 	evt->set_mode	= dummy_timer_set_mode;
 	evt->cpumask	= cpumask_of(cpu);
 
