@@ -57,9 +57,21 @@
 
 		#include "../../../../../include/nexell/target/s5p6818_svt_gpio.h"
 		#include "s5p6818-pin.dtsi"
-		#include "s5p6818-svt-pm.dtsi"
+		
+		pm_alive_config {
+			pm,alive_0 = < 1 PWR_DECT_FALLINGEDGE >;	/* set wakeup source <on/off type>: alive 0  */
+    		pm,alive_1 = < 0 PWR_DECT_FALLINGEDGE >;	/* set wakeup source <on/off type>: alive 1  */
+	  		pm,alive_2 = < 0 PWR_DECT_FALLINGEDGE >;	/* set wakeup source <on/off type>: alive 2  */
+      		pm,alive_3 = < 0 PWR_DECT_FALLINGEDGE >;	/* set wakeup source <on/off type>: alive 3  */
+      		pm,alive_4 = < 0 PWR_DECT_FALLINGEDGE >;	/* set wakeup source <on/off type>: alive 4  */
+      		pm,alive_5 = < 0 PWR_DECT_FALLINGEDGE >;	/* set wakeup source <on/off type>: alive 5  */
+		};
 
-   		dynamic-freq@bb000 {
+		pm_rtc_config {
+			pm,rtc = < 1 >;		/* set wakeup source <on/off> : alive 0  */
+		};
+
+	   	dynamic-freq@bb000 {
    			supply_name  = "vdd_arm";
    			vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
    		};

@@ -56,7 +56,7 @@
 			spi2:spi@a7000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
 		};
 
-		#include "../../../../../include/nexell/target/s5p6818_asb_gpio.h"
+		#include "../../../../../include/nexell/target/s5p6818_drone_gpio.h"
 		#include "s5p6818-pin.dtsi"
 		
 		pm_alive_config {
@@ -73,9 +73,9 @@
 		};
 
 	   	dynamic-freq@bb000 {
-	   		supply_name  = "vdd_arm";
-	   		vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
-	   	};
+   			supply_name  = "vdd_arm";
+   			vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
+   		};
 
 		serial@a1000 {
 			dma-enable = <1>;

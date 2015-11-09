@@ -72,10 +72,10 @@
 			pm,rtc = < 1 >;		/* set wakeup source <on/off> : alive 0  */
 		};
 
-	   	dynamic-freq@bb000 {
-	   		supply_name  = "vdd_arm";
-	   		vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
-	   	};
+   		dynamic-freq@bb000 {
+   			supply_name  = "vdd_arm";
+   			vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
+   		};
 
 		serial@a1000 {
 			dma-enable = <1>;
