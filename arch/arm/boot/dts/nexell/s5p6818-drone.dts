@@ -40,6 +40,8 @@
 	};
 
 	soc {
+		#include "../../../../../include/nexell/target/s5p6818_drone_gpio.h"
+		#include "s5p6818-pin.dtsi"
 
 		clocks {
 			uart0:uart@a9000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
@@ -48,7 +50,7 @@
 			uart3:uart@ab000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
 			uart4:uart@6e000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
 			uart5:uart@84000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
-			i2c0:i2c@ae000 	 { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
+			i2c0:i2c@ae000   { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
 			i2c1:i2c@af000   { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
 			i2c2:i2c@b0000   { clock-frequency = <I2C_CLOCK_FREQUENCY>;  };
 			spi0:spi@ac000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
@@ -56,12 +58,11 @@
 			spi2:spi@a7000   { clock-frequency = <SPI_CLOCK_FREQUENCY>;  };
 		};
 
-		#include "../../../../../include/nexell/target/s5p6818_drone_gpio.h"
-		#include "s5p6818-pin.dtsi"
-
    		dynamic-freq@bb000 {
    			supply_name  = "vdd_arm";
+   			#ifdef CONFIG_REGULATOR_NXE2000
    			vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
+   			#endif
    		};
 
 		serial@a1000 {
@@ -170,26 +171,25 @@
 			lcd_height_mm = <90>;
 		};
 
-		lvds@0 {
+		lcd@0 {
 			status = "okay";
-			lvds_format = <LVDS_LCDFORMAT_JEIDA>; /* 0:VESA, 1:JEIDA, 2:Location */
 			vsync {
 				hor_active_size	= <1024>;
 				hor_sync_width	= <20>;
-				hor_back_porch	= <140>;
+				hor_back_porch	= <160>;
 				hor_front_porch	= <160>;
 				hor_sync_invert	= <1>;
 				ver_active_size	= <600>;
 				ver_sync_width	= <3>;
-				ver_back_porch	= <20>;
+				ver_back_porch	= <23>;
 				ver_front_porch	= <12>;
 				ver_sync_invert	= <1>;
-				pixel_clock_hz	= <(800000000/12)>;	/* PLL/div */
+				pixel_clock_hz	= <(800000000/14)>;
 			};
 			clock {
-				clock,src_div0  = <2>;
-				clock,div_val0	= <12>;
-				clock,src_div1	= <7>;
+				clock,src_div0  = <DPC_CLK_SRC_PLL2>;
+				clock,div_val0	= <14>;
+				clock,src_div1	= <DPC_CLK_SRC_VCLK2>;
 				clock,div_val1	= <1>;
 			};
 		};

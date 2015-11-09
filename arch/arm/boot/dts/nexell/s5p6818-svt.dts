@@ -39,6 +39,8 @@
 	};
 
 	soc {
+		#include "../../../../../include/nexell/target/s5p6818_svt_gpio.h"
+		#include "s5p6818-pin.dtsi"
 
 		clocks {
 			uart0:uart@a9000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
@@ -55,9 +57,6 @@
 			spi2:spi@a7000 { clock-frequency = <SPI_CLOCK_FREQUENCY>; };
 			/*gmac:gmac@c8000  { clock-frequency = <GMAC_CLOCK_FREQUENCY>; };*/
 		};
-
-		#include "../../../../../include/nexell/target/s5p6818_svt_gpio.h"
-		#include "s5p6818-pin.dtsi"
 
 		serial@a1000 {
 			enable_dma = <1>;
