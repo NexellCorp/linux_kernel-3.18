@@ -86,6 +86,36 @@
 			status = "okay";
 		};
 
+		#ifdef CONFIG_MMC_NXP_CH0
+		dw_mmc@62000 {
+			status = "okay";
+			bus_speed = <100>;
+			cd_gpio = <(PAD_GPIO_C + 6)>;
+			clk_dly = <0x01020000>;
+		};
+		#endif
+		
+		#ifdef CONFIG_MMC_NXP_CH1
+		dw_mmc@68000 {
+			status = "okay";
+			bus_speed = <50>;
+			cd_gpio = <(PAD_GPIO_D + 21)>;
+			clk_dly = <0x01020000>;
+		};
+		#endif
+		
+		#ifdef CONFIG_MMC_NXP_CH2
+		dw_mmc@69000 {
+			status = "okay";
+			bus_speed = <100>;
+			bus_wd = <4>;
+			non-removable;
+			//ddr-mode;
+			clk_dly = <0x02010000>;
+		};
+		#endif
+
+
 		spi@5b000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
