@@ -70,7 +70,6 @@
 
 		#include "../../../../../include/nexell/target/s5p6818_asb_gpio.h"
 		#include "s5p6818-pin.dtsi"
-		#include "s5p6818-asb-pm.dtsi"
 
 		pm_alive_config {
 			pm,alive_0 = < 1 PWR_DECT_FALLINGEDGE >;    /* set wakeup source <on/off type>: alive 0  */
