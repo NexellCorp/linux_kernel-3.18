@@ -580,7 +580,7 @@ config SDH_BFIN_MISSING_CMD_PULLUP_WORKAROUND
 config MMC_DW
 	tristate "Synopsys DesignWare Memory Card Interface"
 	depends on HAS_DMA
-	depends on ARC || ARM || MIPS || COMPILE_TEST
+	depends on ARC || ARM || MIPS || COMPILE_TEST || ARM64
 	help
 	  This selects support for the Synopsys DesignWare Mobile Storage IP
 	  block, this provides host support for SD and MMC interfaces, in both
@@ -607,6 +607,40 @@ config MMC_DW_PLTFM
 	  If you have a controller with this interface, say Y or M here.
 
 	  If unsure, say Y.
+config MMC_NXP
+	bool
+
+config MMC_NXP_CH0
+	bool "Support SD/MMC CH 0"
+	depends on MMC_DW
+	select MMC_NXP
+		default y
+
+config MMC_NXP_CH0_USE_DMA
+	bool "Use SD/MMC CH 0 DMA MODE"
+	depends on MMC_NXP_CH0 && MMC_DW_IDMAC
+		default y
+
+config MMC_NXP_CH1
+	bool "Support SD/MMC CH 1"
+	depends on MMC_DW
+	select MMC_NXP
+		default n
+
+config MMC_NXP_CH1_USE_DMA
+	bool "Use SD/MMC CH 1 DMA MODE"
+	depends on MMC_NXP_CH1 && MMC_DW_IDMAC
+		default y
+
+config MMC_NXP_CH2
+	bool "Support SD/MMC CH 2"
+	depends on MMC_DW
+	select MMC_NXP
+		default n
+config MMC_NXP_CH2_USE_DMA
+	bool "Use SD/MMC CH 2 DMA MODE"
+	depends on MMC_NXP_CH2 && MMC_DW_IDMAC
+		default y
 
 config MMC_DW_EXYNOS
 	tristate "Exynos specific extensions for Synopsys DW Memory Card Interface"
@@ -748,3 +782,4 @@ config MMC_SUNXI
 	help
 	  This selects support for the SD/MMC Host Controller on
 	  Allwinner sunxi SoCs.
+
