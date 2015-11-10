@@ -905,4 +905,10 @@ config GPIO_VIPERBOARD
           River Tech's viperboard.h for detailed meaning
           of the module parameters.
 
+config GPIO_SLSI
+	bool "SLsiAP GPIO"
+	depends on PLAT_SLSIAP
+	default y
+	help
+		Select this option to enable GPIO driver for the SLsiAP chip family.
 endif
