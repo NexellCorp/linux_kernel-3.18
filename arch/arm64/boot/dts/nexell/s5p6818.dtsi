@@ -142,10 +142,11 @@
 			reg	= <0xC0009000 0x1000>, <0xC000a000 0x100>;
 		};
 
-		cpu:interrupt-controller@08000 {
-			compatible = "nexell,s5p6818-gic-cpu";
+		intc:io-controller@08000 {
+			compatible = "nexell,s5p6818-gic-intc";
 			interrupt-controller;
 			reg	= <0xC0008000 0x1000>;
+			#interrupt-cells = <3>;
 		  	#address-cells = <1>;
     	    #size-cells = <1>;
 			ranges;
