@@ -391,9 +391,9 @@ out:
 }
 
 static int irq_cpu_domain_gic_xlate(struct irq_domain *d,
-				struct device_node *controller,
-				const u32 *intspec, unsigned int intsize,
-				unsigned long *out_hwirq, unsigned int *out_type)
+					struct device_node *controller,
+					const u32 *intspec, unsigned int intsize,
+					unsigned long *out_hwirq, unsigned int *out_type)
 {
 	u32 irq = intspec[1];
 	u32 new = irq;
@@ -413,9 +413,9 @@ static int irq_cpu_domain_gic_xlate(struct irq_domain *d,
 }
 
 static int irq_cpu_domain_xlate(struct irq_domain *d,
-				struct device_node *controller,
-				const u32 *intspec, unsigned int intsize,
-				unsigned long *out_hwirq, unsigned int *out_type)
+					struct device_node *controller,
+					const u32 *intspec, unsigned int intsize,
+					unsigned long *out_hwirq, unsigned int *out_type)
 {
 	u32 irq = intspec[1];
 	u32 new = irq - low_first_irq;;
@@ -497,13 +497,13 @@ static void __init irq_cpu_hw_irq_handler_data(struct device_node *np,
 }
 
 static int irq_cpu_set_affinity(struct irq_data *d,
-						const struct cpumask *mask_val, bool force)
+					const struct cpumask *mask_val, bool force)
 {
 	return IRQ_SET_MASK_OK;
 }
 
 static void __init irq_cpu_interface_setup(struct device_node *np,
-						struct device_node *parent)
+					struct device_node *parent)
 {
     struct irq_chip *d = NULL;
     struct irq_data *data;
@@ -620,7 +620,8 @@ static int __init irq_cpu_of_setup(struct device_node *node,
 	if (!irqs)
 		return 0;
 
-	domain = irq_domain_add_simple(node, irqs, data[0].first_irq, &cpu_irq_domain_ops, data);
+	domain = irq_domain_add_simple(node, irqs,
+				data[0].first_irq, &cpu_irq_domain_ops, data);
 	if (WARN_ON(!domain)) {
 		pr_err("%s: irq domain init failed\n", __func__);
 		kfree(data);
