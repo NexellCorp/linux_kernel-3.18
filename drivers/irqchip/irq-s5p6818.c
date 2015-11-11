@@ -38,12 +38,20 @@
 */
 
 struct cpu_irq_domain_data {
+	struct list_head link;
 	struct device_node *node;
 	void __iomem *base;
 	struct irq_chip *chip;
 	void (*handler)(unsigned int, struct irq_desc *);
 	struct irq_domain *domain;
+	unsigned int irqno;		/* physical irq number */
+	unsigned int hwirq;		/* domain hwirq */
+	unsigned int first_irq;	/* domain first_irq */
+	unsigned int size;
 };
+
+static int low_first_irq = S32_MAX;
+static LIST_HEAD(irq_domain_link);
 
 /*
  *  ALIVE irq chain handler
@@ -71,11 +79,13 @@ struct cpu_irq_domain_data {
 #define ARM_DMB()		dmb()
 #endif
 
+#define	irqdata_to_bit(d, p)	(d->hwirq - p->hwirq)
+
 static void irq_alive_ack(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 	pr_debug("%s: alive irq=%d, io=%d\n", __func__, d->irq, bit);
 	writel((1<<bit), base + ALIVE_INT_STATUS);	/* ack:irq pend clear */
 	ARM_DMB();
@@ -85,7 +95,7 @@ static void irq_alive_mask(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 	pr_debug("%s: alive irq=%d, io=%d\n", __func__, d->irq, bit);
 	writel((1<<bit), base + ALIVE_INT_RESET);	/* mask:irq reset (disable) */
 }
@@ -94,7 +104,7 @@ static void irq_alive_unmask(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 	pr_debug("%s: alive irq=%d, io=%d\n", __func__, d->irq, bit);
 	writel((1<<bit), base + ALIVE_INT_SET); ARM_DMB();
 }
@@ -103,7 +113,7 @@ static int irq_alive_set_type(struct irq_data *d, unsigned int type)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 	int offs = 0, i = 0;
 	NX_ALIVE_DETECTMODE mode = 0;
 
@@ -145,7 +155,7 @@ static void irq_alive_enable(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 	pr_debug("%s: alive irq=%d, io=%d\n", __func__, d->irq, bit);
 	writel((1<<bit), base + ALIVE_INT_SET); ARM_DMB();	/* unmask:irq set (enable) */
 }
@@ -154,7 +164,7 @@ static void irq_alive_disable(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 	pr_debug("%s: alive irq=%d, io=%d\n", __func__, d->irq, bit);
 	writel((1<<bit), base + ALIVE_INT_RESET);	/* mask:irq reset (disable) */
 }
@@ -180,19 +190,20 @@ static void irq_alive_handler(unsigned int irq, struct irq_desc *desc)
 	mask = readl(base + ALIVE_INT_SET_READ);
 	stat = readl(base + ALIVE_INT_STATUS) & mask;
 	bit = ffs(stat) - 1;
-	hwirq = irq;
+	hwirq = data->hwirq + bit;
 
-	pr_debug("Alive hwirq=%d[%d], stat=0x%02x, mask=0x%02x\n",
-		hwirq, bit, stat, mask);
+	pr_debug("Alive irq=%d:%d (hw %d), stat=0x%02x, mask=0x%02x @%p\n",
+		irq, bit, hwirq, stat, mask, data);
 
 	if (-1 == bit) {
-		pr_err( "Unknown Alive hwirq=%d, stat=0x%08x, mask=0x%02x\r\n",
-			hwirq, stat, mask);
+		pr_err( "Unknown Alive irq=%d, stat=0x%08x, mask=0x%02x\r\n",
+			irq, stat, mask);
 		writel(-1, (base + ALIVE_INT_STATUS));	/* clear alive status all */
 		goto out;
 	}
 
-	irq = irq_find_mapping(data->domain, bit); /* data->first_irq + bit */
+	irq = irq_find_mapping(data->domain, hwirq); /* data->first_irq + bit */
+
 	if (unlikely(!irq))
 		handle_bad_irq(irq, desc);
 	else
@@ -227,7 +238,7 @@ static void irq_gpio_ack(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 
 	pr_debug("%s: gpio irq=%d, %s.%d\n", __func__, d->irq, VIO_NAME(d->irq), bit);
 
@@ -239,7 +250,7 @@ static void irq_gpio_mask(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 
 	pr_debug("%s: gpio irq=%d, %s.%d\n", __func__, d->irq, VIO_NAME(d->irq), bit);
 
@@ -252,7 +263,7 @@ static void irq_gpio_unmask(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 
 	pr_debug("%s: gpio irq=%d, %s.%d\n", __func__, d->irq, VIO_NAME(d->irq), bit);
 
@@ -266,7 +277,7 @@ static int irq_gpio_set_type(struct irq_data *d, unsigned int type)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 	u32 val, alt;
 	ulong reg;
 
@@ -314,7 +325,7 @@ static void irq_gpio_enable(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 
 	pr_debug("%s: gpio irq=%d, %s.%d\n", __func__, d->irq, VIO_NAME(d->irq), bit);
 
@@ -327,7 +338,7 @@ static void irq_gpio_disable(struct irq_data *d)
 {
 	struct cpu_irq_domain_data *data = irq_data_get_irq_chip_data(d);
 	void __iomem *base = data->base;
-	int bit = d->hwirq;
+	int bit = irqdata_to_bit(d, data);
 
 	pr_debug("%s: gpio irq=%d, %s.%d\n", __func__, d->irq, VIO_NAME(d->irq), bit);
 
@@ -357,19 +368,19 @@ static void irq_gpio_handler(unsigned int irq, struct irq_desc *desc)
 	mask = readl(base + GPIO_INT_ENB);
 	stat = readl(base + GPIO_INT_STATUS) & mask;
 	bit  = ffs(stat) - 1;
-	hwirq = irq;
+	hwirq = data->hwirq + bit;
 
-	pr_debug("Gpio hwirq=%d [%s.%d], stat=0x%08x, mask=0x%08x\n",
-		hwirq, PIO_NAME(hwirq), bit, stat, mask);
+	pr_debug("Gpio irq=%d [%s.%d] (hw %d), stat=0x%08x, mask=0x%08x\n",
+		irq, PIO_NAME(irq), bit, hwirq, stat, mask);
 
 	if (-1 == bit) {
-		pr_err("Unknown Gpio hwirq=%d, status=0x%08x, mask=0x%08x\r\n",
-			hwirq, stat, mask);
+		pr_err("Unknown Gpio irq=%d, status=0x%08x, mask=0x%08x\r\n",
+			irq, stat, mask);
 		writel(-1, (base + GPIO_INT_STATUS));	/* clear gpio status all */
 		goto out;
 	}
 
-	irq = irq_find_mapping(data->domain, bit); /* data->first_irq + bit */
+	irq = irq_find_mapping(data->domain, hwirq); /* data->first_irq + bit */
 	if (unlikely(!irq))
 		handle_bad_irq(irq, desc);
 	else
@@ -379,27 +390,79 @@ out:
  	chained_irq_exit(chip, desc);
 }
 
+static int irq_cpu_domain_gic_xlate(struct irq_domain *d,
+				struct device_node *controller,
+				const u32 *intspec, unsigned int intsize,
+				unsigned long *out_hwirq, unsigned int *out_type)
+{
+	u32 irq = intspec[1];
+	u32 new = irq;
+
+	if (d->of_node != controller)
+		return -EINVAL;
+
+	if (3 > intsize)
+		return -EINVAL;
+
+	*out_hwirq = new;
+	*out_type = intspec[2]; /* irq trigger type */
+
+	pr_debug("gic xlate [%d -> %d]\n", irq, new);
+
+	return 0;
+}
+
 static int irq_cpu_domain_xlate(struct irq_domain *d,
 				struct device_node *controller,
 				const u32 *intspec, unsigned int intsize,
 				unsigned long *out_hwirq, unsigned int *out_type)
 {
+	u32 irq = intspec[1];
+	u32 new = irq - low_first_irq;;
+
 	if (d->of_node != controller)
 		return -EINVAL;
-	if (intsize < 3)
+
+	if (3 > intsize)
 		return -EINVAL;
 
-	*out_hwirq = intspec[1];
+	*out_hwirq = new;
+	*out_type = intspec[2]; /* irq trigger type */
+
+	pr_debug("io  xlate [%d -> %d] low %d\n", irq, new, low_first_irq);
 
 	return 0;
+}
+
+static int irq_cpu_domain_match(struct irq_domain *d,
+					struct device_node *node)
+{
+	struct device_node *np = d->of_node;
+
+	/*
+	 * refer to dtsi file's gpio:io-interrupt DT
+	 */
+	int ret = strcmp(node->name, np->name) ? 0 : 1;
+
+	pr_debug("domain_match: %p node %s:%s ret:%d (%p:%p)\n",
+			d, node->name, np->name, ret, d->ops, d->ops->xlate);
+
+	return ret;	/* 1: OK, 0: False */
 }
 
 static int irq_cpu_domain_map(struct irq_domain *d,
 					unsigned int irq, irq_hw_number_t hw)
 {
-	struct cpu_irq_domain_data *data = d->host_data;
+	struct cpu_irq_domain_data *data = NULL;
 
-	pr_debug("domain_map: irq %d, hw=%d\n", irq, (int)hw);
+	list_for_each_entry(data, &irq_domain_link, link) {
+		int start = (int)data->first_irq;
+		int end = (int)(data->first_irq + data->size);
+		if (end > irq && irq >= start)
+			break;
+	}
+	pr_debug("domain_map: %p, io irq %d virt %d map hw %d\n",
+		d, data->irqno, irq, (int)hw);
 
 	irq_set_chip_data(irq, data);
 	irq_set_chip_and_handler(irq, data->chip, handle_level_irq);
@@ -409,29 +472,28 @@ static int irq_cpu_domain_map(struct irq_domain *d,
 }
 
 static struct irq_domain_ops cpu_irq_domain_ops = {
+	.match  = irq_cpu_domain_match,
 	.map  = irq_cpu_domain_map,
+	.xlate = irq_cpu_domain_xlate,
 };
 
-static void __init irq_cpu_domain_setup(struct device_node *np,
+static void __init irq_cpu_hw_irq_handler_data(struct device_node *np,
+					struct irq_domain *domain,
 					struct cpu_irq_domain_data *data,
-					int first_irq, int hw_irq, int nr_irq, int offs_irq)
+					int first_irq, int hwirq, int size, int offs_irq)
 {
-	static struct irq_domain *domain;
-
-	domain = irq_domain_add_simple(np, nr_irq, first_irq,
-					&cpu_irq_domain_ops, data);
-	if (WARN_ON(!domain)) {
-		pr_err("%s: irq domain init failed\n", __func__);
+	if (!data)
 		return;
-	}
+
 	data->domain = domain;
+	hwirq += offs_irq;
 
-	hw_irq += offs_irq;
-
-	if (irq_set_handler_data(hw_irq, data))
+	if (irq_set_handler_data(hwirq, data))
 		BUG();
 
-	irq_set_chained_handler(hw_irq, data->handler);
+	irq_set_chained_handler(hwirq, data->handler);
+
+	printk("IRQ HW %d map to %d size %d\n", hwirq, first_irq, size);
 }
 
 static int irq_cpu_set_affinity(struct irq_data *d,
@@ -478,64 +540,99 @@ static void __init irq_cpu_interface_setup(struct device_node *np,
 	if (data->domain) {
 		ops = (struct irq_domain_ops *)data->domain->ops;
 		if (ops->xlate)
-			ops->xlate = &irq_cpu_domain_xlate;
+			ops->xlate = &irq_cpu_domain_gic_xlate;
 	}
 }
 
-static int __init irq_cpu_of_setup(struct device_node *np,
+static int __init irq_cpu_of_parse_dt(struct device_node *node,
+					struct cpu_irq_domain_data *data, int *offs_irq)
+{
+	struct device_node *child;
+	int nr_irqs = 0;
+
+	if (of_property_read_u32(node, "gic-interrupt-offset", offs_irq))
+		*offs_irq = 0;
+
+	for_each_child_of_node(node, child) {
+		void __iomem *base;
+		int irqno, first_irq;
+		int size;
+
+		if (!(base = of_iomap(child, 0)))
+			continue;
+
+		if (of_property_read_u32(child, "hw_irq", &irqno))
+			continue;
+
+		if (of_property_read_u32(child, "first_irq", &first_irq))
+			continue;
+
+		if (of_property_read_u32(child, "nr_irqs",  &size))
+			continue;
+
+		if (!of_node_cmp(child->type, "gpio")) {
+			data->chip = &irq_gpio_chip;
+			data->handler = &irq_gpio_handler;
+		} else if (!of_node_cmp(child->type, "alive")) {
+			data->chip = &irq_alive_chip;
+			data->handler = &irq_alive_handler;
+		//	irq_set_irq_wake(irqno, 1);
+		} else {
+			continue;
+		}
+
+		data->node = child;
+		data->base = base;
+		data->irqno = irqno;
+		data->hwirq = nr_irqs;
+		data->first_irq = first_irq;
+		data->size = size;
+
+		list_add(&data->link, &irq_domain_link);
+
+		if (low_first_irq > first_irq)
+			low_first_irq = first_irq;
+
+		data++, nr_irqs += size;
+		printk("HW IRQ[%d] %d %2dEA [Max:%3d] @%p\n",
+			irqno, first_irq, size, nr_irqs, (void*)data);
+	}
+
+	return nr_irqs;
+}
+
+static int __init irq_cpu_of_setup(struct device_node *node,
 					struct device_node *parent)
 {
-	struct device_node *dp;
+	struct irq_domain *domain;
 	struct cpu_irq_domain_data *data;
-	void __iomem *base;
-	int offs_irq = 0;
+	int offs_irq = 0, irqs = 0;
 	int i = 0;
+	int cnt = of_get_child_count(node);
 
-	data = kzalloc(sizeof(*data)*of_get_child_count(np), GFP_KERNEL);
+	data = kzalloc(sizeof(*data)*cnt, GFP_KERNEL);
 	if (!data) {
 		pr_err("%s: Failed to kzalloc for interrupt!\n", __func__);
 		return -EINVAL;
 	}
 
-	if (of_property_read_u32(np, "gic-interrupt-offset", &offs_irq))
-		offs_irq = 0;
+	irqs = irq_cpu_of_parse_dt(node, data, &offs_irq);
+	if (!irqs)
+		return 0;
 
-	for_each_child_of_node(np, dp) {
-		int first_irq;
-		int nr_irq, hw_irq;
-
-		if (!(base = of_iomap(dp, 0)))
-			continue;
-
-		if (of_property_read_u32(dp, "hw_irq", &hw_irq))
-			continue;
-
-		if (of_property_read_u32(dp, "first_irq", &first_irq))
-			continue;
-
-		if (of_property_read_u32(dp, "nr_irqs",  &nr_irq))
-			continue;
-
-		if (!of_node_cmp(dp->type, "gpio")) {
-			data[i].chip = &irq_gpio_chip;
-			data[i].handler = &irq_gpio_handler;
-		} else if (!of_node_cmp(dp->type, "alive")) {
-			data[i].chip = &irq_alive_chip;
-			data[i].handler = &irq_alive_handler;
-			irq_set_irq_wake(hw_irq, 1);
-		} else {
-			continue;
-		}
-
-		data[i].node = dp;
-		data[i].base = base;
-
-		irq_cpu_domain_setup(np, &data[i++], first_irq, hw_irq, nr_irq, offs_irq);
-
-		printk("HW IRQ[%d] %d %dEA\n",  hw_irq, first_irq, nr_irq);
+	domain = irq_domain_add_simple(node, irqs, data[0].first_irq, &cpu_irq_domain_ops, data);
+	if (WARN_ON(!domain)) {
+		pr_err("%s: irq domain init failed\n", __func__);
+		kfree(data);
+		return -EINVAL;
 	}
 
-	irq_cpu_interface_setup(np, parent);
+	for (i = (cnt-1) ; i >= 0; i--)
+		irq_cpu_hw_irq_handler_data(node, domain, &data[i],
+				data[i].first_irq, data[i].irqno, data[i].size,
+				offs_irq);
+
+	irq_cpu_interface_setup(node, parent);
 
 #ifdef CONFIG_FIQ
 	init_FIQ();
@@ -547,4 +644,4 @@ static int __init irq_cpu_of_setup(struct device_node *np,
 #endif
 	return 0;
 }
-IRQCHIP_DECLARE(s5p6818_gic, "nexell,s5p6818-gic-cpu", irq_cpu_of_setup);
+IRQCHIP_DECLARE(s5p6818_gic, "nexell,s5p6818-gic-intc", irq_cpu_of_setup);
