@@ -8,7 +8,7 @@
  */
 
 /dts-v1/;
-
+#include <dt-bindings/interrupt-controller/irq.h>
 #include "s5p6818.dtsi"
 
 #define	UART_CLOCK_FREQUENCY	147500000
@@ -523,4 +523,21 @@
 		sample_rate = <48000>;
 	    format = "S16";
 	};
+
+#ifdef CONFIG_DM9000
+	ethernet@18000000 {
+		compatible = "davicom,dm9000";
+		reg = <0x04000000 0x1 0x04000004 0x1>;
+		interrupt-parent = <&intc>;
+		interrupts = <0  (IRQ_GPIO_C_START + 26) IRQ_TYPE_LEVEL_HIGH >;
+		davicom,no-eeprom;
+	};
+#endif
+
+    io-keypad {
+        compatible = "nexell,nxp-keypad";
+        buttons  = <
+			(PAD_GPIO_ALV + 0)	116 0	/* gpio, keycode, active high */
+        >;
+    };
 };

@@ -95,7 +95,7 @@
 #define IRQ_PHY_NR       		(160) 		// GIC: GIC_DIST_CTR
 
 /*
- * gpio interrupt Number 160 (106~265)
+ * gpio interrupt Number 160 (160~320)
  */
 #define IRQ_GPIO_START			IRQ_PHY_NR
 #define IRQ_GPIO_END			(IRQ_GPIO_START + 32 * 5)	// Group: A,B,C,D,E
@@ -109,7 +109,7 @@
 #define IRQ_GPIO_NR				(IRQ_GPIO_END-IRQ_GPIO_START)
 
 /*
- * ALIVE Interrupt Number 6 (266~271)
+ * ALIVE Interrupt Number 6 (320~326)
  */
 #define IRQ_ALIVE_START			IRQ_GPIO_END
 #define IRQ_ALIVE_END			(IRQ_ALIVE_START + 6)

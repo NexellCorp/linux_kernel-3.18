@@ -111,6 +111,13 @@ const struct linux_logo * __init_refok fb_find_logo(int depth)
 		/* M32R Linux logo */
 		logo = &logo_m32r_clut224;
 #endif
+#ifdef CONFIG_LOGO_NEXELL_1024_600_CLUT224
+		logo = &logo_nexell_1024_600_clut224;
+#endif
+#ifdef CONFIG_LOGO_NEXELL_1920_1080_CLUT224
+		logo = &logo_nexell_1920_1080_clut224;
+#endif
+
 	}
 	return logo;
 }

@@ -142,10 +142,10 @@
 			reg	= <0xC0009000 0x1000>, <0xC000a000 0x100>;
 		};
 
-		cpu:interrupt-controller@08000 {
-			compatible = "nexell,s5p6818-gic-cpu";
+		intc:io-interrupt@08000 {
+			compatible = "nexell,s5p6818-gic-intc";
 			interrupt-controller;
-			reg	= <0xC0008000 0x1000>;
+			#interrupt-cells = <3>;
 		  	#address-cells = <1>;
     	    #size-cells = <1>;
 			ranges;
@@ -487,15 +487,19 @@
 		lvds@0 {
 			compatible = "nexell,nxp-lvds";
 			display_in = <(6 + CONFIG_NXP_DISPLAY_LVDS_IN)>; /* 6: syncgen0, 7:syncgen1 */
-			device_id = <4>;
+			device_id = <4>;	/* refer to display.h */
 			status = "disabled";
 		};
 		#endif
 
-		mp2ts:mp2ts@5d000 {
-			compatible = "nexell,nxp-mp2ts";
-			reg = <PHYS_BASE_MPEGTSI 0x100>;
+		#if defined(CONFIG_NXP_DISPLAY_LCD)
+		lcd@0 {
+			compatible = "nexell,nxp-lcd";
+			display_in = <(6 + CONFIG_NXP_DISPLAY_LCD_IN)>; /* 6: syncgen0, 7:syncgen1 */
+			device_id = <1>;	/* refer to display.h */
+			status = "disabled";
 		};
+		#endif
 
 		rtc@10c00 {
 			compatible = "nexell,nxp-rtc";

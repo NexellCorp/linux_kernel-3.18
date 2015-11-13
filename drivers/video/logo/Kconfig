@@ -82,4 +82,14 @@ config LOGO_M32R_CLUT224
 	depends on M32R
 	default y
 
+config LOGO_NEXELL_1024_600_CLUT224
+	bool "224-color Nexell Linux logo 1024x600"
+	depends on PLAT_SLSIAP
+	default y
+
+config LOGO_NEXELL_1920_1080_CLUT224
+	bool "224-color Nexell Linux logo 1920x1080"
+	depends on PLAT_SLSIAP
+	default y
+
 endif # LOGO
