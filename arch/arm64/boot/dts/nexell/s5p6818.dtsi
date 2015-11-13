@@ -305,6 +305,8 @@
 			nexell,i2c-max-bus-freq = <100000>;
 			nexell,i2c-slave-addr = <0x66>;
 			nexell,reset-id = <RESET_ID_I2C0>;
+			nexell,i2c-rerty-delay = <10>;
+			nexell,i2c-rerty-cnt = <2>;
 		};
 		#endif
 		#endif
@@ -329,6 +331,8 @@
 			nexell,i2c-max-bus-freq = <50000>;
 			nexell,i2c-slave-addr = <0x66>;
 			nexell,reset-id = <RESET_ID_I2C1>;
+			nexell,i2c-rerty-delay = <10>;
+			nexell,i2c-rerty-cnt = <2>;
 		};
 		#endif
 		#endif
@@ -353,6 +357,8 @@
 			nexell,i2c-max-bus-freq = <100000>;
 			nexell,i2c-slave-addr = <0x66>;
 			nexell,reset-id = <RESET_ID_I2C2>;
+			nexell,i2c-rerty-delay = <10>;
+			nexell,i2c-rerty-cnt = <2>;
 		};
 		#endif
 		#endif

@@ -55,6 +55,7 @@
 #define dev_err(fmt,msg...) printk(msg)
 #endif
 
+#define DEFAULT_RETRY_CNT	2
 //#define dev_dbg(fmt,msg...) lldebugout(msg)
 //#define dev_err(fmt,msg...) lldebugout(msg)
 //#define dev_info(fmt,msg...) lldebugout(msg)
@@ -340,7 +341,7 @@ static int i2c_s3c_irq_nextbyte(struct s3c24xx_i2c *i2c, unsigned long iicstat)
 			/* ack was not received... */
 
 			pr_err("i2c-nxp.%d: ack was not received\n",i2c->pdata->bus_num);
-			s3c24xx_i2c_stop(i2c, -ENXIO);
+			s3c24xx_i2c_stop(i2c, -EAGAIN);
 			goto out_ack;
 		}
 
@@ -574,12 +575,11 @@ static int s3c24xx_i2c_doxfer(struct s3c24xx_i2c *i2c,
 
 	/* change set transfer timeout. modify by bok*/
 	do {
-	i2c->tr=0;
-	wait = num * msecs_to_jiffies(WAIT_ACK_TIME);
-	timeout = wait_event_interruptible_timeout(i2c->wait, i2c->condition, wait);
-	if(i2c->condition == 1)
-		break;
-
+		i2c->tr=0;
+		wait = num * msecs_to_jiffies(WAIT_ACK_TIME);
+		timeout = wait_event_interruptible_timeout(i2c->wait, i2c->condition, wait);
+		if(i2c->condition == 1)
+			break;
 	} while(i2c->tr);
 
 	ret = i2c->msg_idx;
@@ -643,6 +643,7 @@ static int s3c24xx_i2c_xfer(struct i2c_adapter *adap,
 			struct i2c_msg *msgs, int num)
 {
 	struct s3c24xx_i2c *i2c = (struct s3c24xx_i2c *)adap->algo_data;
+	int delay  = i2c->pdata->retry_delay;
 	int retry;
 	int ret;
 
@@ -657,7 +658,7 @@ static int s3c24xx_i2c_xfer(struct i2c_adapter *adap,
 	for (retry = 0; retry < adap->retries; retry++) {
 
 		ret = s3c24xx_i2c_doxfer(i2c, msgs, num);
-
+		
 		if (ret != -EAGAIN) {
 			clk_disable_unprepare(i2c->clk);
 			pm_runtime_put_sync(&adap->dev);
@@ -665,8 +666,8 @@ static int s3c24xx_i2c_xfer(struct i2c_adapter *adap,
 		}
 
 		dev_dbg(i2c->dev, "Retrying transmission (%d)\n", retry);
-
-		udelay(100);
+		
+		udelay(delay);
 	}
 
 	clk_disable_unprepare(i2c->clk);
@@ -889,7 +890,7 @@ static void
 s3c24xx_i2c_parse_dt(struct device_node *np, struct s3c24xx_i2c *i2c)
 {
 	struct s3c2410_platform_i2c *pdata = i2c->pdata;
-
+	
 	if (!np)
 		return;
 
@@ -899,6 +900,8 @@ s3c24xx_i2c_parse_dt(struct device_node *np, struct s3c24xx_i2c *i2c)
 	of_property_read_u32(np, "nexell,i2c-slave-addr", &pdata->slave_addr);
 	of_property_read_u32(np, "nexell,i2c-max-bus-freq",
 				(u32 *)&pdata->frequency);
+	of_property_read_u32(np, "nexell,i2c-rerty-delay", &pdata->retry_delay);
+	of_property_read_u32(np, "nexell,i2c-rerty-cnt", &pdata->retry_cnt);
 
 }
 #else
@@ -949,10 +952,13 @@ static int s3c24xx_i2c_probe(struct platform_device *pdev)
 	strlcpy(i2c->adap.name, "s3c2410-i2c", sizeof(i2c->adap.name));
 	i2c->adap.owner   = THIS_MODULE;
 	i2c->adap.algo    = &s3c24xx_i2c_algorithm;
-	i2c->adap.retries = 2;
+	i2c->adap.retries = i2c->pdata->retry_cnt;
 	i2c->adap.class   = I2C_CLASS_HWMON | I2C_CLASS_SPD;
 	i2c->tx_setup     = 50;
-
+	
+	if(i2c->adap.retries)
+		i2c->adap.retries = DEFAULT_RETRY_CNT;
+		
 	spin_lock_init(&i2c->lock);
 	init_waitqueue_head(&i2c->wait);
 
