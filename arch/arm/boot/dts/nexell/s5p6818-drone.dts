@@ -32,13 +32,7 @@
 	memory {
 		reg = <0x40000000 0x40000000>;
 	};
-
-    aliases {
-		snd_null_card0 = &snd_null_card_0;
-		snd_null_card1 = &snd_null_card_1;
-		snd_null_card2 = &snd_null_card_2;
-	};
-
+    
 	soc {
 		#include "../../../../../include/nexell/target/s5p6818_drone_gpio.h"
 		#include "s5p6818-pin.dtsi"
@@ -109,11 +103,11 @@
 		#ifdef CONFIG_MMC_NXP_CH2
 		dw_mmc@69000 {
 			status = "okay";
-			bus_speed = <100>;
-			bus_wd = <4>;
+			bus_speed = <200>;
+			bus_wd = <8>;
 			non-removable;
-			//ddr-mode;
-			clk_dly = <0x02010000>;
+			ddr-mode;
+			clk_dly = <0x02030000>;
 		};
 		#endif
 
@@ -135,40 +129,7 @@
 				};
 			};
 		};
-		spi@5c000 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			num_cs = <1>;
-			clk_nr = <0>;
-			//status = "okay";
-			spidev@0 {
-				compatible = "spidev";
-				reg = <0>;
-				spi-max-frequency = < 50000000 >;
-				controller-data {
-				  spi-cs-gpio = <(PAD_GPIO_E + 15)>;
-					spi-feedback-delay = <02>;
-				};
-			};
-		};
-		spi@5f000 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			num_cs = <1>;
-			clk_nr = <0>;
-			status = "okay";
-			spidev@0 {
-				compatible = "spidev";
-				reg = <0>;
-				spi-max-frequency = < 50000000 >;
-				controller-data {
-			  	spi-cs-gpio = <(PAD_GPIO_C + 10)>;
-					spi-feedback-delay = <02>;
-					hierarchy = <1>; //0 : master, 1 : slave
-				};
-			};
-		};
-
+		
 		rtc@10c00 {
 			status = "okay";
 		};
@@ -237,26 +198,6 @@
 			status = "okay";
 		};
 
-		i2s_1:i2s1@56000 {
-			master_mode = <0>;
-			mclk_in = <1>;
-			trans_mode = <1>;
-			frame_bit = <48>;
-			sample_rate = <48000>;
-			pre_supply_mclk = <0>;
-			status = "okay";
-		};
-
-		i2s_2:i2s2@57000 {
-			master_mode = <0>;
-			mclk_in = <1>;
-			trans_mode = <1>;
-			frame_bit = <48>;
-			sample_rate = <48000>;
-			pre_supply_mclk = <0>;
-			status = "okay";
-		};
-
 		iic0:iic@a4000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -267,15 +208,25 @@
 			status = "okay";
 		};
 
-		spdifrx@5a000 {
-			status = "okay";
-		};
-
 		ehci@30000 {
 			hsic_en = <1>;
 			hsic_exthub_gpio = <159>;
 		};
+		
+		#ifdef CONFIG_TOUCHSCREEN_GSLX680
+		iic1:iic@a5000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
 
+			gslX680@1c{
+				status		= "okay";
+				compatible	= "nexell,gslX680";
+				reg			= <0x40>;
+				mtouch-irq  = <(IRQ_GPIO_B_START+29)>;
+			};
+		};
+		#endif
+		
 		#ifdef CONFIG_REGULATOR_MP8845C
 		iic0:iic@a4000 {
 			#address-cells = <1>;
@@ -467,37 +418,6 @@
         format = "S16";
 	};
 
-	snd-null {
-		compatible = "nexell,snd-null";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg = <0 0>;
-	};
-
-	snd_null_card_0:snd_null_card@0 {
-		compatible = "nexell,snd-null-card";
-		ch = <0>;
-		sample_rate = <48000>;
-	    format = "S16";
-		nexell,i2s-controller = <&i2s_0>;
-	};
-
-	snd_null_card_1:snd_null_card@1 {
-		compatible = "nexell,snd-null-card";
-		ch = <1>;
-		sample_rate = <48000>;
-	    format = "S16";
-		nexell,i2s-controller = <&i2s_1>;
-	};
-
-	snd_null_card_2:snd_null_card@2 {
-		compatible = "nexell,snd-null-card";
-		ch = <2>;
-		sample_rate = <48000>;
-	    format = "S16";
-		nexell,i2s-controller = <&i2s_2>;
-	};
-
 	spdif-dit {
 		compatible = "nexell,spdif-dit";
 		#address-cells = <1>;
@@ -523,16 +443,6 @@
 		sample_rate = <48000>;
 	    format = "S16";
 	};
-
-#ifdef CONFIG_DM9000
-	ethernet@18000000 {
-		compatible = "davicom,dm9000";
-		reg = <0x04000000 0x1 0x04000004 0x1>;
-		interrupt-parent = <&intc>;
-		interrupts = <0  (IRQ_GPIO_C_START + 26) IRQ_TYPE_LEVEL_HIGH >;
-		davicom,no-eeprom;
-	};
-#endif
 
     io-keypad {
         compatible = "nexell,nxp-keypad";

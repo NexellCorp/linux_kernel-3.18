@@ -1002,7 +1002,7 @@ static void dw_mci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 	regs = mci_readl(slot->host, UHS_REG);
 
 	/* DDR mode set */
-	if (ios->timing == MMC_TIMING_UHS_DDR50)
+	if (ios->timing == MMC_TIMING_UHS_DDR50 || ios->timing == MMC_TIMING_MMC_DDR52 )
 		regs |= (0x1 << slot->id) << 16;
 	else
 		regs &= ~(0x1 << slot->id) << 16;
@@ -2708,7 +2708,7 @@ static struct dw_mci_board *dw_mci_parse_dt(struct dw_mci *host)
 		pdata->caps |= MMC_CAP_NONREMOVABLE;
 	}
 	if(of_find_property(np,"ddr-mode",NULL)){
-		pdata->caps |=  MMC_CAP_UHS_DDR50 | MMC_CAP_1_8V_DDR | MMC_CAP_ERASE | MMC_CAP_HW_RESET ;
+		pdata->caps |=  MMC_CAP_UHS_DDR50 | MMC_CAP_1_8V_DDR |  MMC_CAP_HW_RESET ;
 	}
 	pdata->caps2 = MMC_CAP2_NO_PRESCAN_POWERUP;
 	return pdata;
@@ -2971,8 +2971,7 @@ EXPORT_SYMBOL(dw_mci_remove);
  */
 int dw_mci_suspend(struct dw_mci *host)
 {
-#if 1 
-	int i, ret = 0;
+	int i;
 
 	for (i = 0; i < host->num_slots; i++) {
 		struct dw_mci_slot *slot = host->slot[i];
@@ -2980,17 +2979,6 @@ int dw_mci_suspend(struct dw_mci *host)
 			continue;
 		if (slot->mmc)
 			slot->mmc->pm_flags |= slot->mmc->pm_caps;
-#if 0
-		ret = mmc_suspend_host(slot->mmc);
-		if (ret < 0) {
-			while (--i >= 0) {
-				slot = host->slot[i];
-				if (slot)
-					mmc_resume_host(host->slot[i]->mmc);
-			}
-			return ret;
-		}
-#endif
 	}
 
 	if (host->vmmc)
@@ -2998,7 +2986,6 @@ int dw_mci_suspend(struct dw_mci *host)
 
 	if (host->pdata->suspend)
 		host->pdata->suspend(host);
-#endif
 	return 0;
 }
 EXPORT_SYMBOL(dw_mci_suspend);
