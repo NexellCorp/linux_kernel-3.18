@@ -62,25 +62,6 @@
 		serial@a1000 {
 			dma-enable = <1>;
 		};
-
-		serial@a0000 {
-			status = "okay";
-			dma-enable = <1>;
-		};
-
-		serial@a2000 {
-			status = "okay";
-			dma-enable = <1>;
-		};
-		serial@a3000 {
-			status = "okay";
-		};
-		serial@6d000 {
-			status = "okay";
-		};
-		serial@6f000 {
-			status = "okay";
-		};
 		
 		#ifdef CONFIG_MMC_NXP_CH0
 		dw_mmc@62000 {
@@ -217,7 +198,7 @@
 		iic1:iic@a5000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
-
+			nexell,i2c-max-bus-freq = <400000>;
 			gslX680@1c{
 				status		= "okay";
 				compatible	= "nexell,gslX680";

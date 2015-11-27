@@ -43,7 +43,7 @@ struct fb_info *framebuffer_alloc(size_t size, struct device *dev)
 	int fb_info_size = sizeof(struct fb_info);
 	struct fb_info *info;
 	char *p;
-
+	
 	if (size)
 		fb_info_size += PADDING;
 

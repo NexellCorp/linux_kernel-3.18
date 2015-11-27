@@ -79,4 +79,8 @@ obj-$(CONFIG_TOUCHSCREEN_WM97XX_ZYLONITE)	+= zylonite-wm97xx.o
 obj-$(CONFIG_TOUCHSCREEN_W90X900)	+= w90p910_ts.o
 obj-$(CONFIG_TOUCHSCREEN_TPS6507X)	+= tps6507x-ts.o
 obj-$(CONFIG_TOUCHSCREEN_ZFORCE)	+= zforce_ts.o
+ifdef CONFIG_64BIT
+obj-$(CONFIG_TOUCHSCREEN_GSLX680)   += gslX680.o gsl_point_id_64
+else
 obj-$(CONFIG_TOUCHSCREEN_GSLX680)   += gslX680.o gsl_point_id
+endif
