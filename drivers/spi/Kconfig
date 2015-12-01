@@ -632,6 +632,24 @@ config SPI_TLE62X0
 	  sysfs interface, with each line presented as a kind of GPIO
 	  exposing both switch control and diagnostic feedback.
 
+config SPI_SLSI
+    tristate "SLSI SPI"
+    depends on ARCH_S5P6818
+    help
+        SPI driver for SLSI SPI.
+config SPI_SLSI_PORT0
+    bool "port 0"
+    depends on SPI_SLSI
+
+config SPI_SLSI_PORT1
+    bool "port 1"
+    depends on SPI_SLSI
+
+config SPI_SLSI_PORT2
+    bool "port 2"
+    depends on SPI_SLSI
+
+	  
 #
 # Add new SPI protocol masters in alphabetical order above this line
 #
