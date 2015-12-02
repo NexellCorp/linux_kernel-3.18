@@ -1,5 +1,5 @@
 /*******************************************************************************
-  STMMAC Ethernet Driver -- MDIO bus implementation
+  NXPMAC Ethernet Driver -- MDIO bus implementation
   Provides Bus interface for MII registers
 
   Copyright (C) 2007-2009  STMicroelectronics Ltd
@@ -27,6 +27,9 @@
 #include <linux/mii.h>
 #include <linux/phy.h>
 #include <linux/slab.h>
+#include <linux/of.h>
+#include <linux/of_gpio.h>
+
 #include <asm/io.h>
 
 #include "nxpmac.h"
@@ -133,10 +136,51 @@ static int stmmac_mdio_reset(struct mii_bus *bus)
 	struct net_device *ndev = bus->priv;
 	struct stmmac_priv *priv = netdev_priv(ndev);
 	unsigned int mii_address = priv->hw->mii.addr;
+	struct stmmac_mdio_bus_data *data = priv->plat->mdio_bus_data;
 
-	if (priv->plat->mdio_bus_data->phy_reset) {
+#ifdef CONFIG_OF
+	if (priv->device->of_node) {
+		int reset_gpio, active_low;
+
+		if (data->reset_gpio < 0) {
+			struct device_node *np = priv->device->of_node;
+			if (!np)
+				return 0;
+
+			data->reset_gpio = of_get_named_gpio(np,
+						"reset-gpio", 0);
+			if (data->reset_gpio < 0)
+				return 0;
+
+			data->active_low = of_property_read_bool(np,
+						"reset-active-low");
+			of_property_read_u32_array(np,
+				"reset-delays-us", data->delays, 3);
+		}
+
+		reset_gpio = data->reset_gpio;
+		active_low = data->active_low;
+
+		if (!gpio_request(reset_gpio, "mdio-reset")) {
+			gpio_direction_output(reset_gpio, active_low ? 1 : 0);
+			if (data->delays[0])
+				msleep(DIV_ROUND_UP(data->delays[0], 1000));
+
+			gpio_set_value(reset_gpio, active_low ? 0 : 1);
+			if (data->delays[1])
+				msleep(DIV_ROUND_UP(data->delays[1], 1000));
+
+			gpio_set_value(reset_gpio, active_low ? 1 : 0);
+			if (data->delays[2])
+				msleep(DIV_ROUND_UP(data->delays[2], 1000));
+		}
+
+	}
+#endif
+
+	if (data->phy_reset) {
 		pr_debug("stmmac_mdio_reset: calling phy_reset\n");
-		priv->plat->mdio_bus_data->phy_reset(priv->plat->bsp_priv);
+		data->phy_reset(priv->plat->bsp_priv);
 	}
 
 	/* This is a workaround for problems with the STE101P PHY.
@@ -173,6 +217,11 @@ int stmmac_mdio_register(struct net_device *ndev)
 		irqlist = mdio_bus_data->irqs;
 	else
 		irqlist = priv->mii_irq;
+
+#ifdef CONFIG_OF
+	if (priv->device->of_node)
+		mdio_bus_data->reset_gpio = -1;
+#endif
 
 	new_bus->name = "stmmac";
 	new_bus->read = &stmmac_mdio_read;

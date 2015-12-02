@@ -26,6 +26,7 @@
 #include <linux/io.h>
 #include <linux/of.h>
 #include <linux/of_net.h>
+#include <linux/ethtool.h>
 
 #include <linux/phy.h>
 #include <linux/delay.h>
@@ -34,6 +35,12 @@
 #include <nexell/soc-s5pxx18.h>
 
 #include "nxpmac.h"
+
+
+
+#if defined(CONFIG_NXPMAC_TX_CLK) && (CONFIG_NXPMAC_TX_CLK < 4)
+extern int nxpmac_tx_clk_setting(void *bsp_priv, int speed);
+#endif
 
 
 
@@ -67,7 +74,7 @@ int gmac_phy_reset(void *priv)
 	return 0;
 }
 
-int  nxpmac_init(struct platform_device *pdev)
+int  nxpmac_init(struct platform_device *pdev, struct plat_stmmacenet_data *plat_dat)
 {
 	// Clock control
 	NX_CLKGEN_Initialize();
@@ -81,19 +88,26 @@ int  nxpmac_init(struct platform_device *pdev)
 	NX_CLKGEN_SetClockDivisorEnable( CLOCKINDEX_OF_DWC_GMAC_MODULE, CTRUE);
 
 	// Reset control
-	NX_RSTCON_Initialize();
-	NX_RSTCON_SetBaseAddress((void *)__io_address(NX_RSTCON_GetPhysicalAddress()) );
-	NX_RSTCON_SetRST(RESETINDEX_OF_DWC_GMAC_MODULE_aresetn_i, RSTCON_NEGATE);
-	udelay(100);
-	NX_RSTCON_SetRST(RESETINDEX_OF_DWC_GMAC_MODULE_aresetn_i, RSTCON_ASSERT);
-	udelay(100);
-	NX_RSTCON_SetRST(RESETINDEX_OF_DWC_GMAC_MODULE_aresetn_i, RSTCON_NEGATE);
-	udelay(100);
+	if (plat_dat->rst) {
+		reset_control_assert(plat_dat->rst);
+		udelay(100);
+		reset_control_deassert(plat_dat->rst);
+	}
+	else {
+		NX_RSTCON_Initialize();
+		NX_RSTCON_SetBaseAddress((void *)__io_address(NX_RSTCON_GetPhysicalAddress()) );
+		NX_RSTCON_SetRST(RESETINDEX_OF_DWC_GMAC_MODULE_aresetn_i, RSTCON_NEGATE);
+		udelay(100);
+		NX_RSTCON_SetRST(RESETINDEX_OF_DWC_GMAC_MODULE_aresetn_i, RSTCON_ASSERT);
+		udelay(100);
+		NX_RSTCON_SetRST(RESETINDEX_OF_DWC_GMAC_MODULE_aresetn_i, RSTCON_NEGATE);
+		udelay(100);
+	}
 
 	// nReset MDIO PHY
 	//__gmac_phy_reset();
 
-	printk("NXP mac init .................. %s\n", phy_loopback_test ? "(Loopback)" : "");
+	printk("NXP mac init .................. \n");
 	return 0;
 }
 
@@ -105,6 +119,10 @@ static int nxpmac_probe_config_dt(struct platform_device *pdev,
 	uint32_t phy_addr;
 	uint32_t phy_irq;
 	struct device *dev = &pdev->dev;
+	uint32_t autoneg;
+	uint32_t speed;
+	uint32_t duplex;
+
 
 	if (!np)
 		return -ENODEV;
@@ -120,6 +138,31 @@ static int nxpmac_probe_config_dt(struct platform_device *pdev,
 					   sizeof(struct stmmac_mdio_bus_data),
 					   GFP_KERNEL);
 
+	if (of_property_read_u32(np, "autoneg", &autoneg)) {
+		pr_warn("incorrect autoneg\n");
+		autoneg = AUTONEG_ENABLE;
+	}
+
+	if (of_property_read_u32(np, "speed", &speed)) {
+		if (autoneg == AUTONEG_DISABLE)
+			pr_warn("incorrect speed\n");
+		speed = SPEED_10;
+	}
+
+	if (of_property_read_u32(np, "duplex", &duplex)) {
+		if (autoneg == AUTONEG_DISABLE)
+			pr_warn("incorrect duplex\n");
+		duplex = DUPLEX_FULL;
+	}
+
+
+	if (autoneg == AUTONEG_DISABLE && speed == 1000)
+		speed = 100;
+
+	plat->autoneg = autoneg;
+	plat->speed = speed;
+	plat->duplex = duplex;
+
 	if (of_property_read_u32(np, "phy-addr", &phy_addr)) {
 		pr_warn("incorrect phy address\n");
 		phy_addr = 0;
@@ -131,8 +174,6 @@ static int nxpmac_probe_config_dt(struct platform_device *pdev,
 	if (of_property_read_u32(np, "reset_gpio", &CFG_ETHER_GMAC_PHY_RST_NUM)) {
 		pr_err("incorrect phy reset number\n");
 	}
-	if (of_property_read_u32(np, "loopback_mode", &phy_loopback_test))
-		phy_loopback_test = 0;
 
 	plat->mdio_bus_data->probed_phy_irq = phy_irq;
 	plat->mdio_bus_data->phy_reset = gmac_phy_reset;
@@ -144,6 +185,13 @@ static int nxpmac_probe_config_dt(struct platform_device *pdev,
 		plat->has_gmac = 1;
 		plat->pmt = 1;
 		plat->init = nxpmac_init;
+	}
+
+	/* Get reset control */
+	plat->rst = devm_reset_control_get(&pdev->dev, "reset");
+	if (IS_ERR(plat->rst)) {
+		dev_err(&pdev->dev, "failed to get reset\n");
+		return PTR_ERR(plat->rst);
 	}
 
 	return 0;
@@ -200,12 +248,16 @@ static int stmmac_pltfr_probe(struct platform_device *pdev)
 		plat_dat = pdev->dev.platform_data;
 	}
 
-	/* Custom initialisation (if needed)*/
+	/* Custom initialisation */
 	if (plat_dat->init) {
-		ret = plat_dat->init(pdev);
+		ret = plat_dat->init(pdev, plat_dat);
 		if (unlikely(ret))
 			return ret;
 	}
+
+	#if defined(CONFIG_NXPMAC_TX_CLK) && (CONFIG_NXPMAC_TX_CLK < 4)
+	plat_dat->fix_mac_speed = nxpmac_tx_clk_setting;
+	#endif
 
 	priv = stmmac_dvr_probe(&(pdev->dev), plat_dat, addr);
 	if (!priv) {
@@ -283,12 +335,13 @@ static int stmmac_pltfr_suspend(struct device *dev)
 
 static int stmmac_pltfr_resume(struct device *dev)
 {
+	struct plat_stmmacenet_data *plat_dat = dev_get_platdata(dev);
 	struct net_device *ndev = dev_get_drvdata(dev);
 	struct stmmac_priv *priv = netdev_priv(ndev);
 	struct platform_device *pdev = to_platform_device(dev);
 
 	if (priv->plat->init)
-		priv->plat->init(pdev);
+		priv->plat->init(pdev, plat_dat);
 
 	return stmmac_resume(ndev);
 }
@@ -314,7 +367,7 @@ int stmmac_pltfr_restore(struct device *dev)
 	struct platform_device *pdev = to_platform_device(dev);
 
 	if (plat_dat->init)
-		plat_dat->init(pdev);
+		plat_dat->init(pdev, plat_dat);
 
 	return stmmac_restore(ndev);
 }

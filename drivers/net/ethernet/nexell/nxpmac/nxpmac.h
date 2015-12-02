@@ -32,6 +32,7 @@
 #include <linux/pci.h>
 #include "common.h"
 #include <linux/ptp_clock_kernel.h>
+#include <linux/reset.h>
 
 struct stmmac_priv {
 	/* Frequently used values are kept adjacent for cache effect */
@@ -49,6 +50,7 @@ struct stmmac_priv {
 	int tx_coalesce;
 	int hwts_tx_en;
 	spinlock_t tx_lock;
+	spinlock_t rx_lock;	/* add by jhkim: to rx overflow */
 	bool tx_path_in_lpi_mode;
 	struct timer_list txtimer;
 
@@ -108,15 +110,14 @@ struct stmmac_priv {
 	u32 adv_ts;
 	int use_riwt;
 	spinlock_t ptp_lock;
-
-#ifdef CONFIG_NXPMAC_DEBUG_FS
-	int dbgfs_initialized;
-	struct dentry *dbgfs_dir;
-	struct dentry *dbgfs_rings_status;
-	struct dentry *dbgfs_dma_cap;
-#endif
-
+	/* add by jhkim: to rx unavail */
 	struct kobject kobj;
+	int rx_unavail;
+	unsigned int *dma_rx_bitmap;
+	unsigned int *dma_tx_bitmap;
+	struct timer_list rxtimer;
+	u32 rx_unavail_timer;
+	int dma_desc_size;
 };
 
 extern int phyaddr;
