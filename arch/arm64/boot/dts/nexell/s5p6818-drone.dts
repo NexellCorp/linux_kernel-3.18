@@ -326,6 +326,18 @@
         types = <0 1 6>;
     };
 
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+
+        linux,ion {
+            compatible = "cma_for_ion";
+            alignment= <4096>;
+            size = < (192*1024*1024) >;
+        };
+    };  
+
     nxp-v4l2 {
         compatible = "nexell,nxp-v4l2";
 

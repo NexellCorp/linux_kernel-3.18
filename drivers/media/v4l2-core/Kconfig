@@ -93,6 +93,14 @@ config VIDEOBUF2_DMA_SG
 	select VIDEOBUF2_CORE
 	select VIDEOBUF2_MEMOPS
 
+config VIDEOBUF2_ION_NXP
+    bool "Video Buffer2 ION helper for SLsiAP"
+    depends on ION_NXP
+    select VIDEOBUF2_CORE
+    select VIDEOBUF2_MEMOPS
+    help
+      Internal memory management for Video Buffer2 by ION
+
 config VIDEOBUF2_DVB
 	tristate
 	select VIDEOBUF2_CORE

@@ -329,4 +329,38 @@ config PWM_VT8500
 	  To compile this driver as a module, choose M here: the module
 	  will be called pwm-vt8500.
 
+config PWM_NXP
+    tristate "Slsiap PWM support"
+    depends on PLAT_SLSIAP
+    help
+      Generic PWM framework driver for Slsiap.
+
+      To compile this driver as a module, choose M here: the module
+      will be called pwm-nxp.
+
+config PWM_SYSFS
+    bool "/sys/devices/platform/pwm.N (sysfs interface)"
+    depends on PWM_NXP
+    default y
+
+config HAVE_PWM_CH0
+    bool "pwm 0"
+    depends on PWM_NXP
+    default y
+
+config HAVE_PWM_CH1
+    bool "pwm 1"
+    depends on PWM_NXP
+    default n
+
+config HAVE_PWM_CH2
+    bool "pwm 2"
+    depends on PWM_NXP
+    default n
+
+config HAVE_PWM_CH3
+    bool "pwm 3"
+    depends on PWM_NXP
+    default n
+
 endif
