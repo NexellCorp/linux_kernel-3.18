@@ -76,10 +76,15 @@
 /* Platfrom data for platform device structure's platform_data field */
 
 struct stmmac_mdio_bus_data {
+	int bus_id;
 	int (*phy_reset)(void *priv);
 	unsigned int phy_mask;
 	int *irqs;
 	int probed_phy_irq;
+#ifdef CONFIG_OF
+	int reset_gpio, active_low;
+	u32 delays[3];
+#endif
 };
 
 struct stmmac_dma_cfg {
@@ -94,8 +99,12 @@ struct plat_stmmacenet_data {
 	int bus_id;
 	int phy_addr;
 	int interface;
+	int autoneg;
+	int speed;
+	int duplex;
 	struct stmmac_mdio_bus_data *mdio_bus_data;
 	struct stmmac_dma_cfg *dma_cfg;
+	int pbl;
 	int clk_csr;
 	int has_gmac;
 	int enh_desc;
@@ -104,13 +113,15 @@ struct plat_stmmacenet_data {
 	int bugged_jumbo;
 	int pmt;
 	int force_sf_dma_mode;
+	int force_thresh_dma_mode;
 	int riwt_off;
 	void (*fix_mac_speed)(void *priv, unsigned int speed);
 	void (*bus_setup)(void __iomem *ioaddr);
-	int (*init)(struct platform_device *pdev);
+	int (*init)(struct platform_device *pdev, struct plat_stmmacenet_data *plat_dat);
 	void (*exit)(struct platform_device *pdev);
 	void *custom_cfg;
 	void *custom_data;
 	void *bsp_priv;
+	struct reset_control *rst;		/* add by freestyle */
 };
 #endif

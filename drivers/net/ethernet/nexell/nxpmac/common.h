@@ -31,22 +31,12 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #if defined(CONFIG_VLAN_8021Q) || defined(CONFIG_VLAN_8021Q_MODULE)
-#define STMMAC_VLAN_TAG_USED
+#define NXPMAC_VLAN_TAG_USED
 #include <linux/if_vlan.h>
 #endif
 
 #include "descs.h"
 #include "mmc.h"
-
-#undef CHIP_DEBUG_PRINT
-/* Turn-on extra printk debug for MAC core, dma and descriptors */
-/* #define CHIP_DEBUG_PRINT */
-
-#ifdef CHIP_DEBUG_PRINT
-#define CHIP_DBG(fmt, args...)  printk(fmt, ## args)
-#else
-#define CHIP_DBG(fmt, args...)  do { } while (0)
-#endif
 
 /* Synopsys Core versions */
 #define	DWMAC_CORE_3_40	0x34
@@ -169,10 +159,10 @@ struct stmmac_extra_stats {
 #define FLOW_AUTO	(FLOW_TX | FLOW_RX)
 
 /* PCS defines */
-#define STMMAC_PCS_RGMII	(1 << 0)
-#define STMMAC_PCS_SGMII	(1 << 1)
-#define STMMAC_PCS_TBI		(1 << 2)
-#define STMMAC_PCS_RTBI		(1 << 3)
+#define NXPMAC_PCS_RGMII	(1 << 0)
+#define NXPMAC_PCS_SGMII	(1 << 1)
+#define NXPMAC_PCS_TBI		(1 << 2)
+#define NXPMAC_PCS_RTBI		(1 << 3)
 
 #define SF_DMA_MODE 1		/* DMA STORE-AND-FORWARD Operation Mode */
 
@@ -211,10 +201,12 @@ struct stmmac_extra_stats {
 #define MAX_DMA_RIWT		0xff
 #define MIN_DMA_RIWT		0x20
 /* Tx coalesce parameters */
-#define STMMAC_COAL_TX_TIMER	40000
-#define STMMAC_MAX_COAL_TX_TICK	100000
-#define STMMAC_TX_MAX_FRAMES	256
-#define STMMAC_TX_FRAMES	64
+#define NXPMAC_COAL_TX_TIMER	40000
+#define NXPMAC_MAX_COAL_TX_TICK	100000
+#define NXPMAC_TX_MAX_FRAMES	256
+#define NXPMAC_TX_FRAMES	64
+
+#define NXPMAC_UNAVAIL_RX_TIMER	(1000*1000)	/* uS */
 
 /* Rx IPC status */
 enum rx_frame_status {
@@ -247,8 +239,8 @@ struct rgmii_adv {
 	unsigned int lp_duplex;
 };
 
-#define STMMAC_PCS_PAUSE	1
-#define STMMAC_PCS_ASYM_PAUSE	2
+#define NXPMAC_PCS_PAUSE	1
+#define NXPMAC_PCS_ASYM_PAUSE	2
 
 /* DMA HW capabilities */
 struct dma_features {
@@ -363,6 +355,7 @@ struct stmmac_dma_ops {
 	void (*dma_diagnostic_fr) (void *data, struct stmmac_extra_stats *x,
 				   void __iomem *ioaddr);
 	void (*enable_dma_transmission) (void __iomem *ioaddr);
+	void (*enable_dma_receive) (void __iomem *ioaddr);	/* add by jhkim */
 	void (*enable_dma_irq) (void __iomem *ioaddr);
 	void (*disable_dma_irq) (void __iomem *ioaddr);
 	void (*start_tx) (void __iomem *ioaddr);
@@ -428,20 +421,13 @@ struct mii_regs {
 	unsigned int data;	/* MII Data */
 };
 
-struct stmmac_ring_mode_ops {
-	unsigned int (*is_jumbo_frm) (int len, int ehn_desc);
-	unsigned int (*jumbo_frm) (void *priv, struct sk_buff *skb, int csum);
-	void (*refill_desc3) (void *priv, struct dma_desc *p);
-	void (*init_desc3) (struct dma_desc *p);
-	void (*clean_desc3) (void *priv, struct dma_desc *p);
-	int (*set_16kib_bfsize) (int mtu);
-};
-
-struct stmmac_chain_mode_ops {
+struct stmmac_mode_ops {
 	void (*init) (void *des, dma_addr_t phy_addr, unsigned int size,
 		      unsigned int extend_desc);
 	unsigned int (*is_jumbo_frm) (int len, int ehn_desc);
 	unsigned int (*jumbo_frm) (void *priv, struct sk_buff *skb, int csum);
+	int (*set_16kib_bfsize)(int mtu);
+	void (*init_desc3)(struct dma_desc *p);
 	void (*refill_desc3) (void *priv, struct dma_desc *p);
 	void (*clean_desc3) (void *priv, struct dma_desc *p);
 };
@@ -450,8 +436,7 @@ struct mac_device_info {
 	const struct stmmac_ops *mac;
 	const struct stmmac_desc_ops *desc;
 	const struct stmmac_dma_ops *dma;
-	const struct stmmac_ring_mode_ops *ring;
-	const struct stmmac_chain_mode_ops *chain;
+	const struct stmmac_mode_ops *mode;
 	const struct stmmac_hwtimestamp *ptp;
 	struct mii_regs mii;	/* MII register Addresses */
 	struct mac_link link;
@@ -471,7 +456,7 @@ extern void stmmac_get_mac_addr(void __iomem *ioaddr, unsigned char *addr,
 extern void stmmac_set_mac(void __iomem *ioaddr, bool enable);
 
 extern void dwmac_dma_flush_tx_fifo(void __iomem *ioaddr);
-extern const struct stmmac_ring_mode_ops ring_mode_ops;
-extern const struct stmmac_chain_mode_ops chain_mode_ops;
+extern const struct stmmac_mode_ops ring_mode_ops;
+extern const struct stmmac_mode_ops chain_mode_ops;
 
 #endif /* __COMMON_H__ */

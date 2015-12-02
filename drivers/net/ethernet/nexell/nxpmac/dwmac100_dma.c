@@ -90,14 +90,14 @@ static void dwmac100_dump_dma_regs(void __iomem *ioaddr)
 {
 	int i;
 
-	CHIP_DBG(KERN_DEBUG "DWMAC 100 DMA CSR\n");
+	pr_debug("DWMAC 100 DMA CSR\n");
 	for (i = 0; i < 9; i++)
 		pr_debug("\t CSR%d (offset 0x%x): 0x%08x\n", i,
 			 (DMA_BUS_MODE + i * 4),
 			 readl(ioaddr + DMA_BUS_MODE + i * 4));
-	CHIP_DBG(KERN_DEBUG "\t CSR20 (offset 0x%x): 0x%08x\n",
-		 DMA_CUR_TX_BUF_ADDR, readl(ioaddr + DMA_CUR_TX_BUF_ADDR));
-	CHIP_DBG(KERN_DEBUG "\t CSR21 (offset 0x%x): 0x%08x\n",
+
+	pr_debug("\tCSR20 (0x%x): 0x%08x, CSR21 (0x%x): 0x%08x\n",
+		 DMA_CUR_TX_BUF_ADDR, readl(ioaddr + DMA_CUR_TX_BUF_ADDR),
 		 DMA_CUR_RX_BUF_ADDR, readl(ioaddr + DMA_CUR_RX_BUF_ADDR));
 }
 
@@ -136,6 +136,7 @@ const struct stmmac_dma_ops dwmac100_dma_ops = {
 	.dma_mode = dwmac100_dma_operation_mode,
 	.dma_diagnostic_fr = dwmac100_dma_diagnostic_fr,
 	.enable_dma_transmission = dwmac_enable_dma_transmission,
+	.enable_dma_receive = dwmac_enable_dma_receive, /* add by jhkim */
 	.enable_dma_irq = dwmac_enable_dma_irq,
 	.disable_dma_irq = dwmac_disable_dma_irq,
 	.start_tx = dwmac_dma_start_tx,

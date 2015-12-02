@@ -1,5 +1,5 @@
 /*******************************************************************************
-  STMMAC Ethtool support
+  NXPMAC Ethtool support
 
   Copyright (C) 2007-2009  STMicroelectronics Ltd
 
@@ -43,189 +43,189 @@ struct stmmac_stats {
 	int stat_offset;
 };
 
-#define STMMAC_STAT(m)	\
+#define NXPMAC_STAT(m)	\
 	{ #m, FIELD_SIZEOF(struct stmmac_extra_stats, m),	\
 	offsetof(struct stmmac_priv, xstats.m)}
 
 static const struct stmmac_stats stmmac_gstrings_stats[] = {
 	/* Transmit errors */
-	STMMAC_STAT(tx_underflow),
-	STMMAC_STAT(tx_carrier),
-	STMMAC_STAT(tx_losscarrier),
-	STMMAC_STAT(vlan_tag),
-	STMMAC_STAT(tx_deferred),
-	STMMAC_STAT(tx_vlan),
-	STMMAC_STAT(tx_jabber),
-	STMMAC_STAT(tx_frame_flushed),
-	STMMAC_STAT(tx_payload_error),
-	STMMAC_STAT(tx_ip_header_error),
+	NXPMAC_STAT(tx_underflow),
+	NXPMAC_STAT(tx_carrier),
+	NXPMAC_STAT(tx_losscarrier),
+	NXPMAC_STAT(vlan_tag),
+	NXPMAC_STAT(tx_deferred),
+	NXPMAC_STAT(tx_vlan),
+	NXPMAC_STAT(tx_jabber),
+	NXPMAC_STAT(tx_frame_flushed),
+	NXPMAC_STAT(tx_payload_error),
+	NXPMAC_STAT(tx_ip_header_error),
 	/* Receive errors */
-	STMMAC_STAT(rx_desc),
-	STMMAC_STAT(sa_filter_fail),
-	STMMAC_STAT(overflow_error),
-	STMMAC_STAT(ipc_csum_error),
-	STMMAC_STAT(rx_collision),
-	STMMAC_STAT(rx_crc),
-	STMMAC_STAT(dribbling_bit),
-	STMMAC_STAT(rx_length),
-	STMMAC_STAT(rx_mii),
-	STMMAC_STAT(rx_multicast),
-	STMMAC_STAT(rx_gmac_overflow),
-	STMMAC_STAT(rx_watchdog),
-	STMMAC_STAT(da_rx_filter_fail),
-	STMMAC_STAT(sa_rx_filter_fail),
-	STMMAC_STAT(rx_missed_cntr),
-	STMMAC_STAT(rx_overflow_cntr),
-	STMMAC_STAT(rx_vlan),
+	NXPMAC_STAT(rx_desc),
+	NXPMAC_STAT(sa_filter_fail),
+	NXPMAC_STAT(overflow_error),
+	NXPMAC_STAT(ipc_csum_error),
+	NXPMAC_STAT(rx_collision),
+	NXPMAC_STAT(rx_crc),
+	NXPMAC_STAT(dribbling_bit),
+	NXPMAC_STAT(rx_length),
+	NXPMAC_STAT(rx_mii),
+	NXPMAC_STAT(rx_multicast),
+	NXPMAC_STAT(rx_gmac_overflow),
+	NXPMAC_STAT(rx_watchdog),
+	NXPMAC_STAT(da_rx_filter_fail),
+	NXPMAC_STAT(sa_rx_filter_fail),
+	NXPMAC_STAT(rx_missed_cntr),
+	NXPMAC_STAT(rx_overflow_cntr),
+	NXPMAC_STAT(rx_vlan),
 	/* Tx/Rx IRQ error info */
-	STMMAC_STAT(tx_undeflow_irq),
-	STMMAC_STAT(tx_process_stopped_irq),
-	STMMAC_STAT(tx_jabber_irq),
-	STMMAC_STAT(rx_overflow_irq),
-	STMMAC_STAT(rx_buf_unav_irq),
-	STMMAC_STAT(rx_process_stopped_irq),
-	STMMAC_STAT(rx_watchdog_irq),
-	STMMAC_STAT(tx_early_irq),
-	STMMAC_STAT(fatal_bus_error_irq),
+	NXPMAC_STAT(tx_undeflow_irq),
+	NXPMAC_STAT(tx_process_stopped_irq),
+	NXPMAC_STAT(tx_jabber_irq),
+	NXPMAC_STAT(rx_overflow_irq),
+	NXPMAC_STAT(rx_buf_unav_irq),
+	NXPMAC_STAT(rx_process_stopped_irq),
+	NXPMAC_STAT(rx_watchdog_irq),
+	NXPMAC_STAT(tx_early_irq),
+	NXPMAC_STAT(fatal_bus_error_irq),
 	/* Tx/Rx IRQ Events */
-	STMMAC_STAT(rx_early_irq),
-	STMMAC_STAT(threshold),
-	STMMAC_STAT(tx_pkt_n),
-	STMMAC_STAT(rx_pkt_n),
-	STMMAC_STAT(normal_irq_n),
-	STMMAC_STAT(rx_normal_irq_n),
-	STMMAC_STAT(napi_poll),
-	STMMAC_STAT(tx_normal_irq_n),
-	STMMAC_STAT(tx_clean),
-	STMMAC_STAT(tx_reset_ic_bit),
-	STMMAC_STAT(irq_receive_pmt_irq_n),
+	NXPMAC_STAT(rx_early_irq),
+	NXPMAC_STAT(threshold),
+	NXPMAC_STAT(tx_pkt_n),
+	NXPMAC_STAT(rx_pkt_n),
+	NXPMAC_STAT(normal_irq_n),
+	NXPMAC_STAT(rx_normal_irq_n),
+	NXPMAC_STAT(napi_poll),
+	NXPMAC_STAT(tx_normal_irq_n),
+	NXPMAC_STAT(tx_clean),
+	NXPMAC_STAT(tx_reset_ic_bit),
+	NXPMAC_STAT(irq_receive_pmt_irq_n),
 	/* MMC info */
-	STMMAC_STAT(mmc_tx_irq_n),
-	STMMAC_STAT(mmc_rx_irq_n),
-	STMMAC_STAT(mmc_rx_csum_offload_irq_n),
+	NXPMAC_STAT(mmc_tx_irq_n),
+	NXPMAC_STAT(mmc_rx_irq_n),
+	NXPMAC_STAT(mmc_rx_csum_offload_irq_n),
 	/* EEE */
-	STMMAC_STAT(irq_tx_path_in_lpi_mode_n),
-	STMMAC_STAT(irq_tx_path_exit_lpi_mode_n),
-	STMMAC_STAT(irq_rx_path_in_lpi_mode_n),
-	STMMAC_STAT(irq_rx_path_exit_lpi_mode_n),
-	STMMAC_STAT(phy_eee_wakeup_error_n),
+	NXPMAC_STAT(irq_tx_path_in_lpi_mode_n),
+	NXPMAC_STAT(irq_tx_path_exit_lpi_mode_n),
+	NXPMAC_STAT(irq_rx_path_in_lpi_mode_n),
+	NXPMAC_STAT(irq_rx_path_exit_lpi_mode_n),
+	NXPMAC_STAT(phy_eee_wakeup_error_n),
 	/* Extended RDES status */
-	STMMAC_STAT(ip_hdr_err),
-	STMMAC_STAT(ip_payload_err),
-	STMMAC_STAT(ip_csum_bypassed),
-	STMMAC_STAT(ipv4_pkt_rcvd),
-	STMMAC_STAT(ipv6_pkt_rcvd),
-	STMMAC_STAT(rx_msg_type_ext_no_ptp),
-	STMMAC_STAT(rx_msg_type_sync),
-	STMMAC_STAT(rx_msg_type_follow_up),
-	STMMAC_STAT(rx_msg_type_delay_req),
-	STMMAC_STAT(rx_msg_type_delay_resp),
-	STMMAC_STAT(rx_msg_type_pdelay_req),
-	STMMAC_STAT(rx_msg_type_pdelay_resp),
-	STMMAC_STAT(rx_msg_type_pdelay_follow_up),
-	STMMAC_STAT(ptp_frame_type),
-	STMMAC_STAT(ptp_ver),
-	STMMAC_STAT(timestamp_dropped),
-	STMMAC_STAT(av_pkt_rcvd),
-	STMMAC_STAT(av_tagged_pkt_rcvd),
-	STMMAC_STAT(vlan_tag_priority_val),
-	STMMAC_STAT(l3_filter_match),
-	STMMAC_STAT(l4_filter_match),
-	STMMAC_STAT(l3_l4_filter_no_match),
+	NXPMAC_STAT(ip_hdr_err),
+	NXPMAC_STAT(ip_payload_err),
+	NXPMAC_STAT(ip_csum_bypassed),
+	NXPMAC_STAT(ipv4_pkt_rcvd),
+	NXPMAC_STAT(ipv6_pkt_rcvd),
+	NXPMAC_STAT(rx_msg_type_ext_no_ptp),
+	NXPMAC_STAT(rx_msg_type_sync),
+	NXPMAC_STAT(rx_msg_type_follow_up),
+	NXPMAC_STAT(rx_msg_type_delay_req),
+	NXPMAC_STAT(rx_msg_type_delay_resp),
+	NXPMAC_STAT(rx_msg_type_pdelay_req),
+	NXPMAC_STAT(rx_msg_type_pdelay_resp),
+	NXPMAC_STAT(rx_msg_type_pdelay_follow_up),
+	NXPMAC_STAT(ptp_frame_type),
+	NXPMAC_STAT(ptp_ver),
+	NXPMAC_STAT(timestamp_dropped),
+	NXPMAC_STAT(av_pkt_rcvd),
+	NXPMAC_STAT(av_tagged_pkt_rcvd),
+	NXPMAC_STAT(vlan_tag_priority_val),
+	NXPMAC_STAT(l3_filter_match),
+	NXPMAC_STAT(l4_filter_match),
+	NXPMAC_STAT(l3_l4_filter_no_match),
 	/* PCS */
-	STMMAC_STAT(irq_pcs_ane_n),
-	STMMAC_STAT(irq_pcs_link_n),
-	STMMAC_STAT(irq_rgmii_n),
+	NXPMAC_STAT(irq_pcs_ane_n),
+	NXPMAC_STAT(irq_pcs_link_n),
+	NXPMAC_STAT(irq_rgmii_n),
 };
-#define STMMAC_STATS_LEN ARRAY_SIZE(stmmac_gstrings_stats)
+#define NXPMAC_STATS_LEN ARRAY_SIZE(stmmac_gstrings_stats)
 
 /* HW MAC Management counters (if supported) */
-#define STMMAC_MMC_STAT(m)	\
+#define NXPMAC_MMC_STAT(m)	\
 	{ #m, FIELD_SIZEOF(struct stmmac_counters, m),	\
 	offsetof(struct stmmac_priv, mmc.m)}
 
 static const struct stmmac_stats stmmac_mmc[] = {
-	STMMAC_MMC_STAT(mmc_tx_octetcount_gb),
-	STMMAC_MMC_STAT(mmc_tx_framecount_gb),
-	STMMAC_MMC_STAT(mmc_tx_broadcastframe_g),
-	STMMAC_MMC_STAT(mmc_tx_multicastframe_g),
-	STMMAC_MMC_STAT(mmc_tx_64_octets_gb),
-	STMMAC_MMC_STAT(mmc_tx_65_to_127_octets_gb),
-	STMMAC_MMC_STAT(mmc_tx_128_to_255_octets_gb),
-	STMMAC_MMC_STAT(mmc_tx_256_to_511_octets_gb),
-	STMMAC_MMC_STAT(mmc_tx_512_to_1023_octets_gb),
-	STMMAC_MMC_STAT(mmc_tx_1024_to_max_octets_gb),
-	STMMAC_MMC_STAT(mmc_tx_unicast_gb),
-	STMMAC_MMC_STAT(mmc_tx_multicast_gb),
-	STMMAC_MMC_STAT(mmc_tx_broadcast_gb),
-	STMMAC_MMC_STAT(mmc_tx_underflow_error),
-	STMMAC_MMC_STAT(mmc_tx_singlecol_g),
-	STMMAC_MMC_STAT(mmc_tx_multicol_g),
-	STMMAC_MMC_STAT(mmc_tx_deferred),
-	STMMAC_MMC_STAT(mmc_tx_latecol),
-	STMMAC_MMC_STAT(mmc_tx_exesscol),
-	STMMAC_MMC_STAT(mmc_tx_carrier_error),
-	STMMAC_MMC_STAT(mmc_tx_octetcount_g),
-	STMMAC_MMC_STAT(mmc_tx_framecount_g),
-	STMMAC_MMC_STAT(mmc_tx_excessdef),
-	STMMAC_MMC_STAT(mmc_tx_pause_frame),
-	STMMAC_MMC_STAT(mmc_tx_vlan_frame_g),
-	STMMAC_MMC_STAT(mmc_rx_framecount_gb),
-	STMMAC_MMC_STAT(mmc_rx_octetcount_gb),
-	STMMAC_MMC_STAT(mmc_rx_octetcount_g),
-	STMMAC_MMC_STAT(mmc_rx_broadcastframe_g),
-	STMMAC_MMC_STAT(mmc_rx_multicastframe_g),
-	STMMAC_MMC_STAT(mmc_rx_crc_errror),
-	STMMAC_MMC_STAT(mmc_rx_align_error),
-	STMMAC_MMC_STAT(mmc_rx_run_error),
-	STMMAC_MMC_STAT(mmc_rx_jabber_error),
-	STMMAC_MMC_STAT(mmc_rx_undersize_g),
-	STMMAC_MMC_STAT(mmc_rx_oversize_g),
-	STMMAC_MMC_STAT(mmc_rx_64_octets_gb),
-	STMMAC_MMC_STAT(mmc_rx_65_to_127_octets_gb),
-	STMMAC_MMC_STAT(mmc_rx_128_to_255_octets_gb),
-	STMMAC_MMC_STAT(mmc_rx_256_to_511_octets_gb),
-	STMMAC_MMC_STAT(mmc_rx_512_to_1023_octets_gb),
-	STMMAC_MMC_STAT(mmc_rx_1024_to_max_octets_gb),
-	STMMAC_MMC_STAT(mmc_rx_unicast_g),
-	STMMAC_MMC_STAT(mmc_rx_length_error),
-	STMMAC_MMC_STAT(mmc_rx_autofrangetype),
-	STMMAC_MMC_STAT(mmc_rx_pause_frames),
-	STMMAC_MMC_STAT(mmc_rx_fifo_overflow),
-	STMMAC_MMC_STAT(mmc_rx_vlan_frames_gb),
-	STMMAC_MMC_STAT(mmc_rx_watchdog_error),
-	STMMAC_MMC_STAT(mmc_rx_ipc_intr_mask),
-	STMMAC_MMC_STAT(mmc_rx_ipc_intr),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_gd),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_hderr),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_nopay),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_frag),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_udsbl),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_gd_octets),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_hderr_octets),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_nopay_octets),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_frag_octets),
-	STMMAC_MMC_STAT(mmc_rx_ipv4_udsbl_octets),
-	STMMAC_MMC_STAT(mmc_rx_ipv6_gd_octets),
-	STMMAC_MMC_STAT(mmc_rx_ipv6_hderr_octets),
-	STMMAC_MMC_STAT(mmc_rx_ipv6_nopay_octets),
-	STMMAC_MMC_STAT(mmc_rx_ipv6_gd),
-	STMMAC_MMC_STAT(mmc_rx_ipv6_hderr),
-	STMMAC_MMC_STAT(mmc_rx_ipv6_nopay),
-	STMMAC_MMC_STAT(mmc_rx_udp_gd),
-	STMMAC_MMC_STAT(mmc_rx_udp_err),
-	STMMAC_MMC_STAT(mmc_rx_tcp_gd),
-	STMMAC_MMC_STAT(mmc_rx_tcp_err),
-	STMMAC_MMC_STAT(mmc_rx_icmp_gd),
-	STMMAC_MMC_STAT(mmc_rx_icmp_err),
-	STMMAC_MMC_STAT(mmc_rx_udp_gd_octets),
-	STMMAC_MMC_STAT(mmc_rx_udp_err_octets),
-	STMMAC_MMC_STAT(mmc_rx_tcp_gd_octets),
-	STMMAC_MMC_STAT(mmc_rx_tcp_err_octets),
-	STMMAC_MMC_STAT(mmc_rx_icmp_gd_octets),
-	STMMAC_MMC_STAT(mmc_rx_icmp_err_octets),
+	NXPMAC_MMC_STAT(mmc_tx_octetcount_gb),
+	NXPMAC_MMC_STAT(mmc_tx_framecount_gb),
+	NXPMAC_MMC_STAT(mmc_tx_broadcastframe_g),
+	NXPMAC_MMC_STAT(mmc_tx_multicastframe_g),
+	NXPMAC_MMC_STAT(mmc_tx_64_octets_gb),
+	NXPMAC_MMC_STAT(mmc_tx_65_to_127_octets_gb),
+	NXPMAC_MMC_STAT(mmc_tx_128_to_255_octets_gb),
+	NXPMAC_MMC_STAT(mmc_tx_256_to_511_octets_gb),
+	NXPMAC_MMC_STAT(mmc_tx_512_to_1023_octets_gb),
+	NXPMAC_MMC_STAT(mmc_tx_1024_to_max_octets_gb),
+	NXPMAC_MMC_STAT(mmc_tx_unicast_gb),
+	NXPMAC_MMC_STAT(mmc_tx_multicast_gb),
+	NXPMAC_MMC_STAT(mmc_tx_broadcast_gb),
+	NXPMAC_MMC_STAT(mmc_tx_underflow_error),
+	NXPMAC_MMC_STAT(mmc_tx_singlecol_g),
+	NXPMAC_MMC_STAT(mmc_tx_multicol_g),
+	NXPMAC_MMC_STAT(mmc_tx_deferred),
+	NXPMAC_MMC_STAT(mmc_tx_latecol),
+	NXPMAC_MMC_STAT(mmc_tx_exesscol),
+	NXPMAC_MMC_STAT(mmc_tx_carrier_error),
+	NXPMAC_MMC_STAT(mmc_tx_octetcount_g),
+	NXPMAC_MMC_STAT(mmc_tx_framecount_g),
+	NXPMAC_MMC_STAT(mmc_tx_excessdef),
+	NXPMAC_MMC_STAT(mmc_tx_pause_frame),
+	NXPMAC_MMC_STAT(mmc_tx_vlan_frame_g),
+	NXPMAC_MMC_STAT(mmc_rx_framecount_gb),
+	NXPMAC_MMC_STAT(mmc_rx_octetcount_gb),
+	NXPMAC_MMC_STAT(mmc_rx_octetcount_g),
+	NXPMAC_MMC_STAT(mmc_rx_broadcastframe_g),
+	NXPMAC_MMC_STAT(mmc_rx_multicastframe_g),
+	NXPMAC_MMC_STAT(mmc_rx_crc_errror),
+	NXPMAC_MMC_STAT(mmc_rx_align_error),
+	NXPMAC_MMC_STAT(mmc_rx_run_error),
+	NXPMAC_MMC_STAT(mmc_rx_jabber_error),
+	NXPMAC_MMC_STAT(mmc_rx_undersize_g),
+	NXPMAC_MMC_STAT(mmc_rx_oversize_g),
+	NXPMAC_MMC_STAT(mmc_rx_64_octets_gb),
+	NXPMAC_MMC_STAT(mmc_rx_65_to_127_octets_gb),
+	NXPMAC_MMC_STAT(mmc_rx_128_to_255_octets_gb),
+	NXPMAC_MMC_STAT(mmc_rx_256_to_511_octets_gb),
+	NXPMAC_MMC_STAT(mmc_rx_512_to_1023_octets_gb),
+	NXPMAC_MMC_STAT(mmc_rx_1024_to_max_octets_gb),
+	NXPMAC_MMC_STAT(mmc_rx_unicast_g),
+	NXPMAC_MMC_STAT(mmc_rx_length_error),
+	NXPMAC_MMC_STAT(mmc_rx_autofrangetype),
+	NXPMAC_MMC_STAT(mmc_rx_pause_frames),
+	NXPMAC_MMC_STAT(mmc_rx_fifo_overflow),
+	NXPMAC_MMC_STAT(mmc_rx_vlan_frames_gb),
+	NXPMAC_MMC_STAT(mmc_rx_watchdog_error),
+	NXPMAC_MMC_STAT(mmc_rx_ipc_intr_mask),
+	NXPMAC_MMC_STAT(mmc_rx_ipc_intr),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_gd),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_hderr),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_nopay),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_frag),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_udsbl),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_gd_octets),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_hderr_octets),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_nopay_octets),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_frag_octets),
+	NXPMAC_MMC_STAT(mmc_rx_ipv4_udsbl_octets),
+	NXPMAC_MMC_STAT(mmc_rx_ipv6_gd_octets),
+	NXPMAC_MMC_STAT(mmc_rx_ipv6_hderr_octets),
+	NXPMAC_MMC_STAT(mmc_rx_ipv6_nopay_octets),
+	NXPMAC_MMC_STAT(mmc_rx_ipv6_gd),
+	NXPMAC_MMC_STAT(mmc_rx_ipv6_hderr),
+	NXPMAC_MMC_STAT(mmc_rx_ipv6_nopay),
+	NXPMAC_MMC_STAT(mmc_rx_udp_gd),
+	NXPMAC_MMC_STAT(mmc_rx_udp_err),
+	NXPMAC_MMC_STAT(mmc_rx_tcp_gd),
+	NXPMAC_MMC_STAT(mmc_rx_tcp_err),
+	NXPMAC_MMC_STAT(mmc_rx_icmp_gd),
+	NXPMAC_MMC_STAT(mmc_rx_icmp_err),
+	NXPMAC_MMC_STAT(mmc_rx_udp_gd_octets),
+	NXPMAC_MMC_STAT(mmc_rx_udp_err_octets),
+	NXPMAC_MMC_STAT(mmc_rx_tcp_gd_octets),
+	NXPMAC_MMC_STAT(mmc_rx_tcp_err_octets),
+	NXPMAC_MMC_STAT(mmc_rx_icmp_gd_octets),
+	NXPMAC_MMC_STAT(mmc_rx_icmp_err_octets),
 };
-#define STMMAC_MMC_STATS_LEN ARRAY_SIZE(stmmac_mmc)
+#define NXPMAC_MMC_STATS_LEN ARRAY_SIZE(stmmac_mmc)
 
 static void stmmac_ethtool_getdrvinfo(struct net_device *dev,
 				      struct ethtool_drvinfo *info)
@@ -248,7 +248,7 @@ static int stmmac_ethtool_getsettings(struct net_device *dev,
 	struct phy_device *phy = priv->phydev;
 	int rc;
 
-	if ((priv->pcs & STMMAC_PCS_RGMII) || (priv->pcs & STMMAC_PCS_SGMII)) {
+	if ((priv->pcs & NXPMAC_PCS_RGMII) || (priv->pcs & NXPMAC_PCS_SGMII)) {
 		struct rgmii_adv adv;
 
 		if (!priv->xstats.pcs_link) {
@@ -268,13 +268,13 @@ static int stmmac_ethtool_getsettings(struct net_device *dev,
 
 		/* Encoding of PSE bits is defined in 802.3z, 37.2.1.4 */
 
-		if (adv.pause & STMMAC_PCS_PAUSE)
+		if (adv.pause & NXPMAC_PCS_PAUSE)
 			cmd->advertising |= ADVERTISED_Pause;
-		if (adv.pause & STMMAC_PCS_ASYM_PAUSE)
+		if (adv.pause & NXPMAC_PCS_ASYM_PAUSE)
 			cmd->advertising |= ADVERTISED_Asym_Pause;
-		if (adv.lp_pause & STMMAC_PCS_PAUSE)
+		if (adv.lp_pause & NXPMAC_PCS_PAUSE)
 			cmd->lp_advertising |= ADVERTISED_Pause;
-		if (adv.lp_pause & STMMAC_PCS_ASYM_PAUSE)
+		if (adv.lp_pause & NXPMAC_PCS_ASYM_PAUSE)
 			cmd->lp_advertising |= ADVERTISED_Asym_Pause;
 
 		/* Reg49[3] always set because ANE is always supported */
@@ -322,9 +322,9 @@ static int stmmac_ethtool_getsettings(struct net_device *dev,
 		return -EBUSY;
 	}
 	cmd->transceiver = XCVR_INTERNAL;
-	spin_lock_irq(&priv->lock);
+	//spin_lock_irq(&priv->lock);
 	rc = phy_ethtool_gset(phy, cmd);
-	spin_unlock_irq(&priv->lock);
+	//spin_unlock_irq(&priv->lock);
 	return rc;
 }
 
@@ -335,7 +335,7 @@ static int stmmac_ethtool_setsettings(struct net_device *dev,
 	struct phy_device *phy = priv->phydev;
 	int rc;
 
-	if ((priv->pcs & STMMAC_PCS_RGMII) || (priv->pcs & STMMAC_PCS_SGMII)) {
+	if ((priv->pcs & NXPMAC_PCS_RGMII) || (priv->pcs & NXPMAC_PCS_SGMII)) {
 		u32 mask = ADVERTISED_Autoneg | ADVERTISED_Pause;
 
 		/* Only support ANE */
@@ -359,9 +359,9 @@ static int stmmac_ethtool_setsettings(struct net_device *dev,
 		return 0;
 	}
 
-	spin_lock(&priv->lock);
+	//spin_lock(&priv->lock);
 	rc = phy_ethtool_sset(phy, cmd);
-	spin_unlock(&priv->lock);
+	//spin_unlock(&priv->lock);
 
 	return rc;
 }
@@ -493,7 +493,7 @@ static void stmmac_get_ethtool_stats(struct net_device *dev,
 		if (priv->dma_cap.rmon) {
 			dwmac_mmc_read(priv->ioaddr, &priv->mmc);
 
-			for (i = 0; i < STMMAC_MMC_STATS_LEN; i++) {
+			for (i = 0; i < NXPMAC_MMC_STATS_LEN; i++) {
 				char *p;
 				p = (char *)priv + stmmac_mmc[i].stat_offset;
 
@@ -508,7 +508,7 @@ static void stmmac_get_ethtool_stats(struct net_device *dev,
 				priv->xstats.phy_eee_wakeup_error_n = val;
 		}
 	}
-	for (i = 0; i < STMMAC_STATS_LEN; i++) {
+	for (i = 0; i < NXPMAC_STATS_LEN; i++) {
 		char *p = (char *)priv + stmmac_gstrings_stats[i].stat_offset;
 		data[j++] = (stmmac_gstrings_stats[i].sizeof_stat ==
 			     sizeof(u64)) ? (*(u64 *)p) : (*(u32 *)p);
@@ -522,10 +522,10 @@ static int stmmac_get_sset_count(struct net_device *netdev, int sset)
 
 	switch (sset) {
 	case ETH_SS_STATS:
-		len = STMMAC_STATS_LEN;
+		len = NXPMAC_STATS_LEN;
 
 		if (priv->dma_cap.rmon)
-			len += STMMAC_MMC_STATS_LEN;
+			len += NXPMAC_MMC_STATS_LEN;
 
 		return len;
 	default:
@@ -542,12 +542,12 @@ static void stmmac_get_strings(struct net_device *dev, u32 stringset, u8 *data)
 	switch (stringset) {
 	case ETH_SS_STATS:
 		if (priv->dma_cap.rmon)
-			for (i = 0; i < STMMAC_MMC_STATS_LEN; i++) {
+			for (i = 0; i < NXPMAC_MMC_STATS_LEN; i++) {
 				memcpy(p, stmmac_mmc[i].stat_string,
 				       ETH_GSTRING_LEN);
 				p += ETH_GSTRING_LEN;
 			}
-		for (i = 0; i < STMMAC_STATS_LEN; i++) {
+		for (i = 0; i < NXPMAC_STATS_LEN; i++) {
 			memcpy(p, stmmac_gstrings_stats[i].stat_string,
 				ETH_GSTRING_LEN);
 			p += ETH_GSTRING_LEN;
@@ -706,8 +706,8 @@ static int stmmac_set_coalesce(struct net_device *dev,
 	    (ec->tx_max_coalesced_frames == 0))
 		return -EINVAL;
 
-	if ((ec->tx_coalesce_usecs > STMMAC_COAL_TX_TIMER) ||
-	    (ec->tx_max_coalesced_frames > STMMAC_TX_MAX_FRAMES))
+	if ((ec->tx_coalesce_usecs > NXPMAC_COAL_TX_TIMER) ||
+	    (ec->tx_max_coalesced_frames > NXPMAC_TX_MAX_FRAMES))
 		return -EINVAL;
 
 	rx_riwt = stmmac_usec2riwt(ec->rx_coalesce_usecs, priv);

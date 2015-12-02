@@ -207,10 +207,12 @@
 			status = "okay";
 			#address-cells = <0x1>;
 			#size-cells = <0x0>;
+			autoneg = <1>;					/* 0:AUTONEG_DISABLE, 1:AUTONEG_ENABLE */
+			speed = <1000>;					/* 10/100/1000 */
+			duplex = <1>;					/* 0:DUPLEX_HALF, 1:DUPLEX_FULL */
 			phy-addr = <3>;
 			probed-phy-irq = <(IRQ_GPIO_A_START+9)>;
 			reset_gpio = <(PAD_GPIO_A+10)>;			/* mdio reset pin */
-			loopback_mode = <0>;					/* 0: none, 1: 10M */
 			phy0:ethernet-phy@0 {
 				compatible = "ethernet-phy-ieee802.3-c22";
 				/*max-speed = <1000>;*/

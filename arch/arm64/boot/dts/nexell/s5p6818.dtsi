@@ -434,6 +434,9 @@
 			clocks = <&pclk>;
 			clock-names = "nxpmaceth";
 
+			resets = <&nxp_reset RESET_ID_DWC_GMAC>;
+			reset-names = "reset";
+
 			reg = <PHYS_BASE_GMAC 0x2000>;
 			interrupt-parent = <&gic>;
 			interrupts = <0 IRQ_GMAC 0>;

@@ -33,9 +33,14 @@ static unsigned int stmmac_jumbo_frm(void *p, struct sk_buff *skb, int csum)
 	struct stmmac_priv *priv = (struct stmmac_priv *)p;
 	unsigned int txsize = priv->dma_tx_size;
 	unsigned int entry = priv->cur_tx % txsize;
-	struct dma_desc *desc = priv->dma_tx + entry;
+	struct dma_desc *desc;
 	unsigned int nopaged_len = skb_headlen(skb);
 	unsigned int bmax, len;
+
+	if (priv->extend_desc)
+		desc = (struct dma_desc *)(priv->dma_etx + entry);
+	else
+		desc = priv->dma_tx + entry;
 
 	if (priv->plat->enh_desc)
 		bmax = BUF_SIZE_8KiB;
@@ -54,7 +59,11 @@ static unsigned int stmmac_jumbo_frm(void *p, struct sk_buff *skb, int csum)
 						STMMAC_RING_MODE);
 		wmb();
 		entry = (++priv->cur_tx) % txsize;
-		desc = priv->dma_tx + entry;
+
+		if (priv->extend_desc)
+			desc = (struct dma_desc *)(priv->dma_etx + entry);
+		else
+			desc = priv->dma_tx + entry;
 
 		desc->des2 = dma_map_single(priv->device, skb->data + bmax,
 					    len, DMA_TO_DEVICE);
@@ -91,10 +100,9 @@ static void stmmac_refill_desc3(void *priv_ptr, struct dma_desc *p)
 {
 	struct stmmac_priv *priv = (struct stmmac_priv *)priv_ptr;
 
-	if (unlikely(priv->plat->has_gmac))
-		/* Fill DES3 in case of RING mode */
-		if (priv->dma_buf_sz >= BUF_SIZE_8KiB)
-			p->des3 = p->des2 + BUF_SIZE_8KiB;
+	/* Fill DES3 in case of RING mode */
+	if (priv->dma_buf_sz >= BUF_SIZE_8KiB)
+		p->des3 = p->des2 + BUF_SIZE_8KiB;
 }
 
 /* In ring mode we need to fill the desc3 because it is used as buffer */
@@ -117,7 +125,7 @@ static int stmmac_set_16kib_bfsize(int mtu)
 	return ret;
 }
 
-const struct stmmac_ring_mode_ops ring_mode_ops = {
+const struct stmmac_mode_ops ring_mode_ops = {
 	.is_jumbo_frm = stmmac_is_jumbo_frm,
 	.jumbo_frm = stmmac_jumbo_frm,
 	.refill_desc3 = stmmac_refill_desc3,
