@@ -724,6 +724,7 @@ struct v4l2_buffer {
 /* Cache handling flags */
 #define V4L2_BUF_FLAG_NO_CACHE_INVALIDATE	0x00000800
 #define V4L2_BUF_FLAG_NO_CACHE_CLEAN		0x00001000
+#define V4L2_BUF_FLAG_USE_SYNC              0x00020000
 /* Timestamp type */
 #define V4L2_BUF_FLAG_TIMESTAMP_MASK		0x0000e000
 #define V4L2_BUF_FLAG_TIMESTAMP_UNKNOWN		0x00000000
@@ -852,6 +853,7 @@ struct v4l2_cropcap {
 struct v4l2_crop {
 	__u32			type;	/* enum v4l2_buf_type */
 	struct v4l2_rect        c;
+    int             pad;
 };
 
 /**
@@ -1016,6 +1018,77 @@ struct v4l2_standard {
 	__u32		     framelines;
 	__u32		     reserved[4];
 };
+
+/*
+ * V I D E O   T I M I N G S   D V P R E S E T
+ */
+struct v4l2_dv_preset {
+    __u32   preset;
+    __u32   reserved[4];
+};
+
+/*
+ * D V P R E S E T S   E N U M E R A T I O N
+ */
+struct v4l2_dv_enum_preset {
+    __u32   index;
+    __u32   preset;
+    __u8    name[32]; /* Name of the preset timing */
+    __u32   width;
+    __u32   height;
+    __u32   reserved[4];
+};
+
+/*
+ * D V P R E S E T V A L U E S
+ */
+#define     V4L2_DV_INVALID     0
+#define     V4L2_DV_480P59_94   1 /* BT.1362 */
+#define     V4L2_DV_576P50      2 /* BT.1362 */
+#define     V4L2_DV_720P24      3 /* SMPTE 296M */
+#define     V4L2_DV_720P25      4 /* SMPTE 296M */
+#define     V4L2_DV_720P30      5 /* SMPTE 296M */
+#define     V4L2_DV_720P50      6 /* SMPTE 296M */
+#define     V4L2_DV_720P59_94   7 /* SMPTE 274M */
+#define     V4L2_DV_720P60      8 /* SMPTE 274M/296M */
+#define     V4L2_DV_1080I29_97  9 /* BT.1120/ SMPTE 274M */
+#define     V4L2_DV_1080I30     10 /* BT.1120/ SMPTE 274M */
+#define     V4L2_DV_1080I25     11 /* BT.1120 */
+#define     V4L2_DV_1080I50     12 /* SMPTE 296M */
+#define     V4L2_DV_1080I60     13 /* SMPTE 296M */
+#define     V4L2_DV_1080P24     14 /* SMPTE 296M */
+#define     V4L2_DV_1080P25     15 /* SMPTE 296M */
+#define     V4L2_DV_1080P30     16 /* SMPTE 296M */
+#define     V4L2_DV_1080P50     17 /* BT.1120 */
+#define     V4L2_DV_1080P60     18 /* BT.1120 */
+
+#define     V4L2_DV_480P60          19
+#define     V4L2_DV_1080I59_94      20
+#define     V4L2_DV_1080P59_94      21
+
+#define     V4L2_DV_720P60_FP       22
+#define     V4L2_DV_720P60_SB_HALF      23
+#define     V4L2_DV_720P60_TB       24
+#define     V4L2_DV_720P59_94_FP        25
+#define     V4L2_DV_720P59_94_SB_HALF   26
+#define     V4L2_DV_720P59_94_TB        27
+#define     V4L2_DV_720P50_FP       28
+#define     V4L2_DV_720P50_SB_HALF      29
+#define     V4L2_DV_720P50_TB       30
+#define     V4L2_DV_1080P24_FP      31
+#define     V4L2_DV_1080P24_SB_HALF     32
+#define     V4L2_DV_1080P24_TB      33
+#define     V4L2_DV_1080P23_98_FP       34
+#define     V4L2_DV_1080P23_98_SB_HALF  35
+#define     V4L2_DV_1080P23_98_TB       36
+#define     V4L2_DV_1080I60_SB_HALF     37
+#define     V4L2_DV_1080I59_94_SB_HALF  38
+#define     V4L2_DV_1080I50_SB_HALF     39
+#define     V4L2_DV_1080P60_SB_HALF     40
+#define     V4L2_DV_1080P60_TB      41
+#define     V4L2_DV_1080P30_FP      42
+#define     V4L2_DV_1080P30_SB_HALF     43
+#define     V4L2_DV_1080P30_TB      44
 
 /*
  *	D V 	B T	T I M I N G S
@@ -2062,6 +2135,11 @@ struct v4l2_create_buffers {
 #define	VIDIOC_DBG_G_REGISTER 	_IOWR('V', 80, struct v4l2_dbg_register)
 
 #define VIDIOC_S_HW_FREQ_SEEK	 _IOW('V', 82, struct v4l2_hw_freq_seek)
+
+#define VIDIOC_ENUM_DV_PRESETS  _IOWR('V', 83, struct v4l2_dv_enum_preset)
+#define VIDIOC_S_DV_PRESET  _IOWR('V', 84, struct v4l2_dv_preset)
+#define VIDIOC_G_DV_PRESET  _IOWR('V', 85, struct v4l2_dv_preset)
+#define VIDIOC_QUERY_DV_PRESET  _IOR('V',  86, struct v4l2_dv_preset)
 
 #define	VIDIOC_S_DV_TIMINGS	_IOWR('V', 87, struct v4l2_dv_timings)
 #define	VIDIOC_G_DV_TIMINGS	_IOWR('V', 88, struct v4l2_dv_timings)
