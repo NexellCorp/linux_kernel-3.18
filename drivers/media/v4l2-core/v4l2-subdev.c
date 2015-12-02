@@ -416,8 +416,18 @@ static long subdev_do_ioctl(struct file *file, unsigned int cmd, void *arg)
 		return v4l2_subdev_call(sd, pad, set_edid, edid);
 	}
 
-	case VIDIOC_SUBDEV_DV_TIMINGS_CAP: {
-		struct v4l2_dv_timings_cap *cap = arg;
+    case VIDIOC_S_DV_PRESET: {
+        struct v4l2_dv_preset *p = arg;
+        return v4l2_subdev_call(sd, video, s_dv_preset, p); 
+    }   
+
+    case VIDIOC_ENUM_DV_PRESETS: {
+        struct v4l2_dv_enum_preset *p = arg;
+        return v4l2_subdev_call(sd, video, enum_dv_presets, p); 
+    }   
+
+    case VIDIOC_SUBDEV_DV_TIMINGS_CAP: {
+                                           struct v4l2_dv_timings_cap *cap = arg;
 
 		if (cap->pad >= sd->entity.num_pads)
 			return -EINVAL;

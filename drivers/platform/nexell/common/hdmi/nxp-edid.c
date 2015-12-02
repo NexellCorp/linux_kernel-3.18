@@ -157,7 +157,7 @@ static int _edid_read_block(struct nxp_edid *me, int block, u8 *buf, size_t len)
     pr_debug("%s: block %d, segment %d, offset %d\n", __func__, block, segment, offset);
 
     if (len < EDID_BLOCK_SIZE) {
-        printk("%s: invalid len %d\n", __func__, len);
+        printk("%s: invalid len %d\n", __func__, (int)len);
         return -EINVAL;
     }
 
