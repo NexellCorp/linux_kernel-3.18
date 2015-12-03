@@ -363,7 +363,6 @@
 		#endif
 		#endif
 
-		#ifdef CONFIG_SPI_SLSI_PORT0
 		spi_0:spi@5b000 {
 			compatible = "nexell,nxp-spi";
 			reg = <PHYS_BASE_SSP0 0x1000>;
@@ -374,10 +373,13 @@
 			dmas = <&pl08xdma0 6 &pl08xdma0 7>;
 			enable_dma = <1>;
 			reset-id = <RESET_ID_SSP0>;
+			#ifdef CONFIG_SPI_SLSI_PORT0
+			status = "enable"
+			#else
+			status = "disabled";
+			#endif
 		};
-		#endif
 
-		#ifdef CONFIG_SPI_SLSI_PORT1
 		spi_1:spi@5c000 {
 			compatible = "nexell,nxp-spi";
 			reg = <PHYS_BASE_SSP1 0x1000>;
@@ -388,10 +390,13 @@
 			dmas = <&pl08xdma0 8 &pl08xdma0 9>;
 			enable_dma = <1>;
 			reset-id = <RESET_ID_SSP1>;
+			#ifdef CONFIG_SPI_SLSI_PORT1
+			status = "enable"
+			#else
+			status = "disabled";
+			#endif
 		};
-		#endif
 		
-		#ifdef CONFIG_SPI_SLSI_PORT2
 		spi_2:spi@5f000 {
 			compatible = "nexell,nxp-spi";
 			reg = <PHYS_BASE_SSP2 0x1000>;
@@ -402,8 +407,12 @@
 			dmas = <&pl08xdma0 10 &pl08xdma0 11>;
 			enable_dma = <1>;
 			reset-id = <RESET_ID_SSP2>;
+			#ifdef CONFIG_SPI_SLSI_PORT2
+			status = "enable"
+			#else
+			status = "disabled";
+			#endif
 		};
-		#endif
 		
 		adc:adc@53000 {
 			compatible = "nexell,nxp-adc";
