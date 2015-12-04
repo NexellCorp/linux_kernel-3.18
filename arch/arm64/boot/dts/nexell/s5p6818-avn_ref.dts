@@ -74,7 +74,9 @@
 
    		dynamic-freq@bb000 {
    			supply_name  = "vdd_arm";
+   			#if defined(CONFIG_REGULATOR_NXE2000) || defined(CONFIG_REGULATOR_MP8845C) || defined(CONFIG_AXP_REGULATOR)
    			vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
+   			#endif
    		};
 
 		serial@a1000 {
@@ -294,8 +296,24 @@
 			hsic_exthub_gpio = <159>;
 		};
 
-		#ifdef CONFIG_REGULATOR_MP8845C
-		iic0:iic@a4000 {
+		#ifdef CONFIG_MFD_MP8845C
+		iic3:iic@0 {
+			compatible = "i2c-gpio";
+			gpios = <&gpio_e 8 0			/* sda */
+				&gpio_e 9 0				/* scl */
+				>;
+			i2c-gpio,delay-us = <10>;	/* ~100 kHz */
+		};
+
+		iic4:iic@0 {
+			compatible = "i2c-gpio";
+			gpios = <&gpio_e 10 0		/* sda */
+				&gpio_e 11 0				/* scl */
+				>;
+			i2c-gpio,delay-us = <10>;	/* ~100 kHz */
+		};
+
+		iic3:iic@0 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 
@@ -303,9 +321,11 @@
 				compatible = "nx,mp8845c";
 				reg = <0x1c>;
 				nx,id = <0>;
+				#ifdef CONFIG_REGULATOR_MP8845C
 				regulators {
 					VCC1P1_ARM_PMIC: vout1 { PMIC_PDATA_INIT(0, "mp8845c_vout0", 600000, 1500000, 1, 1, 1200000, 1, 0xF) };
 				};
+				#endif
 			};
 		};
 
