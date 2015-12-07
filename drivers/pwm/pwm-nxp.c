@@ -667,4 +667,4 @@ static int __init nxp_pwm_init(void)
 {
 	return platform_driver_register(&nxp_pwm_driver);
 }
-arch_initcall(nxp_pwm_init);
+module_init(nxp_pwm_init);
