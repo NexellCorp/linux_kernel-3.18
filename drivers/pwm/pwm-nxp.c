@@ -44,36 +44,28 @@ static struct pwm_device_hw devs_pwm[] = {
 		.io     = PAD_GPIO_D +  1,
 		.fn_io  = NX_GPIO_PADFUNC_0,
 		.fn_pwm = NX_GPIO_PADFUNC_1,
-#ifdef CFG_PWM0_CLK_SRC
-		.clk_tclk= 1,
-#endif
+		.clk_tclk= 0,
 	},
 	[1] = {
 		.ch	    = 1,
 		.io     = PAD_GPIO_C + 13,
 		.fn_io  = NX_GPIO_PADFUNC_1,
 		.fn_pwm = NX_GPIO_PADFUNC_2,
-#ifdef CFG_PWM1_CLK_SRC
 		.clk_tclk= 1,
-#endif
 	},
 	[2] = {
 		.ch	    = 2,
 		.io     = PAD_GPIO_C + 14,
 		.fn_io  = NX_GPIO_PADFUNC_1,
 		.fn_pwm = NX_GPIO_PADFUNC_2,
-#ifdef CFG_PWM2_CLK_SRC
-		.clk_tclk= 1,
-#endif
+		.clk_tclk= 0,
 	},
 	[3] = {
 		.ch	    = 3,
 		.io     = PAD_GPIO_D +  0,
 		.fn_io  = NX_GPIO_PADFUNC_0,
 		.fn_pwm = NX_GPIO_PADFUNC_2,
-#ifdef CFG_PWM3_CLK_SRC
 		.clk_tclk= 1,
-#endif
 	},
 };
 #define	PWN_CHANNELS	(4)
@@ -280,7 +272,7 @@ unsigned long nxp_soc_pwm_set_frequency(int ch, unsigned int request, unsigned i
 					rate = clk_round_rate(pwm->clk, freq);
 					tcnt = rate/request;
 					if(tcnt == 1){
-						printk("generate lower frequency pwm clock than request clock\n");
+						printk("generate lower frequency pwm clock than request clock using TCLK\n");
 						tcnt = 2;
 					}
 					hz = rate/tcnt;
@@ -303,7 +295,7 @@ unsigned long nxp_soc_pwm_set_frequency(int ch, unsigned int request, unsigned i
 				mout = rate/tscl/(1<<smux);
 				tcnt = mout/request;
 				if(tcnt == 1){
-					printk("generate lower frequency pwm clock than request clock\n");
+					printk("generate lower frequency pwm clock than request clock using PLCK \n");
 					tcnt = 2;
 				}
 				hz = mout/tcnt;
@@ -571,6 +563,8 @@ static int nxp_pwm_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "id %d is out of range\n", id);
 		return -EINVAL;
 	}
+
+	of_property_read_u32(pdev->dev.of_node, "clk_tclk", &devs_pwm[id].clk_tclk);
 
 	pwm = devm_kzalloc(&pdev->dev, sizeof(*pwm), GFP_KERNEL);
 	if (!pwm) {
