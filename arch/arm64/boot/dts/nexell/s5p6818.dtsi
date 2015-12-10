@@ -293,6 +293,7 @@
 				&gpio_d 2 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<0>;
 		};
 		#else
 		iic0:iic@a4000 {
@@ -319,6 +320,7 @@
 				&gpio_d 4 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<1>;
 		};
 		#else
 	  	iic1:iic@a5000 {
@@ -345,6 +347,7 @@
 				&gpio_d 6 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<2>;
 		};
 		#else
 		iic2:iic@a6000 {
