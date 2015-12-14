@@ -13,6 +13,8 @@
  *
  */
 
+//#define __TRACE__
+
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/kernel.h>
@@ -776,6 +778,7 @@ void phy_state_machine(struct work_struct *work)
 
 	if (phydev->drv->link_change_notify)
 		phydev->drv->link_change_notify(phydev);
+	__trace("state: %d\n", phydev->state);
 
 	switch (phydev->state) {
 	case PHY_DOWN:

@@ -725,6 +725,7 @@ static void stmmac_adjust_link(struct net_device *dev)
 	if (phydev == NULL)
 		return;
 
+	__trace("now link: %d\n", phydev->link);
 	spin_lock_irqsave(&priv->lock, flags);
 
 	if (phydev->link) {
@@ -940,7 +941,7 @@ static int stmmac_init_phy(struct net_device *dev)
 	phydev = phy_connect(dev, phy_id_fmt, &stmmac_adjust_link, interface);
 	// [ADD] by freestyle
 	__trace("%s phydev->autoneg: %x\n", __func__, phydev->autoneg);
-	//if (phydev->autoneg == AUTONEG_DISABLE)
+	if (phydev->autoneg == AUTONEG_DISABLE)
 		phy_stop(phydev);
 	// [ADD]
 
@@ -1011,7 +1012,7 @@ static void stmac_display_desc_status(struct stmmac_priv *priv)
 	}
 
 	for (i = 0; rxsize/32 > i; i++)
-		printk("Rx bitmaps [%3d] 0x%08x (%d)\n", i, bitmap[i], sizeof(rxsize/32));
+		printk("Rx bitmaps [%3d] 0x%08x (%zu)\n", i, bitmap[i], sizeof(rxsize/32));
 }
 
 static void stmmac_display_descriptors(struct stmmac_priv *priv)
