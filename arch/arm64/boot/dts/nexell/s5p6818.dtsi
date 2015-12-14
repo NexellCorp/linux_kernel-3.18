@@ -293,6 +293,7 @@
 				&gpio_d 2 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<0>;
 		};
 		#else
 		iic0:iic@a4000 {
@@ -319,6 +320,7 @@
 				&gpio_d 4 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<1>;
 		};
 		#else
 	  	iic1:iic@a5000 {
@@ -345,6 +347,7 @@
 				&gpio_d 6 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<2>;
 		};
 		#else
 		iic2:iic@a6000 {
@@ -373,8 +376,12 @@
 			dmas = <&pl08xdma0 6 &pl08xdma0 7>;
 			enable_dma = <1>;
 			reset-id = <RESET_ID_SSP0>;
+			#ifdef CONFIG_SPI_SLSI_PORT0
+			status = "enable"
+			#else
+			status = "disabled";
+			#endif
 		};
-
 
 		spi_1:spi@5c000 {
 			compatible = "nexell,nxp-spi";
@@ -386,10 +393,13 @@
 			dmas = <&pl08xdma0 8 &pl08xdma0 9>;
 			enable_dma = <1>;
 			reset-id = <RESET_ID_SSP1>;
+			#ifdef CONFIG_SPI_SLSI_PORT1
+			status = "enable"
+			#else
 			status = "disabled";
+			#endif
 		};
-
-
+		
 		spi_2:spi@5f000 {
 			compatible = "nexell,nxp-spi";
 			reg = <PHYS_BASE_SSP2 0x1000>;
@@ -400,9 +410,13 @@
 			dmas = <&pl08xdma0 10 &pl08xdma0 11>;
 			enable_dma = <1>;
 			reset-id = <RESET_ID_SSP2>;
+			#ifdef CONFIG_SPI_SLSI_PORT2
+			status = "enable"
+			#else
 			status = "disabled";
+			#endif
 		};
-
+		
 		adc:adc@53000 {
 			compatible = "nexell,nxp-adc";
 			reg = <PHYS_BASE_ADC 0x1000>;
@@ -527,6 +541,7 @@
 			reset-id = <RESET_ID_PWM>;
 			clock-names = "pwm0";
 			clocks =  <&pwm0>;
+			clk_tclk = <0>;
 			status = "okay";
 		};
 
@@ -537,6 +552,7 @@
 			reset-id = <RESET_ID_PWM>;
 			clock-names = "pwm1";
 			clocks =  <&pwm1>;
+			clk_tclk = <1>;
 			status = "disabled";
 		};
 		pwm_device2:pwmdev2@18000 {
@@ -546,6 +562,7 @@
 			reset-id = <RESET_ID_PWM>;
 			clock-names = "pwm2";
 			clocks =  <&pwm2>;
+			clk_tclk = <0>;
 			status = "disabled";
 		};
 		pwm_device3:pwmdev3@18000 {
@@ -555,6 +572,7 @@
 			reset-id = <RESET_ID_PWM>;
 			clock-names = "pwm3";
 			clocks =  <&pwm3>;
+			clk_tclk = <1>;
 			status = "disabled";
 		};
 

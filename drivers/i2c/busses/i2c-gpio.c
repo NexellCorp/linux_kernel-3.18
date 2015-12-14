@@ -123,7 +123,16 @@ static void of_i2c_gpio_get_props(struct device_node *np,
 	pdata->scl_is_output_only =
 		of_property_read_bool(np, "i2c-gpio,scl-output-only");
 }
+static int of_get_ch(struct device_node *np)
+{
+	int reg;
 
+	of_property_read_u32(np,"i2c-gpio,ch",&reg);
+
+	if(0 > reg)
+		return -1;
+	return reg;
+}
 static int i2c_gpio_probe(struct platform_device *pdev)
 {
 	struct i2c_gpio_private_data *priv;
@@ -220,7 +229,15 @@ static int i2c_gpio_probe(struct platform_device *pdev)
 	adap->dev.parent = &pdev->dev;
 	adap->dev.of_node = pdev->dev.of_node;
 
-	adap->nr = pdev->id;
+	if (pdev->dev.of_node){
+		adap->nr = of_get_ch(pdev->dev.of_node );
+		if(0 > adap->nr) {
+			printk("Get i2c ch number error. check i2c-gpio channel info\n");
+			return -1;
+		}
+	} else {
+		adap->nr = pdev->id;
+	}
 	ret = i2c_bit_add_numbered_bus(adap);
 	if (ret)
 		return ret;

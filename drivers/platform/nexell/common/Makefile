@@ -4,4 +4,5 @@
 #
 
 obj-$(CONFIG_DEVTMPFS) += mount_devtmpfs.o
+obj-$(CONFIG_ION) 	   += ion_mem.o
 

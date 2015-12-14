@@ -334,10 +334,18 @@ struct v4l2_subdev_video_ops {
 				struct v4l2_subdev_frame_interval *interval);
 	int (*enum_framesizes)(struct v4l2_subdev *sd, struct v4l2_frmsizeenum *fsize);
 	int (*enum_frameintervals)(struct v4l2_subdev *sd, struct v4l2_frmivalenum *fival);
-	int (*s_dv_timings)(struct v4l2_subdev *sd,
-			struct v4l2_dv_timings *timings);
-	int (*g_dv_timings)(struct v4l2_subdev *sd,
-			struct v4l2_dv_timings *timings);
+    int (*enum_dv_presets) (struct v4l2_subdev *sd,
+            struct v4l2_dv_enum_preset *preset);
+    int (*s_dv_preset)(struct v4l2_subdev *sd,
+            struct v4l2_dv_preset *preset);
+    int (*g_dv_preset)(struct v4l2_subdev *sd,
+            struct v4l2_dv_preset *preset);
+    int (*query_dv_preset)(struct v4l2_subdev *sd,
+            struct v4l2_dv_preset *preset);
+    int (*s_dv_timings)(struct v4l2_subdev *sd,
+            struct v4l2_dv_timings *timings);
+    int (*g_dv_timings)(struct v4l2_subdev *sd,
+            struct v4l2_dv_timings *timings);
 	int (*query_dv_timings)(struct v4l2_subdev *sd,
 			struct v4l2_dv_timings *timings);
 	int (*enum_mbus_fmt)(struct v4l2_subdev *sd, unsigned int index,

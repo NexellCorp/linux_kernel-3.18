@@ -127,7 +127,7 @@
 			clk_dly = <0x01020000>;
 		};
 		#endif
-		
+		#ifdef CONFIG_SPI_SLSI_PORT0
 		spi@5b000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -140,11 +140,14 @@
 				reg = <0>;
 				spi-max-frequency = < 50000000 >;
 				controller-data {
-				  spi-cs-gpio = <(PAD_GPIO_C + 30)>;
+					spi-cs-gpio = <(PAD_GPIO_C + 30)>;
 					spi-feedback-delay = <02>;
 				};
 			};
 		};
+		#endif
+		
+		#ifdef CONFIG_SPI_SLSI_PORT1
 		spi@5c000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -156,11 +159,14 @@
 				reg = <0>;
 				spi-max-frequency = < 50000000 >;
 				controller-data {
-				  spi-cs-gpio = <(PAD_GPIO_E + 15)>;
+					spi-cs-gpio = <(PAD_GPIO_E + 15)>;
 					spi-feedback-delay = <02>;
 				};
 			};
 		};
+		#endif
+		
+		#ifdef CONFIG_SPI_SLSI_PORT2
 		spi@5f000 {
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -172,14 +178,15 @@
 				reg = <0>;
 				spi-max-frequency = < 50000000 >;
 				controller-data {
-			  	spi-cs-gpio = <(PAD_GPIO_C + 10)>;
+			  		spi-cs-gpio = <(PAD_GPIO_C + 10)>;
 					spi-feedback-delay = <02>;
 					hierarchy = <1>; //0 : master, 1 : slave
 				};
 			};
 
 		};
-
+		#endif
+		
 		adc:adc@53000 {
 			resets = <&nxp_reset RESET_ID_ADC>;
 			reset-names = "reset";

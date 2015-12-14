@@ -365,9 +365,6 @@ out:
 	return ret;
 }
 
-extern void (*pm_power_off)(void);
-static void (*backup_pm_power_off)(void);
-
 #if (NXE2000_PM_RESTART == 1)
 extern void (*arm_pm_restart)(char str, const char *cmd);
 static void (*backup_pm_restart)(char str, const char *cmd);
@@ -432,10 +429,6 @@ void nxe2000_power_off(void)
 	if (ret < 0)
 		ret = nxe2000_write(&nxe2000_i2c_client->dev, NXE2000_REG_SLPCNT, 0x1);
 
-	if (backup_pm_power_off)
-		backup_pm_power_off();
-
-	halt();
 }
 
 #if (NXE2000_PM_RESTART == 1)
@@ -925,8 +918,12 @@ static int nxe2000_i2c_probe(struct i2c_client *client,
 
 	nxe2000_i2c_client = client;
 
-	backup_pm_power_off = pm_power_off;
+#if 1
+	//backup_pm_power_off = pm_power_off;
 	pm_power_off = nxe2000_power_off;
+#else
+	nxp_board_shutdown = nxe2000_power_off;
+#endif
 
 #if (NXE2000_PM_RESTART == 1)
 	backup_pm_restart = arm_pm_restart;

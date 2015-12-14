@@ -32,6 +32,14 @@ config MFD_MP8845C
 	  additional drivers must be enabled in order to use the
 	  functionality of the device.
 
+config MFD_AXP228
+	bool "X-Powers AXP228"
+	depends on I2C=y
+	select MFD_CORE
+	help
+		If you say Y here you get support for the X-Powers AXP228
+		This driver include only the core APIs.
+
 config MFD_CS5535
 	tristate "AMD CS5535 and CS5536 southbridge core functions"
 	select MFD_CORE

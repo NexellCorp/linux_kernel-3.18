@@ -60,7 +60,9 @@
 
    		dynamic-freq@bb000 {
    			supply_name  = "vdd_arm";
+   			#if defined(CONFIG_REGULATOR_NXE2000) || defined(CONFIG_REGULATOR_MP8845C) || defined(CONFIG_AXP_REGULATOR)
    			vdd_arm-supply	= <&VCC1P1_ARM_PMIC>;
+   			#endif
    		};
 
 		serial@a1000 {
@@ -276,8 +278,24 @@
 			hsic_exthub_gpio = <159>;
 		};
 
-		#ifdef CONFIG_REGULATOR_MP8845C
-		iic0:iic@a4000 {
+		#ifdef CONFIG_MFD_MP8845C
+		iic3:iic@0 {
+			compatible = "i2c-gpio";
+			gpios = <&gpio_e 8 0			/* sda */
+				&gpio_e 9 0				/* scl */
+				>;
+			i2c-gpio,delay-us = <10>;	/* ~100 kHz */
+		};
+
+		iic4:iic@0 {
+			compatible = "i2c-gpio";
+			gpios = <&gpio_e 10 0		/* sda */
+				&gpio_e 11 0				/* scl */
+				>;
+			i2c-gpio,delay-us = <10>;	/* ~100 kHz */
+		};
+
+		iic3:iic@0 {
 			#address-cells = <1>;
 			#size-cells = <0>;
 
@@ -285,62 +303,30 @@
 				compatible = "nx,mp8845c";
 				reg = <0x1c>;
 				nx,id = <0>;
+				#ifdef CONFIG_REGULATOR_MP8845C
 				regulators {
 					VCC1P1_ARM_PMIC: vout1 { PMIC_PDATA_INIT(0, "mp8845c_vout0", 600000, 1500000, 1, 1, 1200000, 1, 0xF) };
 				};
+				#endif
 			};
 		};
 
-		iic2:iic@a6000 {
+		iic4:iic@0 {
 			#address-cells = <1>;
 			#size-cells = <0>;
-
 			mp8845c@1c {
 				compatible = "nx,mp8845c";
 				reg = <0x1c>;
 				nx,id = <1>;
+				#ifdef CONFIG_REGULATOR_MP8845C
 				regulators {
 					VCC1P0_CORE_PMIC: vout2 { PMIC_PDATA_INIT(1, "mp8845c_vout1", 600000, 1500000, 1, 1, 1100000, 1, 0xF) };
 				};
+				#endif
 			};
 		};
-		#endif // CONFIG_REGULATOR_MP8845C
+		#endif // CONFIG_MFD_MP8845C
 
-		#ifdef CONFIG_REGULATOR_NXE2000
-		iic0:iic@a4000 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			nxe2000@32 {
-				compatible = "nx,nxe2000";
-				reg = <0x32>;
-				nx,id = <0>;
-				vdd_arm-supply		= <&VCC1P1_ARM_PMIC>;
-				vdd_core-supply		= <&VCC1P0_CORE_PMIC>;
-				regulators {
-					#ifndef CONFIG_REGULATOR_MP8845C
-					VCC1P1_ARM_PMIC:	dcdc1	{ PMIC_PDATA_INIT( 0, "nxe2000_dcdc1",	 900000, 1500000, 1, 1, 1200000, 1, 0x4) };
-					VCC1P0_CORE_PMIC:	dcdc2	{ PMIC_PDATA_INIT( 1, "nxe2000_dcdc2",	1000000, 1500000, 1, 1, 1100000, 1, 0x4) };
-					#endif
-					VCC3P3_PMIC: 		dcdc3	{ PMIC_PDATA_INIT( 2, "nxe2000_dcdc3",	1000000, 3500000, 1, 1, 3300000, 1, 0x0) };
-					VCC1P5_DDR_PMIC:	dcdc4	{ PMIC_PDATA_INIT( 3, "nxe2000_dcdc4",	1000000, 2000000, 1, 1, 1500000, 1, 0xF) };
-					VCC1P5_CORE_PMIC:	dcdc5	{ PMIC_PDATA_INIT( 4, "nxe2000_dcdc5",	1000000, 2000000, 1, 1, 1500000, 1, 0x4) };
-					VCC_LDO1:			ldo1	{ PMIC_PDATA_INIT( 5, "nxe2000_ldo1",	1000000, 3500000, 0, 0, 3300000, 0, 0x0) };
-					VCC_LDO2:			ldo2	{ PMIC_PDATA_INIT( 6, "nxe2000_ldo2",	1000000, 3500000, 0, 0, 1800000, 0, 0x0) };
-					VCC1P8_CORE_PMIC:	ldo3	{ PMIC_PDATA_INIT( 7, "nxe2000_ldo3",	1000000, 3500000, 1, 1, 1800000, 1, 0x2) };
-					VCC1P8_DEVICE_PMIC:	ldo4	{ PMIC_PDATA_INIT( 8, "nxe2000_ldo4",	1000000, 3500000, 1, 1, 1800000, 1, 0x2) };
-					VCC_LDO5:			ldo5	{ PMIC_PDATA_INIT( 9, "nxe2000_ldo5",	1000000, 3500000, 0, 0, 2800000, 0, 0x0) };
-					VCC3P3_ALV:			ldo6	{ PMIC_PDATA_INIT(10, "nxe2000_ldo6",	1000000, 3500000, 1, 1, 3300000, 1, 0xF) };
-					VCC2P8_PMIC:		ldo7	{ PMIC_PDATA_INIT(11, "nxe2000_ldo7",	1000000, 3500000, 1, 1, 2800000, 1, 0x1) };
-					VCC_LDO8:			ldo8	{ PMIC_PDATA_INIT(12, "nxe2000_ldo8",	1000000, 3500000, 0, 0, 3300000, 0, 0x0) };
-					VCC_LDO9:			ldo9	{ PMIC_PDATA_INIT(13, "nxe2000_ldo9",	1000000, 3500000, 0, 0, 3300000, 0, 0x0) };
-					VCC1P2_PMIC:		ldo10	{ PMIC_PDATA_INIT(14, "nxe2000_ldo10",	1000000, 3500000, 1, 1, 1200000, 1, 0x0) };
-					VCC1P0_ALV:			ldortc1	{ PMIC_PDATA_INIT(15, "nxe2000_rtc1",	1700000, 3500000, 1, 1, 1800000, 1, 0xF) };
-					VCC1P8_ALV:			ldortc2	{ PMIC_PDATA_INIT(16, "nxe2000_rtc2",	1000000, 3500000, 1, 1, 1000000, 1, 0xF) };
-				};
-			};
-		};
-		#endif // CONFIG_REGULATOR_NXE2000
 
 		tmu-hwmon@96000 {
 			polling-delay = <100>;
