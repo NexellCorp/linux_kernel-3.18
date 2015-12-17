@@ -58,6 +58,7 @@
 #include <nexell/platform.h>
 #include <nexell/soc-s5pxx18.h>
 
+#include <linux/reset.h>
 #if 0
 #define dbg(x...)		printk(x)
 #define dev_info(fmg,msg...) printk(msg)
@@ -1889,13 +1890,14 @@ static void s3c24xx_serial_drv_init(void *data, int port)
 {
 	struct s3c24xx_uart_drv_data *drv_data = data;
 
-	if (nxp_soc_peri_reset_status(drv_data->reset_id))
+	if (reset_control_status(drv_data->rst))
 		return;
 
 	NX_TIEOFF_Set(drv_data->tieoff_user_smc, 0);
 	NX_TIEOFF_Set(drv_data->tieoff_smc_txenb, 0);
 	NX_TIEOFF_Set(drv_data->tieoff_smc_rxenb, 0);
-	nxp_soc_peri_reset_set(drv_data->reset_id);
+
+	reset_control_reset(drv_data->rst);
 }
 
 static u64 uart_dmamask = DMA_BIT_MASK(32);
@@ -1906,7 +1908,7 @@ static struct s3c24xx_serial_drv_data *s3c24xx_get_driver_data(struct platform_d
 	struct s3c24xx_uart_drv_data *ud;
 	const struct of_device_id *match;
 	unsigned int tieoff[3];
-	int reset, ret, dma;
+	int ret, dma;
 
 	if (!pdev->dev.of_node)
 		return EXYNOS4210_SERIAL_DRV_DATA;
@@ -1936,9 +1938,6 @@ static struct s3c24xx_serial_drv_data *s3c24xx_get_driver_data(struct platform_d
 		ud->tieoff_smc_txenb = tieoff[1];
 		ud->tieoff_smc_rxenb = tieoff[2];
 	}
-
-	if (!of_property_read_u32(pdev->dev.of_node, "reset-id", &reset))
-		ud->reset_id = reset;
 
 	if (!of_property_read_u32(pdev->dev.of_node, "dma-enable", &dma)) {
 		ud->enable_dma = dma;
@@ -2005,7 +2004,12 @@ static int s3c24xx_serial_probe(struct platform_device *pdev)
 						uport->drv_data->fifosize[port_index];
 	if (uport->data->enable_dma)
 		s3c24xx_dma_probe(uport);
-
+	
+	udata->rst = devm_reset_control_get(&pdev->dev,"uart-reset");
+	if(NULL == udata->rst) {
+		dev_err(&pdev->dev, "could not find uart reset channel!\n");
+		return -ENODEV;
+	}
 #if defined (CONFIG_PM) && defined (CONFIG_SERIAL_NXP_RESUME_WORK)
 	INIT_DELAYED_WORK(&uport->resume_work, s3c24xx_resume_work);
  	wake_lock_init(&uport->resume_lock, WAKE_LOCK_SUSPEND,

@@ -73,6 +73,9 @@ struct s3c64xx_spi_info {
 	int rx_lvl_offset;
 	int high_speed;
 	int tx_st_done;
+
+	struct reset_control *p_rst;
+	struct reset_control *rst;
 };
 
 /**

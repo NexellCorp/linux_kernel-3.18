@@ -67,7 +67,7 @@
 		dw_mmc@62000 {
 			status = "okay";
 			bus_speed = <100>;
-			cd_gpio = <(PAD_GPIO_C + 6)>;
+			cd_gpio = <(PAD_GPIO_ALV + 1)>;
 			clk_dly = <0x01020000>;
 		};
 		#endif
@@ -97,7 +97,6 @@
 			#size-cells = <0>;
 			num_cs = <1>;
 			clk_nr = <0>;
-
 
 			spidev@0 {
 				compatible = "spidev";

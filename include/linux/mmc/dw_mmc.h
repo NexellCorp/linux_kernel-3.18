@@ -347,7 +347,8 @@ struct dw_mci_board {
 	u32		hs_over_clk;
 	u32		hw_timeout;	/* add by jhkim */
 	u32		mode;	/* add by bok	*/
-	u32		reset_id;
+	struct reset_control *rst; /* add by bok for reset control*/
+
 };
 #define DMA_MODE	1
 #define PIO_MODE	2

@@ -36,6 +36,8 @@
 #include <linux/regulator/consumer.h>
 #include <linux/workqueue.h>
 #include <linux/of.h>
+#include <linux/reset.h>
+#include <linux/gpio.h>
 #include "dw_mmc.h"
 #include "dw_mmc_dbg.h"
 
@@ -2524,20 +2526,19 @@ static bool mci_wait_reset(struct device *dev, struct dw_mci *host)
 
 	return false;
 }
-//static u64 dwmci_dmamask = DMA_BIT_MASK(32);
-
+/* Card detect gpio read func. */
 static int get_id_cd[3] = { 0, };
 static int _dwmci_get_cd0(u32 slot_id)
 {
-	return nxp_soc_gpio_get_in_value(get_id_cd[0]);
+	return gpio_get_value(get_id_cd[0]);
 }
 static int _dwmci_get_cd1(u32 slot_id)
 {
-	return nxp_soc_gpio_get_in_value(get_id_cd[1]);
+	return gpio_get_value(get_id_cd[1]);
 }
 static int _dwmci_get_cd2(u32 slot_id)
 {
-	return  nxp_soc_gpio_get_in_value(get_id_cd[2]);
+	return gpio_get_value(get_id_cd[2]);
 }
 static int __dwmci_init(u32 slot_id, irq_handler_t handler, void *data)
 {
@@ -2550,7 +2551,7 @@ static int __dwmci_init(u32 slot_id, irq_handler_t handler, void *data)
 	int io  = 0;
 	int irq = 0 ; 
 	int id  = 0, ret = 0;
-	
+
 	host->hclk = clk_get(host->dev,NULL);
 	clk_set_rate(host->hclk, pdata->bus_hz);
 	clk_prepare_enable(host->hclk);
@@ -2610,7 +2611,8 @@ static int __dwmci_initialize(int ch, ulong rate)
 	int reset = RESET_ID_SDMMC0 + ch;
 	char s[20];
 
-	nxp_soc_peri_reset_set(reset);
+	//nxp_soc_peri_reset_set(reset);
+	reset_control_reset(host->pdata->rst);
 
 	sprintf(s, "%s.%d", "sdhc", ch);
 	clk = clk_get(NULL, s);
@@ -2700,10 +2702,6 @@ static struct dw_mci_board *dw_mci_parse_dt(struct dw_mci *host)
 			pdata->caps |= MMC_CAP_8_BIT_DATA;
 	}
 
-	if(!(of_property_read_u32(np,"reset-id",&tmp))){
-		pdata->reset_id = tmp;
-	}
-
 	if(of_find_property(np,"non-removable",NULL)){
 		pdata->caps |= MMC_CAP_NONREMOVABLE;
 	}
@@ -2711,6 +2709,11 @@ static struct dw_mci_board *dw_mci_parse_dt(struct dw_mci *host)
 		pdata->caps |=  MMC_CAP_UHS_DDR50 | MMC_CAP_1_8V_DDR |  MMC_CAP_HW_RESET ;
 	}
 	pdata->caps2 = MMC_CAP2_NO_PRESCAN_POWERUP;
+
+	pdata->rst = devm_reset_control_get(dev,"dw_mmc-reset");
+	printk("\e[31m  %p \e[0m\n",pdata->rst);
+
+	reset_control_reset(pdata->rst);
 	return pdata;
 }
 
@@ -2998,7 +3001,7 @@ int dw_mci_resume(struct dw_mci *host)
 	int i;
 #endif
 
-	nxp_soc_peri_reset_set(host->pdata->reset_id);
+	reset_control_reset(host->pdata->rst);
 	if (host->pdata->resume)
 		host->pdata->resume(host);
 
