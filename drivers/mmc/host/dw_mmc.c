@@ -2711,8 +2711,6 @@ static struct dw_mci_board *dw_mci_parse_dt(struct dw_mci *host)
 	pdata->caps2 = MMC_CAP2_NO_PRESCAN_POWERUP;
 
 	pdata->rst = devm_reset_control_get(dev,"dw_mmc-reset");
-	printk("\e[31m  %p \e[0m\n",pdata->rst);
-
 	reset_control_reset(pdata->rst);
 	return pdata;
 }
