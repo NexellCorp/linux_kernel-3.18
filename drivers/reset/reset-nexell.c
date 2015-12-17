@@ -74,7 +74,7 @@ static int nexell_reset_reset(struct reset_controller_dev *rcdev,
 
 	NX_RSTCON_SetBaseAddress(data->base);
 
-	#if 1
+	#if 0
 	if (NX_RSTCON_GetRST(RSTIndex) == 1)		/* pass through if reset already deasserted */
 	{
 		pr_debug("reset already deasserted\n");
@@ -157,11 +157,45 @@ static int nexell_reset_deassert(struct reset_controller_dev *rcdev,
 	return 0;
 }
 
+static int nexell_reset_status(struct reset_controller_dev *rcdev,
+			      unsigned long id)
+{
+	struct nexell_reset_data *data = container_of(rcdev,
+						     struct nexell_reset_data,
+						     rcdev);
+	unsigned long flags;
+	U32 RSTIndex = id;
+	int power;
+
+	pr_debug("%s: id=%ld [0x%p]\n", __func__, id, data->base);
+	nx_assert(RESET_ID_END >= RSTIndex);
+
+	if (RESET_ID_CPU1   == RSTIndex ||
+		RESET_ID_CPU2   == RSTIndex ||
+		RESET_ID_CPU3   == RSTIndex ||
+		RESET_ID_DREX   == RSTIndex ||
+		RESET_ID_DREX_A == RSTIndex ||
+		RESET_ID_DREX_C == RSTIndex) {
+		printk("Invalid reset id %d ...\n", RSTIndex);
+		return -EINVAL;
+	}
+
+	spin_lock_irqsave(&data->lock, flags);
+
+	NX_RSTCON_SetBaseAddress(data->base);
+	power = NX_RSTCON_GetRST(RSTIndex) ? 1 : 0;
+
+	spin_unlock_irqrestore(&data->lock, flags);
+
+	return power;
+}
+
 
 static struct reset_control_ops nexell_reset_ops = {
 	.reset		= nexell_reset_reset,
 	.assert		= nexell_reset_assert,
 	.deassert	= nexell_reset_deassert,
+	.status		= nexell_reset_status,
 };
 
 

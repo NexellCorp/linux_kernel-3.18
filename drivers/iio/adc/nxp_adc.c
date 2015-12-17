@@ -386,7 +386,9 @@ static int nxp_adc_setup(struct nxp_adc_info *adc, struct platform_device *pdev)
     pr_debug(" [Interrup Enable Bit    ] : %8s  			  \r\n", NX_ADC_GetInterruptEnable( 0, 0 ) ? "ENABLE" : "DISABLE" );
 
 #else
+	pr_debug("adc before reset status: %d\n", reset_control_status(adc->rst));
 	ADC_HW_RESET();
+	pr_debug("adc after reset status: %d\n", reset_control_status(adc->rst));
 
 	setup_adc_con(adc);
 #endif
