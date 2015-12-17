@@ -179,12 +179,6 @@
 			status = "okay";
 		};
 
-		iic0:iic@a4000 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-		};
-
 		spdiftx@59000 {
 			status = "okay";
 		};
@@ -286,6 +280,7 @@
 				&gpio_d 20 0				/* scl */
 				>;
 			i2c-gpio,delay-us = <10>;	/* ~100 kHz */
+			i2c-gpio,ch =<3>;
 		};
 
 		#ifdef CONFIG_MFD_AXP228
