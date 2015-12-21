@@ -8,6 +8,7 @@
 #include <linux/init.h>
 #include <linux/miscdevice.h>
 #include <linux/sched.h>
+#include <linux/compat.h>
 
 #include <asm/uaccess.h>
 
@@ -215,7 +216,6 @@ static int _handle_set_and_run(unsigned long arg)
     frame_data_info frame_info;
     nxp_deinterlace *me = _deinterlace;
 
-
     if (copy_from_user(&frame_info, (frame_data_info *)arg, sizeof(frame_data_info))) {
         printk(KERN_ERR "%s: failed to copy_from_user\n", __func__);
         _set_status(me, PROCESSING_STOP);
@@ -252,6 +252,149 @@ static long deinterlace_ioctl(struct file *file, unsigned int cmd, unsigned long
 
     return ret;
 }
+
+#ifdef CONFIG_COMPAT
+struct compat_frame_data {
+    compat_int_t frame_num;
+    compat_int_t plane_num;
+    compat_int_t frame_type;
+    compat_int_t frame_factor;
+
+    union {
+        struct {
+            compat_uptr_t virt[MAX_BUFFER_PLANES];
+            compat_ulong_t sizes[MAX_BUFFER_PLANES];
+            compat_ulong_t src_stride[MAX_BUFFER_PLANES];
+            compat_ulong_t dst_stride[MAX_BUFFER_PLANES];
+
+            compat_int_t fds[MAX_BUFFER_PLANES];
+            compat_ulong_t phys[MAX_BUFFER_PLANES];
+        } plane3;
+    };
+};
+
+struct compat_frame_data_info {
+    compat_int_t command;
+    compat_int_t width;
+    compat_int_t height;
+    compat_int_t plane_mode;
+
+    struct compat_frame_data dst_bufs[DST_BUFFER_COUNT];
+    struct compat_frame_data src_bufs[SRC_BUFFER_COUNT];
+};
+
+static int compat_get_frame_data(struct compat_frame_data *data32, frame_data *data)
+{
+    compat_int_t i32;
+    /* compat_uptr_t uptr; */
+    compat_ulong_t ul;
+    int err;
+    int i;
+
+    err  = get_user(i32, &data32->frame_num);
+    err |= put_user(i32, &data->frame_num);
+    err |= get_user(i32, &data32->plane_num);
+    err |= put_user(i32, &data->plane_num);
+    err |= get_user(i32, &data32->frame_type);
+    err |= put_user(i32, &data->frame_type);
+    err |= get_user(i32, &data32->frame_factor);
+    err |= put_user(i32, &data->frame_factor);
+
+#if 0
+    // TODO : not use virt
+    for (i = 0; i < MAX_BUFFER_PLANES; i++) {
+        err |= get_user(uptr, &data32->plane3.virt[i]);
+        err |= put_user(uptr, &data->plane3.virt[i]);
+    }
+#endif
+
+    for (i = 0; i < MAX_BUFFER_PLANES; i++) {
+        err |= get_user(ul, &data32->plane3.sizes[i]);
+        err |= put_user(ul, &data->plane3.sizes[i]);
+    }
+
+    for (i = 0; i < MAX_BUFFER_PLANES; i++) {
+        err |= get_user(ul, &data32->plane3.src_stride[i]);
+        err |= put_user(ul, &data->plane3.src_stride[i]);
+    }
+
+    for (i = 0; i < MAX_BUFFER_PLANES; i++) {
+        err |= get_user(ul, &data32->plane3.dst_stride[i]);
+        err |= put_user(ul, &data->plane3.dst_stride[i]);
+    }
+
+#if 0
+    // TODO : not use fds
+    for (i = 0; i < MAX_BUFFER_PLANES; i++) {
+        err |= get_user(i32, &data32->plane3.fds[i]);
+        err |= put_user(i32, &data->plane3.fds[i]);
+    }
+#endif
+
+    for (i = 0; i < MAX_BUFFER_PLANES; i++) {
+        err |= get_user(ul, &data32->plane3.phys[i]);
+        err |= put_user(ul, &data->plane3.phys[i]);
+    }
+
+    return err;
+}
+
+static int compat_get_frame_data_info(struct compat_frame_data_info *data32, frame_data_info *data)
+{
+    compat_int_t i32;
+    int i;
+    int err;
+
+    err  = get_user(i32, &data32->command);
+    err |= put_user(i32, &data->command);
+    err |= get_user(i32, &data32->width);
+    err |= put_user(i32, &data->width);
+    err |= get_user(i32, &data32->height);
+    err |= put_user(i32, &data->height);
+    err |= get_user(i32, &data32->plane_mode);
+    err |= put_user(i32, &data->plane_mode);
+
+    for (i = 0; i < DST_BUFFER_COUNT; i++) {
+        err |= compat_get_frame_data(&data32->dst_bufs[i], &data->dst_bufs[i]);
+    }
+
+    for (i = 0; i < SRC_BUFFER_COUNT; i++) {
+        err |= compat_get_frame_data(&data32->src_bufs[i], &data->src_bufs[i]);
+    }
+
+    return err;
+}
+
+static long deinterlace_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+    switch (cmd) {
+    case IOCTL_DEINTERLACE_SET_AND_RUN:
+    {
+        struct compat_frame_data_info __user *data32;
+        frame_data_info __user *data;
+        int err;
+
+        data32 = compat_ptr(arg);
+        data = compat_alloc_user_space(sizeof(*data));
+        if (!data) {
+            printk(KERN_ERR "%s: failed to compat_alloc_user_space for frame_data\n", __func__);
+            return -EFAULT;
+        }
+
+        err = compat_get_frame_data_info(data32, data);
+        if (err) {
+            printk(KERN_ERR "%s: failed to compat_get_frame_data\n", __func__);
+            return err;
+        }
+
+        return filp->f_op->unlocked_ioctl(filp, IOCTL_DEINTERLACE_SET_AND_RUN, (unsigned long)data);
+    }
+
+    default:
+        return -EINVAL;
+    }
+}
+#endif
 
 static int deinterlace_open(struct inode *inode, struct file *file)
 {
@@ -301,7 +444,10 @@ static struct file_operations deinterlace_fops =
 {
     .open			=	deinterlace_open,
     .release    	=	deinterlace_close,
-    .unlocked_ioctl	=	deinterlace_ioctl
+    .unlocked_ioctl	=	deinterlace_ioctl,
+#ifdef CONFIG_COMPAT
+    .compat_ioctl   =   deinterlace_compat_ioctl,
+#endif
 };
 
 static struct miscdevice nxp_deinterlace_misc_device =

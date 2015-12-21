@@ -1188,7 +1188,12 @@ void vb2_buffer_done(struct vb2_buffer *vb, enum vb2_buffer_state state)
 	unsigned long flags;
 	unsigned int plane;
 
+    // patch for SLSIAP : no warn!
+#ifdef CONFIG_V4L2_NXP
+	if (vb->state != VB2_BUF_STATE_ACTIVE)
+#else
 	if (WARN_ON(vb->state != VB2_BUF_STATE_ACTIVE))
+#endif
 		return;
 
 	if (WARN_ON(state != VB2_BUF_STATE_DONE &&
@@ -1593,11 +1598,16 @@ static int __buf_prepare(struct vb2_buffer *vb, const struct v4l2_buffer *b)
 	struct vb2_queue *q = vb->vb2_queue;
 	int ret;
 
+    // psw0523 patch for SLSIAP
+#ifndef CONFIG_V4L2_NXP
 	ret = __verify_length(vb, b);
 	if (ret < 0) {
 		dprintk(1, "plane parameters verification failed: %d\n", ret);
 		return ret;
 	}
+#else
+    ret = 0;
+#endif
 	if (b->field == V4L2_FIELD_ALTERNATE && V4L2_TYPE_IS_OUTPUT(q->type)) {
 		/*
 		 * If the format's field is ALTERNATE, then the buffer's field
@@ -2157,13 +2167,18 @@ static void __vb2_queue_cancel(struct vb2_queue *q)
 	 * videobuf2-core.h for more information how buffers should be returned
 	 * to vb2 in stop_streaming().
 	 */
+    // HACK : SLSIAP patch for disable warnings
+#ifndef CONFIG_V4L2_NXP
 	if (WARN_ON(atomic_read(&q->owned_by_drv_count))) {
+#endif
 		for (i = 0; i < q->num_buffers; ++i)
 			if (q->bufs[i]->state == VB2_BUF_STATE_ACTIVE)
 				vb2_buffer_done(q->bufs[i], VB2_BUF_STATE_ERROR);
+#ifndef CONFIG_V4L2_NXP
 		/* Must be zero now */
 		WARN_ON(atomic_read(&q->owned_by_drv_count));
 	}
+#endif
 
 	q->streaming = 0;
 	q->start_streaming_called = 0;

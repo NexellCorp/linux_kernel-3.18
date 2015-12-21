@@ -6,6 +6,8 @@
 #include <linux/interrupt.h>
 #include <linux/v4l2-mediabus.h>
 
+#include <linux/compat.h>
+
 #include <media/media-entity.h>
 #include <media/v4l2-dev.h>
 #include <media/v4l2-device.h>
@@ -250,9 +252,17 @@ static int _hw_set_format(struct nxp_scaler *me)
 }
 
 #ifndef SIMULATION_SCALER
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+static inline void _make_cmd(u32 *c)
+#else
 static inline void _make_cmd(unsigned int *c)
+#endif
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+    u32 command = 0;
+#else
     unsigned int command = 0;
+#endif
     /* copy size */
     command |= (11-1) << 0; // word
     /* start source address register : SCSRCADDRREG */
@@ -261,174 +271,19 @@ static inline void _make_cmd(unsigned int *c)
     vmsg("%s: command: 0x%x\n", __func__, command);
 }
 
-#if 0
-static int _make_command_buffer(struct nxp_scaler *me)
-{
-    unsigned int *cmd_buffer;
-    unsigned int src_width, src_height, src_code, dst_width, dst_height, dst_code;
-    unsigned int cb_src_width, cb_src_height, cb_dst_width, cb_dst_height;
-
-    if (!me->command_buffer_vir) {
-        me->command_buffer_vir = dma_alloc_coherent(NULL, COMMAND_BUFFER_SIZE, &me->command_buffer_phy, GFP_KERNEL);
-        if (!me->command_buffer_vir) {
-            pr_err("%s: failed to allocate command buffer!!!\n", __func__);
-            return -ENOMEM;
-        }
-    }
-
-    src_width = me->format[NXP_SCALER_PAD_SINK].width;
-    src_height = me->format[NXP_SCALER_PAD_SINK].height;
-    src_code = me->format[NXP_SCALER_PAD_SINK].code;
-    dst_width = me->format[NXP_SCALER_PAD_SOURCE].width;
-    dst_height = me->format[NXP_SCALER_PAD_SOURCE].height;
-    dst_code = me->format[NXP_SCALER_PAD_SOURCE].code;
-
-    cmd_buffer = me->command_buffer_vir;
-
-    /* Y command buffer */
-    /* header */
-    _make_cmd(cmd_buffer); cmd_buffer++;
-
-    /* Source Address Register */
-    *cmd_buffer = me->cur_src_buf->dma_addr[0]; cmd_buffer++;
-    /* Source Stride Register */
-    *cmd_buffer = me->cur_src_buf->stride[0]; cmd_buffer++;
-    /* Source Size Register */
-    *cmd_buffer = ((src_height - 1) << 16) | (src_width - 1); cmd_buffer++;
-    /* Destination Address */
-    *cmd_buffer = me->cur_dst_buf->dma_addr[0]; cmd_buffer++;
-    /* Destination Stride Register */
-    *cmd_buffer = me->cur_dst_buf->stride[0]; cmd_buffer++;
-    /* not use Destination Address1, Destination Stride Register1 */
-    cmd_buffer++;
-    cmd_buffer++;
-    /* Destination Size Register */
-    *cmd_buffer = ((dst_height - 1) << 16) | (dst_width - 1); cmd_buffer++;
-    /* Horizontal Delta Register */
-    *cmd_buffer = (src_width << 16) / (dst_width - 1); cmd_buffer++;
-    /* Vertical Delta Register */
-    *cmd_buffer = (src_height << 16) / (dst_height - 1); cmd_buffer++;
-    /* Ratio Reset Value Register : TODO fixed ??? */
-    *cmd_buffer = 0x00080010; cmd_buffer++;
-
-#if 0
-    /* run command */
-    *cmd_buffer = 1 << 29; cmd_buffer++;
-    *cmd_buffer = 0x00000001; cmd_buffer++;
-#else
-    /* workaround */
-    *cmd_buffer = 0; cmd_buffer++;
-    *cmd_buffer = 0x00000001; cmd_buffer++;
-    *cmd_buffer = (1 << 29) | (1 << 10); cmd_buffer++;
-    *cmd_buffer = 0x00000003; cmd_buffer++;
-#endif
-
-    /* CB command buffer */
-    if (src_code == V4L2_MBUS_FMT_YUYV8_1_5X8) {
-        /* 420 */
-        cb_src_width = src_width >> 1;
-        cb_src_height = src_height >> 1;
-    } else if (src_code == V4L2_MBUS_FMT_YUYV8_1X16) {
-        /* 422 */
-        cb_src_width = src_width >> 1;
-        cb_src_height = src_height;
-    } else {
-        cb_src_width = src_width;
-        cb_src_height = src_height;
-    }
-    if (dst_code == V4L2_MBUS_FMT_YUYV8_1_5X8) {
-        /* 420 */
-        cb_dst_width = dst_width >> 1;
-        cb_dst_height = dst_height >> 1;
-    } else if (dst_code == V4L2_MBUS_FMT_YUYV8_1X16) {
-        /* 422 */
-        cb_dst_width = dst_width >> 1;
-        cb_dst_height = dst_height;
-    } else {
-        cb_dst_width = dst_width;
-        cb_dst_height = dst_height;
-    }
-
-    _make_cmd(cmd_buffer); cmd_buffer++;
-    /* Source Address Register */
-    *cmd_buffer = me->cur_src_buf->dma_addr[1]; cmd_buffer++;
-    /* Source Stride Register */
-    *cmd_buffer = me->cur_src_buf->stride[1]; cmd_buffer++;
-    /* Source Size Register */
-    *cmd_buffer = ((cb_src_height - 1) << 16) | (cb_src_width - 1); cmd_buffer++;
-    /* Destination Address */
-    *cmd_buffer = me->cur_dst_buf->dma_addr[1]; cmd_buffer++;
-    /* Destination Stride Register */
-    *cmd_buffer = me->cur_dst_buf->stride[1]; cmd_buffer++;
-    /* not use Destination Address1, Destination Stride Register1 */
-    cmd_buffer++;
-    cmd_buffer++;
-    /* Destination Size Register */
-    *cmd_buffer = ((cb_dst_height - 1) << 16) | (cb_dst_width - 1); cmd_buffer++;
-    /* Horizontal Delta Register */
-    *cmd_buffer = (cb_src_width << 16) / (cb_dst_width - 1); cmd_buffer++;
-    /* Vertical Delta Register */
-    *cmd_buffer = (cb_src_height << 16) / (cb_dst_height - 1); cmd_buffer++;
-    /* Ratio Reset Value Register : TODO fixed ??? */
-    *cmd_buffer = 0x00080010; cmd_buffer++;
-
-#if 0
-    /* run command */
-    *cmd_buffer = 1 << 29; cmd_buffer++;
-    *cmd_buffer = 0x00000001; cmd_buffer++;
-#else
-    /* workaround */
-    *cmd_buffer = 0; cmd_buffer++;
-    *cmd_buffer = 0x00000001; cmd_buffer++;
-    *cmd_buffer = (1 << 29) | (1 << 10); cmd_buffer++;
-    *cmd_buffer = 0x00000003; cmd_buffer++;
-#endif
-
-    /* CR command buffer */
-    _make_cmd(cmd_buffer); cmd_buffer++;
-    /* Source Address Register */
-    *cmd_buffer = me->cur_src_buf->dma_addr[2]; cmd_buffer++;
-    /* Source Stride Register */
-    *cmd_buffer = me->cur_src_buf->stride[2]; cmd_buffer++;
-    /* Source Size Register */
-    *cmd_buffer = ((cb_src_height - 1) << 16) | (cb_src_width - 1); cmd_buffer++;
-    /* Destination Address */
-    *cmd_buffer = me->cur_dst_buf->dma_addr[2]; cmd_buffer++;
-    /* Destination Stride Register */
-    *cmd_buffer = me->cur_dst_buf->stride[2]; cmd_buffer++;
-    /* not use Destination Address1, Destination Stride Register1 */
-    cmd_buffer++;
-    cmd_buffer++;
-    /* Destination Size Register */
-    *cmd_buffer = ((cb_dst_height - 1) << 16) | (cb_dst_width - 1); cmd_buffer++;
-    /* Horizontal Delta Register */
-    *cmd_buffer = (cb_src_width << 16) / (cb_dst_width - 1); cmd_buffer++;
-    /* Vertical Delta Register */
-    *cmd_buffer = (cb_src_height << 16) / (cb_dst_height - 1); cmd_buffer++;
-    /* Ratio Reset Value Register : TODO fixed ??? */
-    *cmd_buffer = 0x00080010; cmd_buffer++;
-
-#if 0
-    /* run command : set last */
-    *cmd_buffer = (1 << 29) | (1 << 27); cmd_buffer++;
-    *cmd_buffer = 0x00000001; cmd_buffer++;
-#else
-    /* workaround */
-    *cmd_buffer = 0; cmd_buffer++;
-    *cmd_buffer = 0x00000001; cmd_buffer++;
-    *cmd_buffer = (1 << 29) | (1 << 27) | (1 << 10); cmd_buffer++;
-    *cmd_buffer = 0x00000003; cmd_buffer++;
-#endif
-
-    return 0;
-}
-#else
 static int _make_command_buffer(struct nxp_scaler *me, struct nxp_video_buffer *src_buf, struct nxp_video_buffer *dst_buf)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+    u32 *cmd_buffer;
+    u32 src_width, src_height, src_code, dst_width, dst_height, dst_code;
+    u32 cb_src_width, cb_src_height, cb_dst_width, cb_dst_height;
+#else
     unsigned int *cmd_buffer;
     unsigned int src_width, src_height, src_code, dst_width, dst_height, dst_code;
     unsigned int cb_src_width, cb_src_height, cb_dst_width, cb_dst_height;
+#endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,18,0)
     if (!me->command_buffer_vir) {
         me->command_buffer_vir = dma_alloc_coherent(NULL, COMMAND_BUFFER_SIZE, &me->command_buffer_phy, GFP_KERNEL);
         if (!me->command_buffer_vir) {
@@ -436,6 +291,7 @@ static int _make_command_buffer(struct nxp_scaler *me, struct nxp_video_buffer *
             return -ENOMEM;
         }
     }
+#endif
 
     src_width = me->format[NXP_SCALER_PAD_SINK].width;
     src_height = me->format[NXP_SCALER_PAD_SINK].height;
@@ -565,8 +421,6 @@ static int _make_command_buffer(struct nxp_scaler *me, struct nxp_video_buffer *
 
     return 0;
 }
-#endif
-
 #endif
 
 // for debugging
@@ -1309,10 +1163,17 @@ static inline void dump_command_buffer(struct nxp_scaler *me, unsigned int *end)
 
 static int _make_command_buffer_misc(struct nxp_scaler *me, struct nxp_scaler_ioctl_data *data)
 {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+    u32 *cmd_buffer;
+    u32 src_width, src_height, src_code, dst_width, dst_height, dst_code;
+    u32 cb_src_width, cb_src_height, cb_dst_width, cb_dst_height;
+#else
     unsigned int *cmd_buffer;
     unsigned int src_width, src_height, src_code, dst_width, dst_height, dst_code;
     unsigned int cb_src_width, cb_src_height, cb_dst_width, cb_dst_height;
+#endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,18,0)
     if (!me->command_buffer_vir) {
         me->command_buffer_vir = dma_alloc_coherent(NULL, COMMAND_BUFFER_SIZE, &me->command_buffer_phy, GFP_KERNEL);
         if (!me->command_buffer_vir) {
@@ -1320,6 +1181,7 @@ static int _make_command_buffer_misc(struct nxp_scaler *me, struct nxp_scaler_io
             return -ENOMEM;
         }
     }
+#endif
 
 #ifdef DEBUG_IOCTL_DATA
     dump_scaler_ioctl_data(data);
@@ -1608,11 +1470,13 @@ static int _set_and_run(struct nxp_scaler *me, struct nxp_scaler_ioctl_data *dat
 
         _hw_init(me);
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,18,0)
         if (me->command_buffer_phy) {
             dma_free_coherent(NULL, COMMAND_BUFFER_SIZE, me->command_buffer_vir, me->command_buffer_phy);
             me->command_buffer_vir = NULL;
             me->command_buffer_phy = 0;
         }
+#endif
         _hw_set_filter_table(me, &_default_filter_table);
         _hw_set_format(me);
 
@@ -1662,7 +1526,7 @@ static int nxp_scaler_misc_release(struct inode *inode, struct file *file)
 
 static long nxp_scaler_misc_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
-    int ret = 0;
+    long ret = 0;
 
     switch (cmd) {
     case IOCTL_SCALER_SET_AND_RUN:
@@ -1684,11 +1548,119 @@ static long nxp_scaler_misc_ioctl(struct file *file, unsigned int cmd, unsigned 
     return ret;
 }
 
+#ifdef CONFIG_COMPAT
+struct compat_nxp_scaler_ioctl_data {
+    uint32_t src_phys[3];
+    uint32_t src_stride[3];
+    compat_uint_t src_width;
+    compat_uint_t src_height;
+    compat_uint_t src_code;
+    uint32_t dst_phys[3];
+    uint32_t dst_stride[3];
+    compat_uint_t dst_width;
+    compat_uint_t dst_height;
+    compat_uint_t dst_code;
+};
+
+static int compat_get_scaler_ioctl_data(struct compat_nxp_scaler_ioctl_data __user *data32,
+        struct nxp_scaler_ioctl_data __user *data)
+{
+    int32_t i32;
+    compat_uint_t u;
+    int err;
+
+    err = get_user(i32, &data32->src_phys[0]);
+    err |= put_user(i32, &data->src_phys[0]);
+    err |= get_user(i32, &data32->src_phys[1]);
+    err |= put_user(i32, &data->src_phys[1]);
+    err |= get_user(i32, &data32->src_phys[2]);
+    err |= put_user(i32, &data->src_phys[2]);
+
+    err |= get_user(i32, &data32->src_stride[0]);
+    err |= put_user(i32, &data->src_stride[0]);
+    err |= get_user(i32, &data32->src_stride[1]);
+    err |= put_user(i32, &data->src_stride[1]);
+    err |= get_user(i32, &data32->src_stride[2]);
+    err |= put_user(i32, &data->src_stride[2]);
+
+    err |= get_user(u, &data32->src_width);
+    err |= put_user(u, &data->src_width);
+
+    err |= get_user(u, &data32->src_height);
+    err |= put_user(u, &data->src_height);
+
+    err |= get_user(u, &data32->src_code);
+    err |= put_user(u, &data->src_code);
+
+    err |= get_user(i32, &data32->dst_phys[0]);
+    err |= put_user(i32, &data->dst_phys[0]);
+    err |= get_user(i32, &data32->dst_phys[1]);
+    err |= put_user(i32, &data->dst_phys[1]);
+    err |= get_user(i32, &data32->dst_phys[2]);
+    err |= put_user(i32, &data->dst_phys[2]);
+
+    err |= get_user(i32, &data32->dst_stride[0]);
+    err |= put_user(i32, &data->dst_stride[0]);
+    err |= get_user(i32, &data32->dst_stride[1]);
+    err |= put_user(i32, &data->dst_stride[1]);
+    err |= get_user(i32, &data32->dst_stride[2]);
+    err |= put_user(i32, &data->dst_stride[2]);
+
+    err |= get_user(u, &data32->dst_width);
+    err |= put_user(u, &data->dst_width);
+
+    err |= get_user(u, &data32->dst_height);
+    err |= put_user(u, &data->dst_height);
+
+    err |= get_user(u, &data32->dst_code);
+    err |= put_user(u, &data->dst_code);
+
+    return err;
+}
+
+static long nxp_scaler_compat_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+    long ret = 0;
+
+    switch (cmd) {
+    case IOCTL_SCALER_SET_AND_RUN:
+    {
+        struct compat_nxp_scaler_ioctl_data __user *data32;
+        struct nxp_scaler_ioctl_data __user *data;
+        int err;
+
+        data32 = compat_ptr(arg);
+        data = compat_alloc_user_space(sizeof(*data));
+        if (!data) {
+            printk(KERN_ERR "%s: failed to compat_alloc_user_space for nxp_scaler_ioctl_data\n", __func__);
+            return -EFAULT;
+        }
+
+        err = compat_get_scaler_ioctl_data(data32, data);
+        if (err) {
+            printk(KERN_ERR "%s: failed to compat_get_scaler_ioctl_data\n", __func__);
+            return err;
+        }
+
+        return filp->f_op->unlocked_ioctl(filp, IOCTL_SCALER_SET_AND_RUN, (unsigned long)data);
+    }
+
+    default:
+        break;
+    }
+
+    return ret;
+}
+#endif
+
 static const struct file_operations nxp_scaler_file_ops = {
     .owner          = THIS_MODULE,
     .open           = nxp_scaler_misc_open,
     .release        = nxp_scaler_misc_release,
     .unlocked_ioctl = nxp_scaler_misc_ioctl,
+#ifdef CONFIG_COMPAT
+    .compat_ioctl   = nxp_scaler_compat_ioctl,
+#endif
 };
 
 static struct miscdevice nxp_scaler_misc_device = {
@@ -1733,6 +1705,19 @@ struct nxp_scaler *create_nxp_scaler(void)
         NXP_ATOMIC_SET(&me->running, 0);
         init_waitqueue_head(&me->wq_start);
         init_waitqueue_head(&me->wq_end);
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+        if (nxp_scaler_misc_device.this_device) {
+            struct device *pdev = nxp_scaler_misc_device.this_device;
+            pdev->dma_mask = &pdev->coherent_dma_mask;
+            pdev->coherent_dma_mask = DMA_BIT_MASK(32);
+            me->command_buffer_vir = dma_alloc_coherent(pdev, COMMAND_BUFFER_SIZE, &me->command_buffer_phy, GFP_KERNEL);
+            if (!me->command_buffer_vir) {
+                printk(KERN_ERR "%s: failed to alloc command buffer!!\n", __func__);
+            }
+        }
+#endif
+
 #endif
     }
 
@@ -1744,6 +1729,14 @@ void release_nxp_scaler(struct nxp_scaler *me)
 {
     vmsg("%s\n", __func__);
 #ifdef CONFIG_ENABLE_SCALER_MISC_DEVICE
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+    if (nxp_scaler_misc_device.this_device) {
+        struct device *pdev = nxp_scaler_misc_device.this_device;
+        dma_free_coherent(pdev, COMMAND_BUFFER_SIZE, me->command_buffer_vir, me->command_buffer_phy);
+        me->command_buffer_vir = NULL;
+        me->command_buffer_phy = 0;
+    }
+#endif
     misc_deregister(&nxp_scaler_misc_device);
 #endif
     release_nxp_video(me->video);
@@ -1777,7 +1770,9 @@ void unregister_nxp_scaler(struct nxp_scaler *me)
 {
     vmsg("%s\n", __func__);
     if (me->command_buffer_phy) {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,18,0)
         dma_free_coherent(NULL, COMMAND_BUFFER_SIZE, me->command_buffer_vir, me->command_buffer_phy);
+#endif
         me->command_buffer_vir = NULL;
         me->command_buffer_phy = 0;
     }

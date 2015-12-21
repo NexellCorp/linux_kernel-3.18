@@ -403,58 +403,109 @@
     nxp-v4l2 {
         compatible = "nexell,nxp-v4l2";
 
+        out {
+            hdmi {
+                edid {
+                    i2c_name = "nxp_edid";
+                    i2c_adapter = <0>;
+                    addr = <0x50>;
+                };
+                hdcp {
+                    i2c_name = "nxp_hdcp";
+                    i2c_adapter = <0>;
+                    addr = <0x3a>;
+                };
+            };
+        };
+
         capture {
             nr = <2>;
 
             capture0 {
-                module = <2>;
+                module = <1>;
                 type = <0>;
 
                 port = <0>;
                 external_sync = <0>;
 
-                h_frontporch = <7>;
-                h_syncwidth = <1>;
-                h_backporch = <10>;
-                v_frontporch = <0>;
-                v_syncwidth = <2>;
-                v_backporch = <3>;
-
-                data_order = <0>;
-                vid = <0>;
+                data_order = <2>;
+                vid = <1>;
 
                 interlace = <0>;
                 late_power_down = <0>;
+                power_down_when_off = <1>;
 
                 sensor {
                     type = <0>;
-                    sensor_name = "MT9D111";
-                    i2c_adapter = <2>;
-                    addr = <0x5d>;
+                    i2c_name = "SP2518";
+                    i2c_adapter = <0>;
+                    addr = <0x30>;
                 };
 
                 power {
-                    reset_io = <(PAD_GPIO_C+30)>;
-                    reset_invert = <1>;
-                    reset_delay_ms = <10>;
+                    enable_seq = <
+                        0x12345678 0xffff0002 0 0 0x87654321
+                        0x12345678 0xffff0002 1 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+6) 1 1 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+4) 1 0 0 1 0 0x87654321
+                        0x12345678 0xffff0003 1 1 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+4) 1 0 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+5) 1 1 0 0 1 1 10 0x87654321
+                    >;
+                    regulator_names = "axp22_dldo2";
+                };
+
+                clock {
+                    pwm_number = <1>;
+                    rate = <24000000>;
                 };
             };
 
             capture1 {
-                module = <0>;
-                type = <1>;
+                module = <1>;
+                type = <0>;
+
+                port = <0>;
+                external_sync = <1>;
+
+                h_frontporch = <1>;
+                h_syncwidth = <1>;
+                h_backporch = <0>;
+                v_frontporch = <0>;
+                v_syncwidth = <1>;
+                v_backporch = <0>;
+
+                data_order = <0>;
+                vid = <1>;
+
+                interlace = <0>;
+                late_power_down = <0>;
+                power_down_when_off = <1>;
 
                 sensor {
                     type = <0>;
-                    sensor_name = "THP7212NX";
-                    i2c_adapter = <1>;
-                    addr = <0x60>;
+                    i2c_name = "SP0838";
+                    i2c_adapter = <0>;
+                    addr = <0x18>;
                 };
 
                 power {
-                    reset_io = <(PAD_GPIO_E+16)>;
-                    reset_invert = <1>;
-                    reset_delay_ms = <10>;
+                    enable_seq = <
+                        0x12345678 0xffff0002 0 0 0x87654321
+                        0x12345678 0xffff0002 1 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+4) 1 1 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+5) 1 1 0 0 1 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+6) 1 0 0 1 0 0x87654321
+                        0x12345678 0xffff0003 1 10 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+6) 1 0 10 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+5) 1 1 5 0x87654321
+                    >;
+                    regulator_names = "axp22_dldo2";
+                };
+
+                clock {
+                    pwm_number = <1>;
+                    rate = <24000000>;
                 };
             };
         };
@@ -506,7 +557,7 @@
         >;
     };
 
-	backlight {
+	pwm-backlight {
 		compatible = "pwm-backlight";
 		pwms = <&pwm_device0 0 100000>;
 		pwm-names = "backlight";

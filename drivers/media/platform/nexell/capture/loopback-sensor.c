@@ -2,20 +2,17 @@
 #include <linux/module.h>
 #include <linux/delay.h>
 
-//#include <mach/platform.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 #include <nexell/platform.h>
-
-//#include <nexell/soc.h>
+#include <nexell/soc-s5pxx18.h>
+#else
+#include <mach/platform.h>
+#include <nexell/soc.h>
+#endif
 
 #include "nxp-v4l2.h"
 #include "loopback-sensor.h"
-
-#if 1
-extern void     nxp_soc_gpio_set_out_value(unsigned int io, int high);
-extern int 			nxp_soc_gpio_get_altnum(unsigned int io);
-extern void     nxp_soc_gpio_set_io_dir(unsigned int io, int out);
-extern void     nxp_soc_gpio_set_io_func(unsigned int io, unsigned int func);
-#endif
 
 #if 1
 #define DUMP_REGISTER 1

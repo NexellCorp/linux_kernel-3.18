@@ -1035,7 +1035,7 @@ static int nxp_mlc_set_fmt(struct v4l2_subdev *sd,
     switch (format->pad) {
     case NXP_MLC_PAD_SINK_RGB:
         *_fmt = format->format;
-        pr_debug("%s: rgb format code 0x%x\n", __func__, format->format.code);
+        vmsg("%s: rgb format code 0x%x\n", __func__, format->format.code);
         switch (format->format.code) {
         case V4L2_MBUS_FMT_RGB565_2X8_LE:
             _fmt->code = NX_MLC_RGBFMT_R5G6B5;

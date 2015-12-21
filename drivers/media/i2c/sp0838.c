@@ -29,6 +29,8 @@
 #include <media/v4l2-subdev.h>
 #include <media/v4l2-ctrls.h>
 
+#include <linux/version.h>
+
 #define MODULE_NAME "SP0838"
 
 #ifdef SP0838_DEBUG
@@ -1300,6 +1302,10 @@ static int sp0838_s_stream(struct v4l2_subdev *sd, int enable)
     struct i2c_client *client = v4l2_get_subdevdata(sd);
     struct sp0838_priv *priv = to_priv(sd);
     int ret = 0;
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+    priv->initialized = false;
+#endif
 
     printk( "%s: enable %d, initialized %d\n", __func__, enable, priv->initialized);
 

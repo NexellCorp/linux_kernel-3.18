@@ -8,15 +8,24 @@
 #include <linux/v4l2-mediabus.h>
 #include <linux/i2c.h>
 #include <linux/platform_device.h>
+#include <linux/atomic.h>
 
 #include <media/media-entity.h>
 #include <media/v4l2-dev.h>
 #include <media/v4l2-subdev.h>
 
-/*#include <mach/nxp-v4l2-platformdata.h>*/
-/*#include <mach/platform.h>*/
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 #include <nexell/nxp-v4l2-platformdata.h>
 #include <nexell/platform.h>
+#else
+#include <mach/nxp-v4l2-platformdata.h>
+#ifdef CONFIG_ARCH_NXP4330_3200
+#include <mach/nxp3200.h>
+#else
+#include <mach/platform.h>
+#endif
+#endif
 
 #include "nxp-video.h"
 #include "nxp-vin-clipper.h"
@@ -29,11 +38,6 @@
 #include "nxp-capture.h"
 
 /* for nexell specific prototype */
-/*#ifdef CONFIG_ARCH_NXP4330_3200*/
-/*#include <mach/nxp3200.h>*/
-/*#else*/
-/*#include <mach/platform.h>*/
-/*#endif*/
 
 /*
  * child bitmap

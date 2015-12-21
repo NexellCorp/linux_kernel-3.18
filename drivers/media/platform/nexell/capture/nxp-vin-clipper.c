@@ -12,8 +12,6 @@
 #include <media/v4l2-device.h>
 #include <media/v4l2-subdev.h>
 
-#include <nexell/nxp-v4l2-platformdata.h>
-
 #include "nxp-v4l2-common.h"
 #include "nxp-video.h"
 #include "nxp-v4l2.h"
@@ -21,18 +19,24 @@
 #include "nxp-capture.h"
 #include "nxp-vin-clipper.h"
 
-/* for nexell specific prototype */
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+#include <nexell/platform.h>
+#include <nexell/soc-s5pxx18.h>
+#include <nexell/nxp-v4l2-platformdata.h>
+#else
 #ifdef CONFIG_ARCH_NXP4330_3200
 #include <mach/nxp3200.h>
 #include <mach/iomap.h>
 #else
-#include <nexell/platform.h>
-/*#include <nexell/soc.h>*/
+#include <mach/platform.h>
+#include <mach/soc-s5pxx18.h>
+#include <mach/nxp-v4l2-platformdata.h>
+#endif
 #endif
 
 #include <linux/timer.h>
 
-#include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 #define media_entity_remote_source media_entity_remote_pad
 #endif
@@ -498,6 +502,12 @@ static int _configure(struct nxp_vin_clipper *me, int enable)
 
         if (NXP_ATOMIC_READ(&me->state) & NXP_VIN_STATE_STOPPING)
             NXP_ATOMIC_CLEAR_MASK(NXP_VIN_STATE_STOPPING, &me->state);
+
+#ifdef CONFIG_OF
+        if (me->platdata->power_enable && me->platdata->power_down_when_off)
+            printk("power down\n");
+            me->platdata->power_enable(me->platdata, false);
+#endif
     }
     vmsg("%s exit\n", __func__);
 

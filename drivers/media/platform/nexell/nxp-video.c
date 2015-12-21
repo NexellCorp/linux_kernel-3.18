@@ -882,7 +882,7 @@ static int nxp_video_qbuf(struct file *file, void *fh,
         struct v4l2_buffer *b)
 {
     struct nxp_video *me = file->private_data;
-    pr_debug("%s: %s, index %d\n", __func__, me->name, b->index);
+    vmsg("%s: %s, index %d\n", __func__, me->name, b->index);
     if (me->vbq) {
         return vb2_qbuf(me->vbq, b);
     } else {

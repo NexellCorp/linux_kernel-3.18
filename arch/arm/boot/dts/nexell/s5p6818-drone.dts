@@ -179,12 +179,6 @@
 			status = "okay";
 		};
 
-		iic0:iic@a4000 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-		};
-
 		spdiftx@59000 {
 			status = "okay";
 		};
@@ -286,6 +280,7 @@
 				&gpio_d 20 0				/* scl */
 				>;
 			i2c-gpio,delay-us = <10>;	/* ~100 kHz */
+			i2c-gpio,ch =<3>;
 		};
 
 		#ifdef CONFIG_MFD_AXP228
@@ -393,61 +388,124 @@
         types = <0 1 6>;
     };
 
+    reserved-memory {
+        #address-cells = <1>;
+        #size-cells = <1>;
+        ranges;
+
+        linux,ion {
+            compatible = "cma_for_ion";
+            alignment= <4096>;
+            size = < (192*1024*1024) >;
+        };
+    };  
+
     nxp-v4l2 {
         compatible = "nexell,nxp-v4l2";
+
+        out {
+            hdmi {
+                edid {
+                    i2c_name = "nxp_edid";
+                    i2c_adapter = <0>;
+                    addr = <0x50>;
+                };
+                hdcp {
+                    i2c_name = "nxp_hdcp";
+                    i2c_adapter = <0>;
+                    addr = <0x3a>;
+                };
+            };
+        };
 
         capture {
             nr = <2>;
 
             capture0 {
-                module = <2>;
+                module = <1>;
                 type = <0>;
 
                 port = <0>;
                 external_sync = <0>;
 
-                h_frontporch = <7>;
-                h_syncwidth = <1>;
-                h_backporch = <10>;
-                v_frontporch = <0>;
-                v_syncwidth = <2>;
-                v_backporch = <3>;
-
-                data_order = <0>;
-                vid = <0>;
+                data_order = <2>;
+                vid = <1>;
 
                 interlace = <0>;
                 late_power_down = <0>;
+                power_down_when_off = <1>;
 
                 sensor {
                     type = <0>;
-                    sensor_name = "MT9D111";
-                    i2c_adapter = <2>;
-                    addr = <0x5d>;
+                    i2c_name = "SP2518";
+                    i2c_adapter = <0>;
+                    addr = <0x30>;
                 };
 
                 power {
-                    reset_io = <(PAD_GPIO_C+30)>;
-                    reset_invert = <1>;
-                    reset_delay_ms = <10>;
+                    enable_seq = <
+                        0x12345678 0xffff0002 0 0 0x87654321
+                        0x12345678 0xffff0002 1 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+6) 1 1 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+4) 1 0 0 1 0 0x87654321
+                        0x12345678 0xffff0003 1 1 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+4) 1 0 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+5) 1 1 0 0 1 1 10 0x87654321
+                    >;
+                    regulator_names = "axp22_dldo2";
+                };
+
+                clock {
+                    pwm_number = <1>;
+                    rate = <24000000>;
                 };
             };
 
             capture1 {
-                module = <0>;
-                type = <1>;
+                module = <1>;
+                type = <0>;
+
+                port = <0>;
+                external_sync = <1>;
+
+                h_frontporch = <1>;
+                h_syncwidth = <1>;
+                h_backporch = <0>;
+                v_frontporch = <0>;
+                v_syncwidth = <1>;
+                v_backporch = <0>;
+
+                data_order = <0>;
+                vid = <1>;
+
+                interlace = <0>;
+                late_power_down = <0>;
+                power_down_when_off = <1>;
 
                 sensor {
                     type = <0>;
-                    sensor_name = "THP7212NX";
-                    i2c_adapter = <1>;
-                    addr = <0x60>;
+                    i2c_name = "SP0838";
+                    i2c_adapter = <0>;
+                    addr = <0x18>;
                 };
 
                 power {
-                    reset_io = <(PAD_GPIO_E+16)>;
-                    reset_invert = <1>;
-                    reset_delay_ms = <10>;
+                    enable_seq = <
+                        0x12345678 0xffff0002 0 0 0x87654321
+                        0x12345678 0xffff0002 1 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+4) 1 1 0 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+5) 1 1 0 0 1 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+6) 1 0 0 1 0 0x87654321
+                        0x12345678 0xffff0003 1 10 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+6) 1 0 10 0x87654321
+                        0x12345678 0xffff0001 (PAD_GPIO_C+5) 1 1 5 0x87654321
+                    >;
+                    regulator_names = "axp22_dldo2";
+                };
+
+                clock {
+                    pwm_number = <1>;
+                    rate = <24000000>;
                 };
             };
         };
@@ -498,4 +556,16 @@
 			(PAD_GPIO_ALV + 0)	116 0	/* gpio, keycode, active high */
         >;
     };
+
+	pwm-backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm_device0 0 100000>;
+		pwm-names = "backlight";
+        brightness-levels = <
+                0 10 20 30 40
+                50 60 70 80 90
+                100 110 120 127
+                >;
+        default-brightness-level = <12>;
+	};
 };

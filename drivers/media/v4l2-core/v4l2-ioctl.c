@@ -910,6 +910,67 @@ static int check_ext_ctrls(struct v4l2_ext_controls *c, int allow_priv)
 
 static int check_fmt(struct file *file, enum v4l2_buf_type type)
 {
+    // psw0523 patch for SLSIAP
+#ifdef CONFIG_V4L2_NXP
+	struct video_device *vfd = video_devdata(file);
+	const struct v4l2_ioctl_ops *ops = vfd->ioctl_ops;
+
+    if (ops == NULL)
+        return -EINVAL;
+
+    switch (type) {
+        case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+            if (ops->vidioc_g_fmt_vid_cap ||
+                    ops->vidioc_g_fmt_vid_cap_mplane)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
+            if (ops->vidioc_g_fmt_vid_cap_mplane)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_VIDEO_OVERLAY:
+            if (ops->vidioc_g_fmt_vid_overlay)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_VIDEO_OUTPUT:
+            if (ops->vidioc_g_fmt_vid_out ||
+                    ops->vidioc_g_fmt_vid_out_mplane)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+            if (ops->vidioc_g_fmt_vid_out_mplane)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_VIDEO_OUTPUT_OVERLAY:
+            if (ops->vidioc_g_fmt_vid_out_overlay)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_VBI_CAPTURE:
+            if (ops->vidioc_g_fmt_vbi_cap)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_VBI_OUTPUT:
+            if (ops->vidioc_g_fmt_vbi_out)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_SLICED_VBI_CAPTURE:
+            if (ops->vidioc_g_fmt_sliced_vbi_cap)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_SLICED_VBI_OUTPUT:
+            if (ops->vidioc_g_fmt_sliced_vbi_out)
+                return 0;
+            break;
+        case V4L2_BUF_TYPE_SDR_CAPTURE:
+            if (ops->vidioc_g_fmt_sdr_cap)
+                return 0;
+            break;
+        default:
+            break;
+    }
+    return -EINVAL;
+#else
+    // here is original
 	struct video_device *vfd = video_devdata(file);
 	const struct v4l2_ioctl_ops *ops = vfd->ioctl_ops;
 	bool is_vid = vfd->vfl_type == VFL_TYPE_GRABBER;
@@ -972,6 +1033,7 @@ static int check_fmt(struct file *file, enum v4l2_buf_type type)
 		break;
 	}
 	return -EINVAL;
+#endif
 }
 
 static void v4l_sanitize_format(struct v4l2_format *fmt)
@@ -1276,8 +1338,11 @@ static int v4l_s_fmt(const struct v4l2_ioctl_ops *ops,
 		p->fmt.pix.priv = V4L2_PIX_FMT_PRIV_MAGIC;
 		return ret;
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+        // psw0523 patch for SLSIAP
+#ifndef CONFIG_V4L2_NXP
 		if (unlikely(!is_tx || !is_vid || !ops->vidioc_s_fmt_vid_out_mplane))
 			break;
+#endif
 		CLEAR_AFTER_FIELD(p, fmt.pix_mp);
 		return ops->vidioc_s_fmt_vid_out_mplane(file, fh, arg);
 	case V4L2_BUF_TYPE_VIDEO_OUTPUT_OVERLAY:

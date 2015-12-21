@@ -381,7 +381,8 @@ struct nxp_hdmi *create_nxp_hdmi(struct nxp_hdmi_platformdata *pdata)
 
     /*me->plat_data = pdata;*/
     me->plat_data = (struct nxp_hdmi_platformdata *)kmalloc(sizeof(struct nxp_hdmi_platformdata), GFP_KERNEL);
-    memcpy(me->plat_data, pdata, sizeof(struct nxp_hdmi_platformdata));
+    if (pdata != NULL)
+        memcpy(me->plat_data, pdata, sizeof(struct nxp_hdmi_platformdata));
 
     return me;
 }

@@ -39,6 +39,13 @@
 
 #include "../ion_priv.h"
 
+/* #define DEBUG_NXP_ION */
+#ifdef DEBUG_NXP_ION
+#define debug_msg(a...) printk(a)
+#else
+#define debug_msg(a...)
+#endif
+
 /**
  * variables
  * start "s_" : static
@@ -88,8 +95,7 @@ static int ion_nxp_contig_heap_allocate(struct ion_heap *heap,
             return -ENOMEM;
         }
         buffer->priv_phys = page_to_phys(page);
-        // for debugging
-        printk("%s: phys 0x%lx, pages %d\n", __func__, buffer->priv_phys, pages);
+        debug_msg("%s: phys 0x%lx, pages %d\n", __func__, buffer->priv_phys, pages);
     }
 
     return 0;
@@ -119,8 +125,7 @@ static void ion_nxp_heap_free(struct ion_buffer *buffer)
         if (!ret) {
             printk(KERN_ERR "CRITICAL ERROR: %s, failed to cma_release for page %p, pages %d\n", __func__, page, pages);
         }
-        // for debugging
-        printk("%s: phys 0x%lx, pages %d\n", __func__, buffer->priv_phys, pages);
+        debug_msg("%s: phys 0x%lx, pages %d\n", __func__, buffer->priv_phys, pages);
     }
 }
 
@@ -141,7 +146,7 @@ static struct sg_table *ion_nxp_heap_map_dma(struct ion_heap *heap,
 
     table = kzalloc(sizeof(struct sg_table), GFP_KERNEL);
     if (!table) {
-        pr_err("%s error: fail to kzalloc size(%d)\n", __func__, sizeof(struct sg_table));
+        pr_err("%s error: fail to kzalloc size(%ld)\n", __func__, sizeof(struct sg_table));
         return ERR_PTR(-ENOMEM);
     }
     ret = sg_alloc_table(table, 1, GFP_KERNEL);
@@ -209,7 +214,7 @@ static struct ion_heap *ion_nxp_heap_create(int type)
     struct ion_heap *heap;
     heap = kzalloc(sizeof(struct ion_heap), GFP_KERNEL);
     if (!heap) {
-        pr_err("%s: fail to kzalloc size(%d)\n", __func__, sizeof(struct ion_heap));
+        pr_err("%s: fail to kzalloc size(%ld)\n", __func__, sizeof(struct ion_heap));
         return ERR_PTR(-ENOMEM);
     }
 
@@ -260,7 +265,7 @@ static struct ion_heap *_ion_heap_create(struct ion_platform_heap *heap_data)
     }
 
     if (IS_ERR_OR_NULL(heap)) {
-        pr_err("%s: error creating heap %s type %d base %lu size %u\n",
+        pr_err("%s: error creating heap %s type %d base %lu size %ld\n",
                 __func__, heap_data->name, heap_data->type,
                 heap_data->base, heap_data->size);
         return ERR_PTR(-EINVAL);
@@ -296,7 +301,7 @@ static int ion_sync_from_device(struct ion_client *client, int fd)
     struct dma_buf *dmabuf;
     struct ion_buffer *buffer;
 
-    /*printk("%s: fd %d\n", __func__, fd);*/
+    debug_msg("%s: fd %d\n", __func__, fd);
     dmabuf = dma_buf_get(fd);
     if (IS_ERR(dmabuf))
         return PTR_ERR(dmabuf);
@@ -360,7 +365,7 @@ static struct ion_platform_data *nxp_ion_parse_dt(struct device *dev)
     struct ion_platform_data *pdata;
     int i;
 
-    printk("===========> %s entered\n", __func__);
+    debug_msg("===========> %s entered\n", __func__);
 
     pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
     if (!pdata) {
@@ -372,7 +377,7 @@ static struct ion_platform_data *nxp_ion_parse_dt(struct device *dev)
          dev_err(dev, "failed to read nr\n");
          return ERR_PTR(-EINVAL);
     }
-    printk("%s: nr %d\n", __func__, pdata->nr);
+    debug_msg("%s: nr %d\n", __func__, pdata->nr);
 
     pdata->heaps = devm_kzalloc(dev, pdata->nr * sizeof(struct ion_platform_heap), GFP_KERNEL);
     if (!pdata->heaps) {
@@ -388,7 +393,7 @@ static struct ion_platform_data *nxp_ion_parse_dt(struct device *dev)
             kfree(pdata);
             return ERR_PTR(-EINVAL);
         }
-        printk("%s: index %d types 0x%x\n", __func__, i, pdata->heaps[i].type);
+        debug_msg("%s: index %d types 0x%x\n", __func__, i, pdata->heaps[i].type);
         pdata->heaps[i].id = pdata->heaps[i].type;
         if (of_property_read_string_index(of_node, "names", i, &pdata->heaps[i].name)) {
             dev_err(dev, "failed to read names index %d\n", i);
@@ -396,10 +401,10 @@ static struct ion_platform_data *nxp_ion_parse_dt(struct device *dev)
             kfree(pdata);
             return ERR_PTR(-EINVAL);
         }
-        printk("%s: index %d name %s\n", __func__, i, pdata->heaps[i].name);
+        debug_msg("%s: index %d name %s\n", __func__, i, pdata->heaps[i].name);
     }
 
-    printk("<=========== %s exit\n", __func__);
+    debug_msg("<=========== %s exit\n", __func__);
     return pdata;
 }
 #endif
@@ -436,7 +441,7 @@ static int nxp_ion_probe(struct platform_device *pdev)
 
     heaps = kzalloc(sizeof(struct ion_heap *) * pdata->nr, GFP_KERNEL);
     if (!heaps) {
-        pr_err("%s error: fail to kzalloc struct ion_heap(size: %d)\n",
+        pr_err("%s error: fail to kzalloc struct ion_heap(size: %ld)\n",
                 __func__, sizeof(struct ion_heap *) * pdata->nr);
         ion_device_destroy(ion_dev);
         return -ENOMEM;

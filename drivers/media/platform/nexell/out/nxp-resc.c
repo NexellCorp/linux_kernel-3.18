@@ -14,8 +14,18 @@
 #include "sync-preset.h"
 #include "nxp-resc.h"
 
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+#include <nexell/soc-s5pxx18.h>
+#include <nexell/platform.h>
+#else
 #include <mach/soc.h>
 #include <mach/platform.h>
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+#define media_entity_remote_source media_entity_remote_pad
+#endif
 
 #define FIXED_POINT     (65536)
 #define SOFT_V          (8)
@@ -194,7 +204,7 @@ static int _hw_set_with_preset(struct nxp_resc *me)
 
     NX_RESCONV_Initialize();
     NX_RESCONV_SetBaseAddress(me->id,
-            (U32)IO_ADDRESS(NX_RESCONV_GetPhysicalAddress(0)));
+            IO_ADDRESS(NX_RESCONV_GetPhysicalAddress(0)));
 
     NX_RESCONV_FIFO_Init(me->id, CTRUE);
     NX_RESCONV_FIFO_Init(me->id, CFALSE);
@@ -282,7 +292,7 @@ static int _hw_set(struct nxp_resc *me)
 
     NX_RESCONV_Initialize();
     NX_RESCONV_SetBaseAddress(me->id,
-            (U32)IO_ADDRESS(NX_RESCONV_GetPhysicalAddress(0)));
+            IO_ADDRESS(NX_RESCONV_GetPhysicalAddress(0)));
 
     NX_RESCONV_FIFO_Init(me->id, CTRUE);
     NX_RESCONV_FIFO_Init(me->id, CFALSE);
@@ -420,7 +430,12 @@ static inline unsigned long _get_clk_hz(int preset)
 
 // same to hdmi setting part
 static int _get_vsync_info(struct nxp_resc *me, int device,
-        struct disp_vsync_info *vsync, struct disp_syncgen_par *par)
+        struct disp_vsync_info *vsync,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+        struct disp_sync_par *par)
+#else
+        struct disp_syncgen_par *par)
+#endif
 {
     int width = me->format[NXP_RESC_PAD_SINK].width;
     int height = me->format[NXP_RESC_PAD_SINK].height;
@@ -521,7 +536,12 @@ static int _get_vsync_info(struct nxp_resc *me, int device,
 }
 
 static int _get_vsync_info_with_preset(struct nxp_resc *me, int device,
-        struct disp_vsync_info *vsync, struct disp_syncgen_par *par)
+        struct disp_vsync_info *vsync,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+        struct disp_sync_par *par)
+#else
+        struct disp_syncgen_par *par)
+#endif
 {
     struct dpc_sync_param *preset = &me->preset->dpc_sync_param;
 
@@ -567,7 +587,11 @@ static int _set_remote_sync(struct nxp_resc *me)
 {
     int ret;
     struct disp_vsync_info vsync;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+    struct disp_sync_par param;
+#else
     struct disp_syncgen_par param;
+#endif
     int source_device;
     struct v4l2_subdev *remote_source;
 
@@ -632,7 +656,7 @@ static int _set_remote_sync(struct nxp_resc *me)
 static void _set_resc_clkgen_pre(struct nxp_resc *me, bool enable, bool sink_is_hdmi)
 {
     NX_DISPTOP_CLKGEN_SetBaseAddress(ResConv_CLKGEN,
-            (U32)IO_ADDRESS(NX_DISPTOP_CLKGEN_GetPhysicalAddress(ResConv_CLKGEN)));
+            IO_ADDRESS(NX_DISPTOP_CLKGEN_GetPhysicalAddress(ResConv_CLKGEN)));
     NX_DISPTOP_CLKGEN_SetClockDivisorEnable(ResConv_CLKGEN, CFALSE);
     if (enable) {
         NX_DISPTOP_CLKGEN_SetClockPClkMode(ResConv_CLKGEN, NX_PCLKMODE_ALWAYS);
@@ -648,7 +672,7 @@ static void _set_resc_clkgen_pre(struct nxp_resc *me, bool enable, bool sink_is_
         NX_DISPTOP_CLKGEN_SetClockDivisorEnable(ResConv_CLKGEN, CTRUE);
 
         NX_DISPTOP_CLKGEN_SetBaseAddress(LCDIF_CLKGEN,
-                (U32)IO_ADDRESS(NX_DISPTOP_CLKGEN_GetPhysicalAddress(LCDIF_CLKGEN)));
+                IO_ADDRESS(NX_DISPTOP_CLKGEN_GetPhysicalAddress(LCDIF_CLKGEN)));
         NX_DISPTOP_CLKGEN_SetClockDivisorEnable ( LCDIF_CLKGEN, CFALSE);
         NX_DISPTOP_CLKGEN_SetClockPClkMode      ( LCDIF_CLKGEN, NX_PCLKMODE_ALWAYS );
         NX_DISPTOP_CLKGEN_SetClockDivisorEnable ( LCDIF_CLKGEN, CFALSE );
@@ -963,6 +987,11 @@ void unregister_nxp_resc(struct nxp_resc *me)
 }
 
 #ifdef CONFIG_PM
+
+#ifndef PM_DBGOUT
+#define PM_DBGOUT(a...)
+#endif
+
 int  suspend_nxp_resc(struct nxp_resc *me)
 {
     PM_DBGOUT("%s\n", __func__);

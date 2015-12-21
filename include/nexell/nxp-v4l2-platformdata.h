@@ -41,6 +41,44 @@ enum nxp_capture_sensor_type {
     NXP_CAPTURE_MAX
 };
 
+#ifdef CONFIG_OF
+#define CAPTURE_ENABLE_ACTION_START         0x12345678
+#define CAPTURE_ENABLE_ACTION_END           0x87654321
+#define CAPTURE_ENABLE_ACTION_TYPE_GPIO     0xffff0001
+#define CAPTURE_ENABLE_ACTION_TYPE_PMIC     0xffff0002
+#define CAPTURE_ENABLE_ACTION_TYPE_CLOCK    0xffff0003
+struct gpio_action_unit {
+    int high_low;
+    int delay_ms;
+};
+struct nxp_capture_enable_gpio_action {
+    int gpio_num;
+    int gpio_alt_func_num;
+    int count;
+    struct gpio_action_unit *units; // alloc by count
+};
+
+struct nxp_capture_enable_pmic_action {
+    int enable;
+    int delay_ms;
+};
+
+struct nxp_capture_enable_clock_action {
+    int enable;
+    int delay_ms;
+};
+
+struct nxp_capture_enable_action {
+    int type;
+    void *action;
+};
+
+struct nxp_capture_enable_seq {
+    int count;
+    struct nxp_capture_enable_action *actions; // alloc by count
+};
+#endif
+
 struct nxp_vin_platformdata {
     bool    is_mipi;
     bool    external_sync;
@@ -71,6 +109,9 @@ struct nxp_vin_platformdata {
     int     reset_io;
     bool    reset_invert;
     int     reset_delay_ms;
+    int     disable_io;
+    bool    disable_invert;
+    int     disable_delay_ms;
     int     regulator_nr;
     char    **regulator_names;
     int     pwm_number;
@@ -82,6 +123,10 @@ struct nxp_vin_platformdata {
     int     (*set_clock)(struct nxp_vin_platformdata *, bool);
     // args : vid
     void    (*setup_io)(struct nxp_vin_platformdata *, bool);
+    struct  nxp_capture_enable_seq *enable_seq;
+    bool    enabled;
+    bool    my_power_state_changed;
+    bool    power_down_when_off;
 #endif
 };
 

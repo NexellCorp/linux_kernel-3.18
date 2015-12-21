@@ -3,8 +3,11 @@
 #include <linux/i2c.h>
 #include <linux/version.h>
 
-/*#include <mach/nxp-v4l2-platformdata.h>*/
-#include <nxp-v4l2-platformdata.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+#include <nexell/nxp-v4l2-platformdata.h>
+#else
+#include <mach/nxp-v4l2-platformdata.h>
+#endif
 
 #include "nxp-v4l2-common.h"
 

@@ -40,7 +40,7 @@
 #include <linux/input.h>
 #include <asm/div64.h>
 
-#include <mach/gpio.h>
+/* #include <mach/gpio.h> */
 #include <linux/gpio.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND

@@ -16,11 +16,13 @@
 #include <media/v4l2-device.h>
 #include <media/v4l2-subdev.h>
 
-#include <nexell/nxp-v4l2-platformdata.h>
+#include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 #include <nexell/platform.h>
+#include <nexell/nxp-v4l2-platformdata.h>
 #else
 #include <mach/soc.h>
+#include <mach/nxp-v4l2-platformdata.h>
 #endif
 
 #include <asm/io.h>
@@ -36,7 +38,6 @@
 #include "nxp-capture.h"
 #include "nxp-csi.h"
 
-#include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
 #define media_entity_remote_source media_entity_remote_pad
 #endif

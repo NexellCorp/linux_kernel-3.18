@@ -2408,7 +2408,8 @@ static ssize_t active_show(struct device *pdev,
 	c = &at->name[strlen("active.")];
 	a = simple_strtoul(c, NULL, 10);
 
-	for (i = 0; 2 > i; i++) {
+	/* for (i = 0; 2 > i; i++) { */
+	for (i = 0; 1 > i; i++) {
 		info = get_module_to_info(i);
 		dev  = info->proc_dev;
 		d[i] = dev->dev_in;
@@ -2442,7 +2443,8 @@ static ssize_t active_store(struct device *pdev,
 	c = &at->name[strlen("active.")];
 	a = simple_strtoul(c, NULL, 10);
 
-	for (i = 0; 2 > i; i++) {
+	/* for (i = 0; 2 > i; i++) { */
+	for (i = 0; 1 > i; i++) {
 		info = get_module_to_info(i);
 		dev  = info->proc_dev;
 		d[i] = dev->dev_in;
@@ -2484,7 +2486,8 @@ static ssize_t vsync_show(struct device *pdev,
 	c = &at->name[strlen("vsync.")];
 	a = simple_strtoul(c, NULL, 10);
 
-	for (i = 0; 2 > i; i++) {
+	/* for (i = 0; 2 > i; i++) { */
+	for (i = 0; 1 > i; i++) {
 		info = get_module_to_info(i);
 		dev  = info->proc_dev;
 		d[i] = dev->dev_in;

@@ -26,7 +26,7 @@ typedef struct
 
 			int fds[MAX_BUFFER_PLANES];
 			unsigned long phys[MAX_BUFFER_PLANES];
-		}plane3;
+		} plane3;
 
 		struct {
 			unsigned char *virt[MAX_BUFFER_PLANES-1];
@@ -36,9 +36,9 @@ typedef struct
 
 			int fds[MAX_BUFFER_PLANES-1];
 			unsigned long phys[MAX_BUFFER_PLANES-1];
-		}plane2;
+		} plane2;
 	};
-}frame_data;
+} frame_data;
 
 typedef struct
 {
@@ -51,7 +51,7 @@ typedef struct
 
 	frame_data dst_bufs[DST_BUFFER_COUNT];
 	frame_data src_bufs[SRC_BUFFER_COUNT];
-}frame_data_info;
+} frame_data_info;
 	
 
 //////////////////////////////////////////////////////////

@@ -14,10 +14,15 @@
 #include <media/media-device.h>
 #include <media/videobuf2-ion-nxp.h>
 
-/*#include <mach/nxp-v4l2-platformdata.h>*/
-/*#include <mach/platform.h>*/
-#include <nxp-v4l2-platformdata.h>
-#include <platform.h>
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
+#include <nexell/soc-s5pxx18.h>
+#include <nexell/nxp-v4l2-platformdata.h>
+#include <nexell/platform.h>
+#else
+#include <mach/nxp-v4l2-platformdata.h>
+#include <mach/platform.h>
+#endif
 
 #include "nxp-capture.h"
 #include "nxp-scaler.h"
@@ -25,12 +30,6 @@
 #include "nxp-v4l2.h"
 #include "loopback-sensor.h"
 
-// TODO
-#if 1
-extern void			nxp_soc_gpio_set_out_value(unsigned int io, int high);
-extern void 		nxp_soc_gpio_set_io_dir(unsigned int io, int out);
-extern void 		nxp_soc_gpio_set_io_func(unsigned int io, unsigned int func);
-#endif
 /**
  * static variable for public api
  */
@@ -58,14 +57,23 @@ void *nxp_v4l2_get_alloc_ctx(void)
 }
 
 #ifdef CONFIG_OF
+
+/* #define DUMP_ENABLE_SEQ */
+/* #define DUMP_ENABLE_ACTION */
+/* #define DEBUG_ENABLE_SEQ */
+#ifdef DEBUG_ENABLE_SEQ
+#define debug_enable_msg(a...) printk(a)
+#else
+#define debug_enable_msg(a...)
+#endif
+
 #include <linux/regulator/driver.h>
 #include <linux/delay.h>
 #include <linux/i2c.h>
 
-extern long nxp_soc_pwm_set_frequency(int ch, unsigned int request, unsigned int duty);
 static int general_set_clock(struct nxp_vin_platformdata *pdata, bool enable)
 {
-    printk("%s enable %d\n", __func__, enable);
+    debug_enable_msg("%s enable %d\n", __func__, enable);
     if (pdata->pwm_number >= 0 && pdata->clock_rate > 0) {
         if (enable) {
             printk("%s: pwm %d, set clock %d\n", __func__, pdata->pwm_number, pdata->clock_rate);
@@ -77,9 +85,8 @@ static int general_set_clock(struct nxp_vin_platformdata *pdata, bool enable)
     return 0;
 }
 
-static int general_power_enable(struct nxp_vin_platformdata *pdata, bool enable)
+static int pmic_enable(struct nxp_vin_platformdata *pdata, bool enable)
 {
-    printk("%s: %d, regulator nr %d\n", __func__, enable, pdata->regulator_nr);
     if (pdata->regulator_nr > 0) {
         int i;
         struct regulator *power;
@@ -90,43 +97,163 @@ static int general_power_enable(struct nxp_vin_platformdata *pdata, bool enable)
                 printk(KERN_ERR "%s: failed to regulator_get() for %s\n", __func__, pdata->regulator_names[i]);
                 return -EINVAL;
             }
-            if (enable)
+            if (enable && !regulator_is_enabled(power))
                 ret = regulator_enable(power);
-            else
+            else if (regulator_is_enabled(power))
                 regulator_disable(power);
             regulator_put(power);
         }
     }
 
-    printk("%s: enable_io %d, enable_invert %d, enable_ms %d, reset_io %d, reset_invert %d, reset_ms %d\n", __func__,
-            pdata->enable_io, pdata->enable_invert, pdata->enable_delay_ms, pdata->reset_io, pdata->reset_invert, pdata->reset_delay_ms);
-    if (enable) {
-        if (pdata->enable_io >= 0) {
-            nxp_soc_gpio_set_out_value(pdata->enable_io, pdata->enable_invert);
-            nxp_soc_gpio_set_io_dir(pdata->enable_io, 1);
-            nxp_soc_gpio_set_io_func(pdata->enable_io, 0);
-            general_set_clock(pdata, enable);
-            if (pdata->enable_delay_ms > 0)
-                mdelay(pdata->enable_delay_ms);
-            nxp_soc_gpio_set_out_value(pdata->enable_io, !pdata->enable_invert);
-        }
+    return 0;
+}
 
-        if (pdata->reset_io >= 0) {
-            nxp_soc_gpio_set_out_value(pdata->reset_io, !pdata->reset_invert);
-            nxp_soc_gpio_set_io_dir(pdata->reset_io, 1);
-            nxp_soc_gpio_set_io_func(pdata->reset_io, 0);
-            if (pdata->reset_delay_ms > 0)
-                mdelay(pdata->reset_delay_ms);
-            nxp_soc_gpio_set_out_value(pdata->reset_io, pdata->reset_invert);
-            if (pdata->reset_delay_ms > 0)
-                mdelay(pdata->reset_delay_ms);
+static int do_enable_gpio_action(struct nxp_vin_platformdata *pdata, struct nxp_capture_enable_gpio_action *action)
+{
+    struct gpio_action_unit *unit;
+    int i;
+
+    // first entry
+    unit = &action->units[0];
+    nxp_soc_gpio_set_out_value(action->gpio_num, unit->high_low);
+    debug_enable_msg("gpio %d goto %d\n", action->gpio_num, unit->high_low);
+    nxp_soc_gpio_set_io_dir(action->gpio_num, 1);
+    debug_enable_msg("gpio %d set io dir to 1\n", action->gpio_num);
+    nxp_soc_gpio_set_io_func(action->gpio_num, action->gpio_alt_func_num);
+    debug_enable_msg("gpio %d set io func to %d\n", action->gpio_num, action->gpio_alt_func_num);
+    if (unit->delay_ms > 0)
+        mdelay(unit->delay_ms);
+
+    for (i = 1; i < action->count; i++) {
+        unit = &action->units[i];
+        nxp_soc_gpio_set_out_value(action->gpio_num, unit->high_low);
+        debug_enable_msg("gpio %d goto %d\n", action->gpio_num, unit->high_low);
+        if (unit->delay_ms > 0)
+            mdelay(unit->delay_ms);
+        debug_enable_msg("delay %dms\n", unit->delay_ms);
+    }
+
+    return 0;
+}
+
+static int do_enable_pmic_action(struct nxp_vin_platformdata *pdata, struct nxp_capture_enable_pmic_action *action)
+{
+    pmic_enable(pdata, action->enable);
+    debug_enable_msg("pmic enable %d\n", action->enable);
+    if (action->delay_ms > 0)
+        mdelay(action->delay_ms);
+    debug_enable_msg("pmic delay %dms\n", action->delay_ms);
+    return 0;
+}
+
+static int do_enable_clock_action(struct nxp_vin_platformdata *pdata, struct nxp_capture_enable_clock_action *action)
+{
+    general_set_clock(pdata, action->enable);
+    debug_enable_msg("clock enable %d\n", action->enable);
+    if (action->delay_ms > 0)
+        mdelay(action->delay_ms);
+    debug_enable_msg("clock delay %dms\n", action->delay_ms);
+    return 0;
+}
+
+static int power_enable_by_enable_seq(struct nxp_vin_platformdata *pdata, bool enable)
+{
+    debug_enable_msg("%s: enable %d\n", __func__, enable);
+    if (enable) {
+        if (!pdata->enabled) {
+            struct nxp_capture_enable_seq *enable_seq = pdata->enable_seq;
+            int i;
+            struct nxp_capture_enable_action *action;
+            for (i = 0; i < enable_seq->count; i++) {
+                action = &enable_seq->actions[i];
+                switch (action->type) {
+                    case CAPTURE_ENABLE_ACTION_TYPE_GPIO:
+                        do_enable_gpio_action(pdata, action->action);
+                        break;
+                    case CAPTURE_ENABLE_ACTION_TYPE_PMIC:
+                        do_enable_pmic_action(pdata, action->action);
+                        break;
+                    case CAPTURE_ENABLE_ACTION_TYPE_CLOCK:
+                        do_enable_clock_action(pdata, action->action);
+                        break;
+                    default:
+                        printk(KERN_ERR "%s: unknown type 0x%x\n", __func__, action->type);
+                        return -EINVAL;
+                }
+            }
+
+            pdata->enabled = enable;
+            pdata->my_power_state_changed = true;
+        } else {
+            pdata->my_power_state_changed = false;
         }
     } else {
-        if (pdata->enable_io >= 0)
-            nxp_soc_gpio_set_out_value(pdata->enable_io, pdata->enable_invert);
-        if (pdata->reset_io >= 0)
-            nxp_soc_gpio_set_out_value(pdata->reset_io, !pdata->reset_invert);
-        general_set_clock(pdata, enable);
+        if (pdata->enabled) {
+            general_set_clock(pdata, enable);
+            pmic_enable(pdata, enable);
+            pdata->enabled = enable;
+            pdata->my_power_state_changed = true;
+        } else {
+            pdata->my_power_state_changed = false;
+        }
+    }
+
+    return 0;
+}
+
+static int general_power_enable(struct nxp_vin_platformdata *pdata, bool enable)
+{
+    if (!pdata->enable_seq) {
+        debug_enable_msg("%s: %d, regulator nr %d\n", __func__, enable, pdata->regulator_nr);
+        pmic_enable(pdata, enable);
+
+        debug_enable_msg("%s: enable %d, enable_io %d, enable_invert %d, enable_ms %d, reset_io %d, reset_invert %d, reset_ms %d, disable_io %d, disable_invert %d, disable_ms %d\n", __func__,
+                enable, pdata->enable_io, pdata->enable_invert, pdata->enable_delay_ms, pdata->reset_io, pdata->reset_invert, pdata->reset_delay_ms, pdata->disable_io, pdata->disable_invert, pdata->disable_delay_ms);
+        if (enable) {
+            if (pdata->disable_io >= 0) {
+                nxp_soc_gpio_set_out_value(pdata->disable_io, !pdata->disable_invert);
+                nxp_soc_gpio_set_io_dir(pdata->disable_io, 1);
+                nxp_soc_gpio_set_io_func(pdata->disable_io, 1);
+                if (pdata->disable_delay_ms > 0)
+                    mdelay(pdata->disable_delay_ms);
+            }
+
+            if (pdata->enable_io >= 0) {
+                nxp_soc_gpio_set_out_value(pdata->enable_io, !pdata->enable_invert);
+                nxp_soc_gpio_set_io_dir(pdata->enable_io, 1);
+                nxp_soc_gpio_set_io_func(pdata->enable_io, 1);
+                nxp_soc_gpio_set_out_value(pdata->enable_io, pdata->enable_invert);
+                general_set_clock(pdata, enable);
+                if (pdata->enable_delay_ms > 0)
+                    mdelay(pdata->enable_delay_ms);
+                {
+                    u32 val = pdata->enable_invert ^ 1;
+                    nxp_soc_gpio_set_out_value(pdata->enable_io, val);
+                }
+            }
+
+            if (pdata->reset_io >= 0) {
+                nxp_soc_gpio_set_out_value(pdata->reset_io, !pdata->reset_invert);
+                nxp_soc_gpio_set_io_dir(pdata->reset_io, 1);
+                nxp_soc_gpio_set_io_func(pdata->reset_io, 1);
+                nxp_soc_gpio_set_out_value(pdata->reset_io, pdata->reset_invert);
+                if (pdata->reset_delay_ms > 0)
+                    /* mdelay(pdata->reset_delay_ms); */
+                    mdelay(1);
+                nxp_soc_gpio_set_out_value(pdata->reset_io, !pdata->reset_invert);
+                if (pdata->reset_delay_ms > 0)
+                    mdelay(pdata->reset_delay_ms);
+            }
+        } else {
+            if (pdata->enable_io >= 0)
+                nxp_soc_gpio_set_out_value(pdata->enable_io, pdata->enable_invert);
+            if (pdata->reset_io >= 0)
+                nxp_soc_gpio_set_out_value(pdata->reset_io, !pdata->reset_invert);
+            general_set_clock(pdata, enable);
+        }
+        return 0;
+    } else {
+        return power_enable_by_enable_seq(pdata, enable);
     }
 
     return 0;
@@ -134,7 +261,7 @@ static int general_power_enable(struct nxp_vin_platformdata *pdata, bool enable)
 
 static bool general_power_state_changed(struct nxp_vin_platformdata *pdata)
 {
-    return 0;
+    return pdata->my_power_state_changed;
 }
 
 static const u_int port_table[][11][2] = {
@@ -178,7 +305,6 @@ static void general_setup_io(struct nxp_vin_platformdata *pdata, bool force)
         int i, len;
         u_int io, fn;
 
-        printk("%s: vid %d\n", __func__, pdata->vid);
         pad = (u_int *)port_table[pdata->vid];
         len = sizeof(port_table[pdata->vid])/sizeof(port_table[pdata->vid][0]);
 
@@ -217,6 +343,31 @@ static struct nxp_v4l2_i2c_board_info *make_i2c_board_info(const char *name, u32
     return nxp_i2c_board_info;
 }
 
+static struct nxp_v4l2_i2c_board_info *nxp_v4l2_parse_i2c_board_info_dt(struct device_node *node)
+{
+    const char *name;
+    u32 i2c_adapter;
+    u32 i2c_addr;
+
+    if (of_property_read_string(node, "i2c_name", &name)) {
+        printk(KERN_ERR "%s: failed to read name\n", __func__);
+        return NULL;
+    }
+
+    if (of_property_read_u32(node, "i2c_adapter", &i2c_adapter)) {
+        printk(KERN_ERR "%s: failed to read i2c_adapter\n", __func__);
+        return NULL;
+    }
+
+    if (of_property_read_u32(node, "addr", &i2c_addr)) {
+        printk(KERN_ERR "%s: failed to read i2c addr\n", __func__);
+        return NULL;
+    }
+
+    return make_i2c_board_info(name, i2c_adapter, i2c_addr);
+}
+
+
 static int nxp_v4l2_parse_capture_sensor_dt(struct device_node *node, struct nxp_capture_platformdata *pcapture)
 {
     u32 type;
@@ -226,52 +377,334 @@ static int nxp_v4l2_parse_capture_sensor_dt(struct device_node *node, struct nxp
     }
 
     if (type == NXP_CAPTURE_I2C) {
-        const char *name;
-        u32 i2c_adapter;
-        u32 i2c_addr;
-
-        if (of_property_read_string(node, "sensor_name", &name)) {
-            printk(KERN_ERR "%s: failed to read sensor name\n", __func__);
-            return -EINVAL;
-        }
-
-        if (of_property_read_u32(node, "i2c_adapter", &i2c_adapter)) {
-             printk(KERN_ERR "%s: failed to read i2c_adapter\n", __func__);
-             return -EINVAL;
-        }
-
-        if (of_property_read_u32(node, "addr", &i2c_addr)) {
-             printk(KERN_ERR "%s: failed to read i2c addr\n", __func__);
-             return -EINVAL;
-        }
-
-        pcapture->sensor = make_i2c_board_info(name, i2c_adapter, i2c_addr);
+        pcapture->sensor = nxp_v4l2_parse_i2c_board_info_dt(node);
         if (!pcapture->sensor) {
             printk(KERN_ERR "%s: failed to make_i2c_board_info()\n", __func__);
             return -ENOMEM;
         }
+    } else if(type == NXP_CAPTURE_LOOPBACK) {
+        pcapture->sensor = NULL;
+        printk(KERN_INFO "[%s] NXP_CAPTURE_LOOPBACK\n", __func__);
     }
-		else if(type == NXP_CAPTURE_LOOPBACK)
-		{
-			pcapture->sensor = NULL;
-			printk(KERN_INFO "[%s] NXP_CAPTURE_LOOPBACK\n", __func__);
-		}
 
     return 0;
 }
 
+static int find_action_mark(u32 *p, int length, u32 mark)
+{
+    int i;
+    for (i = 0; i < length; i++) {
+        if (p[i] == mark)
+            return i;
+    }
+    return -1;
+}
+
+static int find_action_start(u32 *p, int length)
+{
+    return find_action_mark(p, length, CAPTURE_ENABLE_ACTION_START);
+}
+
+static int find_action_end(u32 *p, int length)
+{
+    return find_action_mark(p, length, CAPTURE_ENABLE_ACTION_END);
+}
+
+static int get_num_of_enable_action(u32 *array, int count)
+{
+    u32 *p = array;
+    int action_num = 0;
+    int next_index = 0;
+    int length = count;
+    while (length > 0) {
+        next_index = find_action_start(p, length);
+        if (next_index < 0)
+            break;
+        p += next_index;
+        length -= next_index;
+        if (length <= 0)
+            break;
+
+        next_index = find_action_end(p, length);
+        if (next_index <= 0) {
+            printk(KERN_ERR "%s: failed to find_action_end, check enable_seq of dts\n", __func__);
+            return 0;
+        }
+        p += next_index;
+        length -= next_index;
+        action_num++;
+    }
+
+    debug_enable_msg("%s: action_num %d\n", __func__, action_num);
+    return action_num;
+}
+
+static u32 *get_next_action_unit(u32 *array, int count)
+{
+    u32 *p = array;
+    int next_index = find_action_start(p, count);
+    if (next_index >= 0)
+        return p + next_index;
+    return NULL;
+}
+
+inline static u32 get_action_type(u32 *array)
+{
+    return array[1];
+}
+
+static int make_enable_gpio_action(u32 *start, u32 *end, struct nxp_capture_enable_action *action)
+{
+    struct nxp_capture_enable_gpio_action *gpio_action;
+    struct gpio_action_unit *unit;
+    int i;
+    u32 *p;
+
+    int unit_count = end - start - 1 - 1 - 1 - 1; // start_marker, type, gpio num, gpio alt
+    if ((unit_count <= 0) || (unit_count % 2)) {
+        printk(KERN_ERR "%s: invalid unit_count %d\n", __func__, unit_count);
+        return -EINVAL;
+    }
+    unit_count /= 2;
+    
+    gpio_action = (struct nxp_capture_enable_gpio_action *)kzalloc(sizeof(struct nxp_capture_enable_gpio_action), GFP_KERNEL);
+    if (!gpio_action) {
+        printk(KERN_ERR "%s: failed to kzalloc for nxp_capture_enable_gpio_action\n", __func__);
+        return -ENOMEM;
+    }
+
+    gpio_action->count = unit_count;
+    gpio_action->units = (struct gpio_action_unit *)kzalloc(sizeof(struct gpio_action_unit) * unit_count, GFP_KERNEL);
+    if (!gpio_action->units) {
+        printk(KERN_ERR "%s: failed to kzalloc for gpio_action_unit, count %d\n", __func__, unit_count);
+        kfree(gpio_action);
+        return -ENOMEM;
+    }
+    
+    gpio_action->gpio_num = start[2];
+    gpio_action->gpio_alt_func_num = start[3];
+
+    p = &start[4];
+    for (i = 0; i < unit_count; i++) {
+        unit = &gpio_action->units[i];
+        unit->high_low = *p;
+        p++;
+        unit->delay_ms = *p;
+        p++;
+    }
+
+    action->type = CAPTURE_ENABLE_ACTION_TYPE_GPIO;
+    action->action = gpio_action;
+
+#ifdef DUMP_ENABLE_ACTION
+    printk("GPIO ACTION DUMP ==============> \n");
+    printk("gpio num: %d\n", gpio_action->gpio_num);
+    printk("gpio alt func num: %d\n", gpio_action->gpio_alt_func_num);
+    printk("gpio action count: %d\n", gpio_action->count);
+    unit = gpio_action->units;
+    for (i = 0; i < unit_count; i++) {
+        if (unit->high_low)
+            printk("\"high and delay %dms\" \t ", unit->delay_ms);
+        else
+            printk("\"low and delay %dms\" \t ", unit->delay_ms);
+        unit++;
+    }
+#endif
+
+    return 0;
+}
+
+static int make_enable_pmic_action(u32 *start, u32 *end, struct nxp_capture_enable_action *action)
+{
+    struct nxp_capture_enable_pmic_action *pmic_action;
+    int entry_count = end - start - 1 - 1; // start_marker, type
+    if ((entry_count <= 0) || (entry_count % 2)) {
+        printk(KERN_ERR "%s: invalid entry_count %d\n", __func__, entry_count);
+        return -EINVAL;
+    }
+
+    pmic_action = (struct nxp_capture_enable_pmic_action *)kzalloc(sizeof(struct nxp_capture_enable_pmic_action), GFP_KERNEL);
+    if (!pmic_action) {
+        printk(KERN_ERR "%s: failed to kzalloc for nxp_capture_enable_pmic_action\n", __func__);
+        return -ENOMEM;
+    }
+
+    pmic_action->enable = start[2];
+    pmic_action->delay_ms = start[3];
+
+    action->type = CAPTURE_ENABLE_ACTION_TYPE_PMIC;
+    action->action = pmic_action;
+
+#ifdef DUMP_ENABLE_ACTION
+    printk("PMIC ACTION DUMP ==============> \n");
+    if (pmic_action->enable)
+        printk("enable power and delay %dms\n", pmic_action->delay_ms);
+    else
+        printk("disable power and delay %dms\n", pmic_action->delay_ms);
+#endif
+
+    return 0;
+}
+
+static int make_enable_clock_action(u32 *start, u32 *end, struct nxp_capture_enable_action *action)
+{
+    struct nxp_capture_enable_clock_action *clock_action;
+    int entry_count = end - start - 1 - 1; // start_marker, type
+    if ((entry_count <= 0) || (entry_count % 2)) {
+        printk(KERN_ERR "%s: invalid entry_count %d\n", __func__, entry_count);
+        return -EINVAL;
+    }
+
+    clock_action = (struct nxp_capture_enable_clock_action *)kzalloc(sizeof(struct nxp_capture_enable_clock_action), GFP_KERNEL);
+    if (!clock_action) {
+        printk(KERN_ERR "%s: failed to kzalloc for nxp_capture_enable_clock_action\n", __func__);
+        return -ENOMEM;
+    }
+
+    clock_action->enable = start[2];
+    clock_action->delay_ms = start[3];
+
+    action->type = CAPTURE_ENABLE_ACTION_TYPE_CLOCK;
+    action->action = clock_action;
+
+#ifdef DUMP_ENABLE_ACTION
+    printk("CLOCK ACTION DUMP ==============> \n");
+    if (clock_action->enable)
+        printk("enable clock and delay %dms\n", clock_action->delay_ms);
+    else
+        printk("disable clock and delay %dms\n", clock_action->delay_ms);
+#endif
+
+    return 0;
+}
+
+static int make_enable_action(u32 *array, int count, struct nxp_capture_enable_action *action)
+{
+    u32 *p = array;
+    int end_index = find_action_end(p, count);
+    if (end_index <= 0) {
+        printk("%s: can't find action end\n", __func__);
+        return -EINVAL;
+    }
+    switch (get_action_type(p)) {
+    case CAPTURE_ENABLE_ACTION_TYPE_GPIO:
+        return make_enable_gpio_action(p, p + end_index, action);
+    case CAPTURE_ENABLE_ACTION_TYPE_PMIC:
+        return make_enable_pmic_action(p, p + end_index, action);
+    case CAPTURE_ENABLE_ACTION_TYPE_CLOCK:
+        return make_enable_clock_action(p, p + end_index, action);
+    default:
+        printk(KERN_ERR "%s: invalid type 0x%x\n", __func__, get_action_type(p));
+        return -EINVAL;
+    }
+}
+
+static void free_enable_seq_actions(struct nxp_capture_enable_seq *seq)
+{
+    int i;
+    struct nxp_capture_enable_action *action;
+    for (i = 0; i < seq->count; i++) {
+        action = &seq->actions[i];
+        if (action->action) {
+            switch (action->type) {
+            case CAPTURE_ENABLE_ACTION_TYPE_GPIO:
+                {
+                    struct nxp_capture_enable_gpio_action *gpio_action = (struct nxp_capture_enable_gpio_action *)(action->action);
+                    if (gpio_action->units)
+                        kfree(gpio_action->units);
+                }
+                break;
+            }
+
+            kfree(action->action);
+        }
+    }
+
+    kfree(seq->actions);
+    seq->count = 0;
+    seq->actions = NULL;
+}
+
+static int parse_capture_enable_seq(u32 *array, int count, struct nxp_capture_enable_seq *seq)
+{
+    u32 *p;
+    int ret = 0;
+    struct nxp_capture_enable_action *action;
+    int action_nums = get_num_of_enable_action(array, count);
+    if (action_nums <= 0) {
+        printk(KERN_ERR "%s: no actions in enable_seq\n", __func__);
+        return -ENOENT;
+    }
+
+    seq->actions = (struct nxp_capture_enable_action *)kzalloc(sizeof(struct nxp_capture_enable_action) * count, GFP_KERNEL);
+    if (!seq->actions) {
+        printk(KERN_ERR "%s: failed to kzalloc for actions\n", __func__);
+        return -ENOMEM;
+    }
+    seq->count = action_nums;
+
+    p = array;
+    action = seq->actions;
+    while (action_nums--) {
+        p = get_next_action_unit(p, count - (p - array));
+        if (!p) {
+            printk(KERN_ERR "%s: failed to get_next_action_unit --> avail count %d, remains %d\n", __func__, seq->count, action_nums);
+            ret = -EINVAL;
+            goto RET_OUT;
+        }
+
+        ret = make_enable_action(p, count - (p - array), action);
+        if (ret != 0)
+            goto RET_OUT;
+
+        p++;
+        action++;
+    }
+
+RET_OUT:
+    if (ret != 0)
+        free_enable_seq_actions(seq);
+
+    return ret;
+}
+
+static int nxp_v4l2_parse_capture_enable_seq(struct device_node *node, struct nxp_capture_enable_seq *seq)
+{
+    int ret = -ENOENT;
+    int count = of_property_count_elems_of_size(node, "enable_seq", 4);
+    debug_enable_msg("%s: u32 count %d\n", __func__, count);
+
+    if (count > 0) {
+        u32 *p32 = (u32 *)kmalloc(sizeof(u32) * count, GFP_KERNEL);
+        if (!p32) {
+            printk(KERN_ERR "%s: failed to kmalloc for u32 array %ld\n", __func__, sizeof(u32) * count);
+            return -ENOMEM;
+        }
+        of_property_read_u32_array(node, "enable_seq", p32, count);
+#ifdef DUMP_ENABLE_SEQ
+        {
+            int i;
+            for (i = 0; i < count; i++) {
+                printk("%d --> 0x%x, ", i, p32[i]); 
+            }
+            printk("\n");
+        }
+#endif
+        ret = parse_capture_enable_seq(p32, count, seq);
+        kfree(p32);
+    }
+
+    return ret;
+}
+
 static int nxp_v4l2_parse_capture_power_dt(struct device_node *node, struct nxp_vin_platformdata *pvin)
 {
-    printk("%s entered\n", __func__);
     if (of_property_read_u32(node, "enable_io", &pvin->enable_io))
         pvin->enable_io = -1;
-    printk("enable_io %d\n", pvin->enable_io);
     if (of_property_read_u32(node, "enable_invert", (u32 *)&pvin->enable_invert))
         pvin->enable_invert = false;
-    printk("enable_invert %d\n", pvin->enable_invert);
     if (of_property_read_u32(node, "enable_delay_ms", &pvin->enable_delay_ms))
         pvin->enable_delay_ms = -1;
-    printk("enable_delay_ms %d\n", pvin->enable_delay_ms);
 
     if (of_property_read_u32(node, "reset_io", &pvin->reset_io))
         pvin->reset_io = -1;
@@ -279,6 +712,13 @@ static int nxp_v4l2_parse_capture_power_dt(struct device_node *node, struct nxp_
         pvin->reset_invert = false;
     if (of_property_read_u32(node, "reset_delay_ms", &pvin->reset_delay_ms))
         pvin->reset_delay_ms = -1;
+
+    if (of_property_read_u32(node, "disable_io", &pvin->disable_io))
+        pvin->disable_io = -1;
+    if (of_property_read_u32(node, "disable_invert", (u32 *)&pvin->disable_invert))
+        pvin->disable_invert = false;
+    if (of_property_read_u32(node, "disable_delay_ms", &pvin->disable_delay_ms))
+        pvin->disable_delay_ms = -1;
 
     pvin->regulator_nr = of_property_count_strings(node, "regulator_names");
     if (pvin->regulator_nr > 0) {
@@ -298,13 +738,29 @@ static int nxp_v4l2_parse_capture_power_dt(struct device_node *node, struct nxp_
         }
     }
 
-    printk("%s exit\n", __func__);
+    {
+        struct property *prop = of_find_property(node, "enable_seq", NULL);
+        if (prop) {
+            struct nxp_capture_enable_seq *seq = (struct nxp_capture_enable_seq *)kmalloc(sizeof(struct nxp_capture_enable_seq), GFP_KERNEL);
+            if (!seq) {
+                printk(KERN_ERR "%s: failed to kmalloc for struct nxp_capture_enable_seq\n", __func__);
+            } else {
+                int ret = nxp_v4l2_parse_capture_enable_seq(node, seq);
+                if (ret != 0) {
+                    printk(KERN_ERR "%s: failed to nxp_v4l2_parse_capture_enable_seq - ret %d\n", __func__, ret);
+                    kfree(seq);
+                    seq = NULL;
+                }
+                pvin->enable_seq = seq;
+            }
+        }
+    }
+
     return 0;
 }
 
 static int nxp_v4l2_parse_capture_clock_dt(struct device_node *node, struct nxp_vin_platformdata *pvin)
 {
-    printk("%s entered\n", __func__);
     if (of_property_read_u32(node, "pwm_number", &pvin->pwm_number)) {
         pvin->pwm_number = -1;
     } else {
@@ -314,7 +770,6 @@ static int nxp_v4l2_parse_capture_clock_dt(struct device_node *node, struct nxp_
         }
     }
 
-    printk("%s exit\n", __func__);
     return 0;
 }
 
@@ -322,8 +777,6 @@ static int nxp_v4l2_parse_capture_sub_dt(struct device_node *node, struct nxp_ca
 {
     struct device_node *child_node = NULL;
     int ret;
-
-    printk("%s %p\n", __func__, pcapture);
 
     if (of_property_read_u32(node, "type", &pcapture->type)) {
         printk(KERN_ERR "failed to read type\n");
@@ -414,6 +867,9 @@ static int nxp_v4l2_parse_capture_sub_dt(struct device_node *node, struct nxp_ca
 
         if (of_property_read_u32(node, "late_power_down", (u32 *)&pcapture->parallel.late_power_down))
             pcapture->parallel.late_power_down = false;
+
+        if (of_property_read_u32(node, "power_down_when_off", (u32 *)&pcapture->parallel.power_down_when_off))
+            pcapture->parallel.power_down_when_off = false;
     }
 
     child_node = of_find_node_by_name(node, "sensor");
@@ -453,7 +909,7 @@ static int nxp_v4l2_parse_capture_sub_dt(struct device_node *node, struct nxp_ca
     pcapture->parallel.set_clock = general_set_clock;
     pcapture->parallel.setup_io = general_setup_io;
 
-    printk("%s: power_enable %p, power_state_changed %p, set_clock %p, setup_ion %p\n", __func__,
+    vmsg("%s: power_enable %p, power_state_changed %p, set_clock %p, setup_ion %p\n", __func__,
             pcapture->parallel.power_enable,
             pcapture->parallel.power_state_changed,
             pcapture->parallel.set_clock,
@@ -499,9 +955,49 @@ static int nxp_v4l2_parse_capture_dt(struct device_node *node, struct nxp_v4l2_p
     return 0;
 }
 
+static int nxp_v4l2_parse_out_hdmi_dt(struct device_node *node, struct nxp_hdmi_platformdata *pdata)
+{
+    struct device_node *child_node = NULL;
+
+    child_node = of_find_node_by_name(node, "edid");
+    if (child_node) {
+        pdata->edid = nxp_v4l2_parse_i2c_board_info_dt(child_node);
+        if (!pdata->edid) {
+            printk(KERN_ERR "%s: failed to kzalloc for hdmi edid\n", __func__);
+            return -ENOMEM;
+        }
+    }
+
+#ifdef CONFIG_NXP_HDMI_USE_HDCP
+    child_node = of_find_node_by_name(node, "hdcp");
+    if (child_node) {
+        pdata->hdcp = nxp_v4l2_parse_i2c_board_info_dt(child_node);
+        if (!pdata->hdcp) {
+            printk(KERN_ERR "%s: failed to kzalloc for hdmi hdcp\n", __func__);
+            return -ENOMEM;
+        }
+    }
+#endif
+
+    return 0;
+}
+
 static int nxp_v4l2_parse_out_dt(struct device_node *node, struct nxp_v4l2_platformdata *pdata)
 {
-    return 0;
+    int ret = 0;
+    struct device_node *child_node = NULL;
+
+    pdata->out = (struct nxp_out_platformdata *)kzalloc(sizeof(struct nxp_out_platformdata), GFP_KERNEL);
+    if (!pdata->out) {
+        printk(KERN_ERR "%s: failed to kzalloc for nxp_out_platformadata\n", __func__);
+        return -ENOMEM;
+    }
+
+    child_node = of_find_node_by_name(node, "hdmi");
+    if (child_node) 
+        ret = nxp_v4l2_parse_out_hdmi_dt(child_node, &pdata->out->hdmi);
+    
+    return ret;
 }
 
 static struct nxp_v4l2_platformdata *nxp_v4l2_parse_dt(struct device *dev)
@@ -511,7 +1007,6 @@ static struct nxp_v4l2_platformdata *nxp_v4l2_parse_dt(struct device *dev)
     struct nxp_v4l2_platformdata *pdata;
     int ret;
 
-    printk("%s entered\n", __func__);
     pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
     if (!pdata) {
         dev_err(dev, "failed to devm_kzalloc() for struct nxp_v4l2_platformdata\n");
@@ -519,7 +1014,6 @@ static struct nxp_v4l2_platformdata *nxp_v4l2_parse_dt(struct device *dev)
     }
 
     child_node = of_find_node_by_name(of_node, "capture");
-    printk("%s: %p\n", __func__, child_node);
     if (child_node) {
         ret = nxp_v4l2_parse_capture_dt(child_node, pdata);
         if (ret) {
@@ -531,17 +1025,16 @@ static struct nxp_v4l2_platformdata *nxp_v4l2_parse_dt(struct device *dev)
 
     child_node = of_find_node_by_name(of_node, "out");
     if (child_node) {
-         ret = nxp_v4l2_parse_out_dt(child_node, pdata);
-         if (ret) {
-             printk(KERN_ERR "%s: failed to nxp_v4l2_parse_out_dt()\n", __func__);
-             if (pdata->captures)
-                 kfree(pdata->captures);
-             kfree(pdata);
-             return ERR_PTR(-EINVAL);
-         }
+        ret = nxp_v4l2_parse_out_dt(child_node, pdata);
+        if (ret) {
+            printk(KERN_ERR "%s: failed to nxp_v4l2_parse_out_dt()\n", __func__);
+            if (pdata->captures)
+                kfree(pdata->captures);
+            kfree(pdata);
+            return ERR_PTR(-EINVAL);
+        }
     }
 
-    printk("%s exit\n", __func__);
     return pdata;
 }
 #endif
@@ -565,8 +1058,7 @@ static int nxp_v4l2_probe(struct platform_device *pdev)
 
     int ret;
 
-    pr_debug("%s entered\n", __func__);
-    printk("%s entered\n", __func__);
+    vmsg("%s entered\n", __func__);
 
 #ifndef CONFIG_OF
     pdata = pdev->dev.platform_data;
@@ -803,10 +1295,7 @@ static int nxp_v4l2_suspend(struct device *dev)
     int ret;
     int i;
 
-    /*PM_DBGOUT("+%s\n", __func__);*/
-
     if (!__me) {
-        /*PM_DBGOUT("%s: No Exist\n", __func__);*/
         return 0;
     }
 
@@ -815,7 +1304,6 @@ static int nxp_v4l2_suspend(struct device *dev)
         if (__me->capture[i]) {
             ret = suspend_nxp_capture(__me->capture[i]);
             if (ret) {
-                /*PM_DBGOUT("failed to suspend capture %d\n", i);*/
                 return ret;
             }
         }
@@ -826,7 +1314,6 @@ static int nxp_v4l2_suspend(struct device *dev)
     if (__me->scaler) {
         ret = suspend_nxp_scaler(__me->scaler);
         if (ret) {
-            /*PM_DBGOUT("failed to suspend scaler\n");*/
             return ret;
         }
     }
@@ -836,13 +1323,11 @@ static int nxp_v4l2_suspend(struct device *dev)
     if (__me->out) {
         ret = suspend_nxp_out(__me->out);
         if (ret) {
-            /*PM_DBGOUT("failed to suspend out\n");*/
             return ret;
         }
     }
 #endif
 
-    /*PM_DBGOUT("-%s\n", __func__);*/
     return 0;
 }
 
@@ -851,13 +1336,11 @@ static int nxp_v4l2_resume(struct device *dev)
     int ret;
     int i;
 
-    /*PM_DBGOUT("+%s\n", __func__);*/
 #ifdef CONFIG_VIDEO_NXP_CAPTURE
     for (i = 0; i < NXP_MAX_CAPTURE_NUM; i++) {
         if (__me->capture[i]) {
             ret = resume_nxp_capture(__me->capture[i]);
             if (ret) {
-                /*PM_DBGOUT("failed to suspend capture %d\n", i);*/
                 return ret;
             }
         }
@@ -868,7 +1351,6 @@ static int nxp_v4l2_resume(struct device *dev)
     if (__me->scaler) {
         ret = resume_nxp_scaler(__me->scaler);
         if (ret) {
-            /*PM_DBGOUT(KERN_ERR "failed to suspend scaler\n");*/
             return ret;
         }
     }
@@ -878,13 +1360,11 @@ static int nxp_v4l2_resume(struct device *dev)
     if (__me->out) {
         ret = resume_nxp_out(__me->out);
         if (ret) {
-            /*PM_DBGOUT(KERN_ERR "failed to suspend out\n");*/
             return ret;
         }
     }
 #endif
 
-    /*PM_DBGOUT("-%s\n", __func__);*/
     return 0;
 }
 #endif
