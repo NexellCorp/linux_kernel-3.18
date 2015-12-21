@@ -273,10 +273,11 @@ struct s3c24xx_uart_drv_data {
     void (*exit) (void *data, int port);
 	void (*wake_peer)(struct uart_port *);
 	/* For nexell soc */
-    int  reset_id;
     int  tieoff_user_smc;
     int  tieoff_smc_txenb;
     int  tieoff_smc_rxenb;
+	/* For reset Control */
+	struct reset_control *rst;
 };
 
 #endif /* __ASSEMBLY__ */

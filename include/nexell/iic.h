@@ -34,7 +34,6 @@ struct s3c2410_platform_i2c {
 	unsigned int	slave_addr;
 	unsigned long	frequency;
 	unsigned int	sda_delay;
-	unsigned int	reset_id;
 	unsigned int    retry_delay;
 	unsigned int    retry_cnt;
 

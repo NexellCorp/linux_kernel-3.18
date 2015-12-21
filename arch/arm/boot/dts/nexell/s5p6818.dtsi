@@ -205,14 +205,10 @@
 			interrupts = <0 IRQ_UART0 0>;
 			clock-names = "uart0";
 			clocks = <&uart0>;
-			#if !defined(CONFIG_SERIAL_NXP_UART0)
-			#if  defined(CONFIG_SERIAL_NXP_UART0_DMA)
 			dma-names = "tx", "rx";
 			dmas = <&pl08xdma0 2 &pl08xdma0 3>;
-			#endif
-			status = "disabled";
-			#endif
-			reset-id = <RESET_ID_UART0>;
+			resets  = <&nxp_reset RESET_ID_UART0>;
+			reset-names = "uart-reset";
 			tieoff-id = <TIEOFF_UART0_USESMC TIEOFF_UART0_SMCTXENB TIEOFF_UART0_SMCRXENB>;
 		};
 
@@ -222,13 +218,12 @@
 			interrupts = <0 IRQ_UART1 0>;
 			clock-names = "uart1";
 			clocks = <&uart1>;
-			#if !defined(CONFIG_SERIAL_NXP_UART1)
-			#if  defined(CONFIG_SERIAL_NXP_UART1_DMA)
 			dma-names = "tx", "rx";
 			dmas = <&pl08xdma0 0 &pl08xdma0 1>;
-			#endif
+			resets  = <&nxp_reset RESET_ID_UART1>;
+			reset-names = "uart-reset";
+			tieoff-id = <TIEOFF_UART1_USESMC TIEOFF_UART1_SMCTXENB TIEOFF_UART1_SMCRXENB>;
 			status = "disabled";
-			#endif
 		};
 
 		serial2:serial@a2000 {
@@ -236,9 +231,12 @@
 			reg = <PHYS_BASE_UART2 0x1000>;
 			interrupts = <0 IRQ_UART2 0>;
 			clock-names = "uart2";
-			#if !defined(CONFIG_SERIAL_NXP_UART2)
+			clocks = <&uart2>;
+			dmas = <&pl08xdma0 4 &pl08xdma0 5>;
+			resets  = <&nxp_reset RESET_ID_UART2>;
+			reset-names = "uart-reset";
+			tieoff-id = <TIEOFF_UART2_USESMC TIEOFF_UART2_SMCTXENB TIEOFF_UART2_SMCRXENB>;
 			status = "disabled";
-			#endif
 		};
 
 		serial3:serial@a3000 {
@@ -246,9 +244,11 @@
 			reg = <PHYS_BASE_UART3 0x1000>;
 			interrupts = <0 IRQ_UART3 0>;
 			clock-names = "uart3";
-			#if !defined(CONFIG_SERIAL_NXP_UART3)
+			clocks = <&uart3>;
+			resets  = <&nxp_reset RESET_ID_UART3>;
+			reset-names = "uart-reset";
+			tieoff-id = <TIEOFF_UART3_USESMC TIEOFF_UART3_SMCTXENB TIEOFF_UART3_SMCRXENB>;
 			status = "disabled";
-			#endif
 		};
 
 		serial4:serial@6d000 {
@@ -256,9 +256,11 @@
 			reg = <PHYS_BASE_UART4 0x1000>;
 			interrupts = <0 IRQ_UART4 0>;
 			clock-names = "uart4";
-			#if !defined(CONFIG_SERIAL_NXP_UART4)
+			clocks = <&uart4>;
+			resets  = <&nxp_reset RESET_ID_UART4>;
+			reset-names = "uart-reset";
+			tieoff-id = <TIEOFF_UART4_USESMC TIEOFF_UART4_SMCTXENB TIEOFF_UART4_SMCRXENB>;
 			status = "disabled";
-			#endif
 		};
 
 		serial5:serial@6f000 {
@@ -266,9 +268,11 @@
 			reg = <PHYS_BASE_UART5 0x1000>;
 			interrupts = <0 IRQ_UART5 0>;
 			clock-names = "uart5";
-			#if !defined(CONFIG_SERIAL_NXP_UART5)
+			clocks = <&uart5>;
+			resets  = <&nxp_reset RESET_ID_UART5>;
+			reset-names = "uart-reset";
+			tieoff-id = <TIEOFF_UART5_USESMC TIEOFF_UART5_SMCTXENB TIEOFF_UART5_SMCRXENB>;
 			status = "disabled";
-			#endif
 		};
 
 		#ifdef CONFIG_I2C_NXP_PORT0
@@ -279,8 +283,8 @@
 				&gpio_d 2 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<0>;
 		};
-
 		#else
 		iic0:iic@a4000 {
 			compatible = "nexell,nxp-i2c";
@@ -291,7 +295,8 @@
 			nexell,i2c-sda-delay = <100>;
 			nexell,i2c-max-bus-freq = <100000>;
 			nexell,i2c-slave-addr = <0x66>;
-			nexell,reset-id = <RESET_ID_I2C0>;
+			resets  = <&nxp_reset RESET_ID_I2C0>;
+			reset-names = "i2c-reset";
 			nexell,i2c-rerty-delay = <10>;
 			nexell,i2c-rerty-cnt = <2>;
 		};
@@ -306,8 +311,8 @@
 				&gpio_d 4 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<1>;
 		};
-
 		#else
 	  	iic1:iic@a5000 {
 			compatible = "nexell,nxp-i2c";
@@ -318,7 +323,8 @@
 			nexell,i2c-sda-delay = <200>;
 			nexell,i2c-max-bus-freq = <50000>;
 			nexell,i2c-slave-addr = <0x66>;
-			nexell,reset-id = <RESET_ID_I2C1>;
+			resets  = <&nxp_reset RESET_ID_I2C1>;
+			reset-names = "i2c-reset";
 			nexell,i2c-rerty-delay = <10>;
 			nexell,i2c-rerty-cnt = <2>;
 		};
@@ -333,8 +339,8 @@
 				&gpio_d 6 0 /* scl */
 				>;
 			i2c-gpio,delay-us = <10>;    /* ~100 kHz */
+			i2c-gpio,ch =<2>;
 		};
-
 		#else
 		iic2:iic@a6000 {
 			compatible = "nexell,nxp-i2c";
@@ -345,7 +351,8 @@
 			nexell,i2c-sda-delay = <100>;
 			nexell,i2c-max-bus-freq = <100000>;
 			nexell,i2c-slave-addr = <0x66>;
-			nexell,reset-id = <RESET_ID_I2C2>;
+			resets  = <&nxp_reset RESET_ID_I2C2>;
+			reset-names = "i2c-reset";
 			nexell,i2c-rerty-delay = <10>;
 			nexell,i2c-rerty-cnt = <2>;
 		};
@@ -365,9 +372,10 @@
 			dma-names = "tx", "rx";
 			dmas = <&pl08xdma0 6 &pl08xdma0 7>;
 			enable_dma = <1>;
-			reset-id = <RESET_ID_SSP0>;
+			resets  = <&nxp_reset RESET_ID_SSP0_P>, <&nxp_reset RESET_ID_SSP0>;
+			reset-names = "pre-reset", "reset";
 			#ifdef CONFIG_SPI_SLSI_PORT0
-			status = "enable"
+			status = "okay";
 			#else
 			status = "disabled";
 			#endif
@@ -382,9 +390,10 @@
 			dma-names = "tx", "rx";
 			dmas = <&pl08xdma0 8 &pl08xdma0 9>;
 			enable_dma = <1>;
-			reset-id = <RESET_ID_SSP1>;
+			resets  = <&nxp_reset RESET_ID_SSP1_P>, <&nxp_reset RESET_ID_SSP1>;
+			reset-names = "pre-reset", "reset";
 			#ifdef CONFIG_SPI_SLSI_PORT1
-			status = "enable"
+			status = "okay"
 			#else
 			status = "disabled";
 			#endif
@@ -399,9 +408,10 @@
 			dma-names = "tx", "rx";
 			dmas = <&pl08xdma0 10 &pl08xdma0 11>;
 			enable_dma = <1>;
-			reset-id = <RESET_ID_SSP2>;
+			resets  = <&nxp_reset RESET_ID_SSP2_P>, <&nxp_reset RESET_ID_SSP2>;
+			reset-names = "pre-reset", "reset";
 			#ifdef CONFIG_SPI_SLSI_PORT2
-			status = "enable"
+			status = "okay"
 			#else
 			status = "disabled";
 			#endif
@@ -687,8 +697,10 @@
 			reg = <PHYS_BASE_SDMMC0 0x1000>;
 			interrupts = <0 IRQ_SDMMC0 0>;
 			clock-names = "sdhc0";
-			reset-id = <RESET_ID_SDMMC0>;
+			resets  = <&nxp_reset RESET_ID_SDMMC0>;
+			reset-names = "dw_mmc-reset";
 			clocks = <&sdhc0>;
+			status = "disabled";
 		};
 
 		dw_mmc1:dw_mmc@68000 {
@@ -696,9 +708,10 @@
 			reg = <PHYS_BASE_SDMMC1 0x1000>;
 			interrupts = <0 IRQ_SDMMC1 0>;
 			clock-names = "sdhc1";
+			resets  = <&nxp_reset RESET_ID_SDMMC1>;
+			reset-names = "dw_mmc-reset";
 			clocks = <&sdhc1>;
-			reset-id = <RESET_ID_SDMMC1>;
-			status = "okay";
+			status = "disabled";
 		};
 
 		dw_mmc2:dw_mmc@69000 {
@@ -706,8 +719,10 @@
 			reg = <PHYS_BASE_SDMMC2 0x1000>;
 			interrupts = <0 IRQ_SDMMC2 0>;
 			clock-names = "sdhc2";
-			reset-id = <RESET_ID_SDMMC2>;
+			resets  = <&nxp_reset RESET_ID_SDMMC2>;
+			reset-names = "dw_mmc-reset";
 			clocks = <&sdhc2>;
+			status = "disabled";
 		};
 
 		dwcotg@40000 {

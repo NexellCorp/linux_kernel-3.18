@@ -11,6 +11,7 @@
  * option) any later version.
  *
  */
+//#define __TRACE__
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 

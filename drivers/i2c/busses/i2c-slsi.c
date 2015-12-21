@@ -41,9 +41,9 @@
 #include <linux/of_i2c.h>
 #endif
 #include <linux/of_gpio.h>
+#include <linux/reset.h> 
 
 #include <asm/irq.h>
-
 #include <nexell/regs-iic.h>
 #include <nexell/iic.h>
 #include <nexell/platform.h>
@@ -60,7 +60,7 @@
 //#define dev_err(fmt,msg...) lldebugout(msg)
 //#define dev_info(fmt,msg...) lldebugout(msg)
 /* i2c controller state */
-
+#define RST
 enum s3c24xx_i2c_state {
 	STATE_IDLE,
 	STATE_START,
@@ -104,10 +104,8 @@ struct s3c24xx_i2c {
 	unsigned int freq;
 	bool condition;
 	bool tr;
+	struct reset_control *rst;
 };
-
-const static int i2c_reset[3] = {RESET_ID_I2C0, RESET_ID_I2C1, RESET_ID_I2C2};
-
 
 /* default platform data removed, dev should always carry data. */
 
@@ -895,14 +893,12 @@ s3c24xx_i2c_parse_dt(struct device_node *np, struct s3c24xx_i2c *i2c)
 		return;
 
 	pdata->bus_num =  of_alias_get_id(np, "i2c");
-	of_property_read_u32(np, "nexell,reset-id", &pdata->reset_id);
 	of_property_read_u32(np, "nexell,i2c-sda-delay", &pdata->sda_delay);
 	of_property_read_u32(np, "nexell,i2c-slave-addr", &pdata->slave_addr);
 	of_property_read_u32(np, "nexell,i2c-max-bus-freq",
 				(u32 *)&pdata->frequency);
 	of_property_read_u32(np, "nexell,i2c-rerty-delay", &pdata->retry_delay);
 	of_property_read_u32(np, "nexell,i2c-rerty-cnt", &pdata->retry_cnt);
-
 }
 #else
 static void
@@ -956,6 +952,13 @@ static int s3c24xx_i2c_probe(struct platform_device *pdev)
 	i2c->adap.class   = I2C_CLASS_HWMON | I2C_CLASS_SPD;
 	i2c->tx_setup     = 50;
 	
+	i2c->rst = devm_reset_control_get(&pdev->dev,"i2c-reset");
+	if(NULL == i2c->rst)
+	{
+		dev_err(&pdev->dev, "fail Get reset control id\n");
+		return -ENOMEM;
+	}
+	
 	if(i2c->adap.retries)
 		i2c->adap.retries = DEFAULT_RETRY_CNT;
 		
@@ -976,11 +979,9 @@ static int s3c24xx_i2c_probe(struct platform_device *pdev)
 	dev_dbg(&pdev->dev, "clock source %p\n", i2c->clk);
 
 	clk_prepare_enable(i2c->clk);
-
-	nxp_soc_peri_reset_set(i2c->pdata->reset_id );
-
+	reset_control_reset(i2c->rst);
+	
 	/* map the registers */
-
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (res == NULL) {
 		dev_err(&pdev->dev, "cannot find IO resource\n");
@@ -1138,15 +1139,14 @@ static int s3c24xx_i2c_resume(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
 	struct s3c24xx_i2c *i2c = platform_get_drvdata(pdev);
-	int rsc = i2c_reset[i2c->pdata->bus_num];
 
 	int ret;
 
 	i2c_lock_adapter(&i2c->adap);
 
 	clk_prepare_enable(i2c->clk);
-
-	nxp_soc_peri_reset_set(rsc);
+	reset_control_reset(i2c->rst);
+	
 	ret = s3c24xx_i2c_init(i2c);
 	if (ret) {
 		i2c_unlock_adapter(&i2c->adap);

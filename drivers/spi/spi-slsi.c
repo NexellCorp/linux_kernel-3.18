@@ -36,6 +36,8 @@
 #include <nexell/platform.h>
 #include <nexell/soc-s5pxx18.h>
 
+#include <linux/reset.h>
+
 #define MAX_SPI_PORTS       3
 /*
  * The type of reading going on on this chip
@@ -268,15 +270,6 @@ struct s3c64xx_spi_port_config {
     bool clk_from_cmu;
 };
 
-
-//static struct s3c2410_dma_client s3c64xx_spi_dma_client = {
-//	.name = "samsung-spi-dma",
-//};
-static int reset_id[3][2] = { 
-		{ RESET_ID_SSP0_P,RESET_ID_SSP0},
-		{ RESET_ID_SSP1_P,RESET_ID_SSP1},
-		{ RESET_ID_SSP2_P,RESET_ID_SSP2},
-};
 static int set_up_next_transfer(struct s3c64xx_spi_driver_data *sdd,
 				struct spi_transfer *transfer);
 
@@ -1482,11 +1475,11 @@ static void s3c64xx_spi_hwinit(struct s3c64xx_spi_driver_data *sdd, int channel)
 
 	/* Reset */
 
-	nxp_soc_peri_reset_set(reset_id[channel][0]);
-	nxp_soc_peri_reset_set(reset_id[channel][1]);
+	reset_control_reset(sci->p_rst);
+	reset_control_reset(sci->rst);
 
 	S3C64XX_SPI_DEACT(sdd);
-
+	
 	/* Disable Interrupts - we use Polling if not DMA mode */
 	writel(0, regs + S3C64XX_SPI_INT_EN);
 
@@ -1655,6 +1648,14 @@ static int __init s3c64xx_spi_probe(struct platform_device *pdev)
 	sci->rx_lvl_offset = sdd->port_conf->rx_lvl_offset;
 	sci->high_speed    = sdd->port_conf->high_speed;
 
+	sci->p_rst = devm_reset_control_get(&pdev->dev,"pre-reset" );
+	sci->rst = devm_reset_control_get(&pdev->dev,"reset" );
+	if(NULL == sci->p_rst || NULL == sci->p_rst)
+	{
+	 	dev_dbg(&pdev->dev, "no reset channel\n");
+		goto err0;
+	}
+	
 	sdd->master = master;
 	sdd->cntrlr_info = sci;
 	sdd->pdev = pdev;
