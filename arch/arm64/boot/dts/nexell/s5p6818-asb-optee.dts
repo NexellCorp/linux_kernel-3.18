@@ -8,9 +8,13 @@
  */
 
 /dts-v1/;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 /memreserve/ 0x7ed00000 0x00100000; /* OP-TEE SHM */
 
 #include "s5p6818-optee.dtsi"
+#else
+#include "s5p6818-optee.dtsi"
+#endif
 
 #define UART_CLOCK_FREQUENCY	147500000
 #define I2C_CLOCK_FREQUENCY	100000000

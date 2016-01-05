@@ -23,10 +23,12 @@
 	#address-cells = <0x1>;
 	#size-cells = <0x1>;
 
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 	psci {
 		compatible = "arm,psci-0.2";
 		method = "smc";
 	};
+#endif
 
 	cpus {
 		#address-cells = <2>;
@@ -36,7 +38,9 @@
 			compatible = "arm,cortex-a53", "arm,armv8";
 			device_type = "cpu";
 			reg = <0x0 0x0>;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 			enable-method = "psci";
+#endif
 			cpu-release-addr = < 0x1 SCR_ARM_SECOND_BOOT >;
 		};
 
@@ -44,7 +48,9 @@
 			compatible = "arm,cortex-a53", "arm,armv8";
 			device_type = "cpu";
 			reg = <0x0 0x1>;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 			enable-method = "psci";
+#endif
 			cpu-release-addr = < 0x1 SCR_ARM_SECOND_BOOT >;
 		};
 
@@ -52,7 +58,9 @@
 			compatible = "arm,cortex-a53", "arm,armv8";
 			device_type = "cpu";
 			reg = <0x0 0x2>;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 			enable-method = "psci";
+#endif
 			cpu-release-addr = < 0x1 SCR_ARM_SECOND_BOOT >;
 		};
 
@@ -60,7 +68,9 @@
 			compatible = "arm,cortex-a53", "arm,armv8";
 			device_type = "cpu";
 			reg = <0x0 0x3>;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 			enable-method = "psci";
+#endif
 			cpu-release-addr = < 0x1 SCR_ARM_SECOND_BOOT >;
 		};
 
@@ -68,7 +78,9 @@
 			compatible = "arm,cortex-a53", "arm,armv8";
 			device_type = "cpu";
 			reg = <0x0 0x100>;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 			enable-method = "psci";
+#endif
 			cpu-release-addr = < 0x1 SCR_ARM_SECOND_BOOT >;
 		};
 
@@ -76,7 +88,9 @@
 			compatible = "arm,cortex-a53", "arm,armv8";
 			device_type = "cpu";
 			reg = <0x0 0x101>;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 			enable-method = "psci";
+#endif
 			cpu-release-addr = < 0x1 SCR_ARM_SECOND_BOOT >;
 		};
 
@@ -84,7 +98,9 @@
 			compatible = "arm,cortex-a53", "arm,armv8";
 			device_type = "cpu";
 			reg = <0x0 0x102>;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 			enable-method = "psci";
+#endif
 			cpu-release-addr = < 0x1 SCR_ARM_SECOND_BOOT >;
 		};
 
@@ -92,7 +108,9 @@
 			compatible = "arm,cortex-a53", "arm,armv8";
 			device_type = "cpu";
 			reg = <0x0 0x103>;
+#ifdef CONFIG_SUPPORT_OPTEE_OS
 			enable-method = "psci";
+#endif
 			cpu-release-addr = < 0x1 SCR_ARM_SECOND_BOOT >;
 		};
 
