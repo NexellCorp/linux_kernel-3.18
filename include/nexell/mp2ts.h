@@ -2,10 +2,10 @@
 #define __NXP_TS_HEADER__
 
 
-#include <nexell/platform.h>
+//#include <nexell/platform.h>
 //#include <nexell/devices.h>
 //#include <nexell/soc.h>
-#include <nexell/soc-s5pxx18.h>
+//include <nexell/soc-s5pxx18.h>
 //#include "ioc_magic.h"
 
 #ifndef __IOC_MAGIC_H__
@@ -27,7 +27,7 @@
 #endif /* __IOC_MAGIC_H__ */
 
 #define DEV_NAME_MPEGTSI        "nxp-mpegtsi"
-#define CFG_MPEGTS_IDMA_MODE	(1)
+#define CFG_MPEGTS_IDMA_MODE	(0)
 
 
 #define DMA_DOUBLE_BUFFER   (1)
@@ -197,7 +197,8 @@ struct ts_channel_info {
 
     unsigned char      *buf;
     unsigned char       tx_mode;
-    unsigned int        dma_virt;
+    //unsigned int        dma_virt;
+    void		        *dma_virt;
     dma_addr_t          dma_phy;
     unsigned int        alloc_size;
     unsigned int        alloc_align;
@@ -206,7 +207,7 @@ struct ts_channel_info {
     int                 r_pos;
     int                 page_size;
     int                 page_num;
-
+ 	int 				irq_num;
     wait_queue_head_t   wait; // read, write wait
 };
 
@@ -224,6 +225,8 @@ struct ts_drv_context {
     int     is_opened;
     char    cap_ch_num;
     char    drv_name[20];
+	bool 	condition;
+	int 	wait_ch;
 };
 
 struct ts_packet_data {
@@ -241,7 +244,7 @@ struct nxp_mp2ts_dev_info {
 };
 
 struct nxp_mp2ts_plat_data {
-	struct nxp_mp2ts_dev_info *dev_info;
+	struct nxp_mp2ts_dev_info dev_info[2];
 	int ts_dma_size[3];
 };
 

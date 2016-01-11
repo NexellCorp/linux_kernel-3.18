@@ -375,6 +375,19 @@
 		#endif
 		#endif
 
+		#ifdef CONFIG_NXP_MP2TS_IF 
+		mp2ts:mp2ts@5d000 {
+			compatible = "nexell,nxp-mp2ts";
+			reg = <PHYS_BASE_MPEGTSI 0x100>;
+			resets  = <&nxp_reset CLK_ID_MPEGTSI>;
+			reset-names = "mp2ts-reset";
+			nxp_dma_size = <5 5 5>;
+			nxp_mp2ts_demod_irq = < 0 >;
+			nxp_mp2ts_demod_rst = < (PAD_GPIO_A+23)   0>;
+			nxp_mp2ts_tuner_rst = < 0>;
+		};
+		#endif
+
 		spi_0:spi@5b000 {
 			compatible = "nexell,nxp-spi";
 			reg = <PHYS_BASE_SSP0 0x1000>;
