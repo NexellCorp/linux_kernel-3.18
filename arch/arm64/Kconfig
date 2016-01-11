@@ -177,10 +177,10 @@ config ARCH_S5P6818
 	select ARCH_HAS_RESET_CONTROLLER
 	select CLKSRC_NXP_TIMER
 	select RESET_CONTROLLER
+	select PINCTRL
 	select ARM64_ERRATUM_845719
 	help
-	  This enables support for the ARMv8 software model (Versatile
-	  Express).
+	  This enables support for the SlsiAP s5p6818.
 
 config PLAT_SLSIAP
 	bool

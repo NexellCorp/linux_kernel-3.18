@@ -46,6 +46,7 @@
 #include <asm/cacheflush.h>
 #include <linux/slab.h>
 #include <linux/prefetch.h>
+#include <linux/pinctrl/consumer.h>
 #ifdef CONFIG_NXPMAC_DEBUG_FS
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
@@ -3374,6 +3375,7 @@ int stmmac_suspend(struct net_device *ndev)
 		priv->hw->mac->pmt(priv->ioaddr, priv->wolopts);
 	else {
 		stmmac_set_mac(priv->ioaddr, false);
+		pinctrl_pm_select_sleep_state(priv->device);
 		/* Disable clock in case of PWM is off */
 		clk_disable_unprepare(priv->stmmac_clk);
 	}

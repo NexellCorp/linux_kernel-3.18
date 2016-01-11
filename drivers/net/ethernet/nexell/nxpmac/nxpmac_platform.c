@@ -26,6 +26,7 @@
 #include <linux/io.h>
 #include <linux/of.h>
 #include <linux/of_net.h>
+#include <linux/of_gpio.h>
 #include <linux/ethtool.h>
 
 #include <linux/phy.h>
@@ -45,32 +46,8 @@ extern int nxpmac_tx_clk_setting(void *bsp_priv, int speed);
 
 
 #ifdef CONFIG_OF
-static uint32_t CFG_ETHER_GMAC_PHY_RST_NUM = -1;
-
-static void __gmac_phy_reset(void)
-{
-	if (CFG_ETHER_GMAC_PHY_RST_NUM == -1) {
-		pr_err("GMAC PHY reset number is not initialized.\n");
-		return;
-	}
-
-	// Set GPIO nReset
-	nxp_soc_gpio_set_io_dir(CFG_ETHER_GMAC_PHY_RST_NUM, 1);
-	nxp_soc_gpio_set_out_value(CFG_ETHER_GMAC_PHY_RST_NUM, 1);
-	udelay( 100 );
-	nxp_soc_gpio_set_out_value(CFG_ETHER_GMAC_PHY_RST_NUM, 0);
-	udelay( 100 );
-	nxp_soc_gpio_set_out_value(CFG_ETHER_GMAC_PHY_RST_NUM, 1);
-	msleep( 30 );
-
-	//gpio_free(CFG_ETHER_GMAC_PHY_RST_NUM);
-	pr_debug(" MDIO phy reset !!\n");
-}
-
 int gmac_phy_reset(void *priv)
 {
-	__gmac_phy_reset();
-
 	return 0;
 }
 
@@ -104,9 +81,6 @@ int  nxpmac_init(struct platform_device *pdev, struct plat_stmmacenet_data *plat
 		udelay(100);
 	}
 
-	// nReset MDIO PHY
-	//__gmac_phy_reset();
-
 	printk("NXP mac init .................. \n");
 	return 0;
 }
@@ -122,6 +96,7 @@ static int nxpmac_probe_config_dt(struct platform_device *pdev,
 	uint32_t autoneg;
 	uint32_t speed;
 	uint32_t duplex;
+	int reset_gpio;
 
 
 	if (!np)
@@ -171,15 +146,19 @@ static int nxpmac_probe_config_dt(struct platform_device *pdev,
 		pr_warn("incorrect phy irq\n");
 		phy_irq = 0;
 	}
-	if (of_property_read_u32(np, "reset_gpio", &CFG_ETHER_GMAC_PHY_RST_NUM)) {
+
+	reset_gpio = of_get_named_gpio(np, "nexell,reset-gpio", 0);
+	if (reset_gpio < 0)
 		pr_err("incorrect phy reset number\n");
-	}
+	else
+		devm_gpio_request(dev, reset_gpio, "mdio-reset");
+
 
 	plat->mdio_bus_data->probed_phy_irq = phy_irq;
-	plat->mdio_bus_data->phy_reset = gmac_phy_reset;
+	//plat->mdio_bus_data->phy_reset = gmac_phy_reset;
 	plat->mdio_bus_data->phy_mask = 0;
 	plat->phy_addr = (int)phy_addr;
-
+	plat->mdio_bus_data->reset_gpio = reset_gpio;
 
 	if (of_device_is_compatible(np, "nexell,nxp-gmac")) {
 		plat->has_gmac = 1;

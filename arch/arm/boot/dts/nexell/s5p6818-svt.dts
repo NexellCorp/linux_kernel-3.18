@@ -41,6 +41,18 @@
 	soc {
 		#include "../../../../../include/nexell/target/s5p6818_svt_gpio.h"
 		#include "s5p6818-pin.dtsi"
+		#include "s5p6818-pinctrl.dtsi"
+
+		pinctrl@1a000 {
+			nand_default: nand-default {
+				nand_noe: nand-noe {
+					nexell,pin-strength = <PIN_STRENGTH_2>;
+				};
+				nand_nwe: nand-nwe {
+					nexell,pin-strength = <PIN_STRENGTH_1>;
+				};
+			};
+		};
 
 		clocks {
 			uart0:uart@a9000 { clock-frequency = <UART_CLOCK_FREQUENCY>; };
@@ -72,6 +84,9 @@
 			bus_speed = <100>;
 			cd_gpio = <(PAD_GPIO_C + 6)>;
 			clk_dly = <0x01020000>;
+
+			pinctrl-names = "default";
+			pinctrl-0 = <&sdmmc0_cclk &sdmmc0_cmd &sdmmc0_bus4>;
 		};
 		#endif
 		
@@ -172,6 +187,10 @@
 		};
 
 		nand:nand@51000 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&nand_default>;
+			/*pinctrl-0 = <&nand_cle &nand_ale &nand_bus8 &nand_rnb &nand_noe &nand_nwe>;*/
+
 			nand-bus-width = <8>;
 			nand-ecc-mode = "hw";
 			/*nand-on-flash-bbt = <1>;*/
@@ -183,11 +202,15 @@
 			nand-tacc = <0x3f>;
 			nand-ecc-bytes = <1024>;
 			nand-ecc-bits = <40>;
-			wp-gpio = <(PAD_GPIO_C+27)>;	/* write protect */
+			//wp-gpio = <(PAD_GPIO_C+27)>;	/* write protect */
+			gpios = <&gpio_c 27 0>;
 			status = "okay";
 		};
 
 		gmac0:ethernet@60000 {
+			pinctrl-names = "default";
+			pinctrl-0 = <&gmac_txd &gmac_rxd &gmac_txen &gmac_mdc &gmac_mdio &gmac_rxclk &gmac_txclk>;
+
 			phy = <&phy0>;
 			status = "okay";
 			#address-cells = <0x1>;
@@ -197,7 +220,8 @@
 			duplex = <1>;					/* 0:DUPLEX_HALF, 1:DUPLEX_FULL */
 			phy-addr = <3>;
 			probed-phy-irq = <(IRQ_GPIO_A_START+9)>;
-			reset_gpio = <(PAD_GPIO_A+10)>;			/* mdio reset pin */
+			nexell,reset-gpio = <&gpio_a 10 0>;
+
 			phy0:ethernet-phy@0 {
 				compatible = "ethernet-phy-ieee802.3-c22";
 				/*max-speed = <1000>;*/

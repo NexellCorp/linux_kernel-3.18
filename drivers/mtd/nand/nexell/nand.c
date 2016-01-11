@@ -43,6 +43,9 @@
 #include <nexell/platform.h>
 #include <nexell/soc-s5pxx18.h>
 
+#include <linux/gpio.h>
+#include <linux/of_gpio.h>
+#include <linux/pinctrl/consumer.h>
 #include "nxp_nand.h"
 
 #if	(0)
@@ -427,7 +430,7 @@ static void nxp_wp_disable(void)
 }
 #endif
 
-static void nand_dev_init(struct nxp_nand *nxp)
+static void nand_dev_init(struct device *dev, struct nxp_nand *nxp)
 {
 	unsigned int io = nxp->cfg.wp_gpio;
 
@@ -442,10 +445,25 @@ static void nand_dev_init(struct nxp_nand *nxp)
 	NX_MCUS_SetNFBank(0);
 	NX_MCUS_SetNFCSEnable(CFALSE);
 
-	nxp_soc_gpio_set_out_value(io, 0);
-	nxp_soc_gpio_set_io_dir(io, 1);
-	nxp_soc_gpio_set_io_func(io, nxp_soc_gpio_get_altnum(io));
-	nxp_soc_gpio_set_out_value(io, 1);
+#ifdef CONFIG_GPIOLIB
+	if (gpio_is_valid(io)) {
+		int ret;
+
+		ret = devm_gpio_request(dev, io, "nand_wp");
+		if (ret < 0) {
+			dev_err(dev,
+				"can't request rdy gpio %d\n", io);
+			return ;
+		}
+
+		ret = gpio_direction_output(io, 1);
+		if (ret < 0) {
+			dev_err(dev,
+				"can't request output direction wp gpio %d\n", io);
+			return ;
+		}
+	}
+#endif
 }
 
 
@@ -557,7 +575,7 @@ static int nand_resume(struct platform_device *pdev)
 	//PM_DBGOUT("+%s\n", __func__);
 
 	/* Select the device */
-	nand_dev_init(nxp);
+	nand_dev_init(&pdev->dev, nxp);
 	chip->select_chip(mtd, 0);
 
 #if defined (CONFIG_MTD_NAND_ECC_HW)
@@ -644,8 +662,8 @@ static int nxp_nand_parse_dt(struct device *dev, struct nxp_nand *nxp)
 	of_property_read_u32(np, "nand-ecc-bits", &nxp->cfg.ecc_hw_bits);
 	nxp->cfg.ecc_bch_bits = nxp->cfg.ecc_hw_bits;
 
-	of_property_read_u32(np, "wp-gpio", &nxp->cfg.wp_gpio);
-	//not yet; cfg.wp_gpio = of_get_named_gpio(np, "gpios", 0);
+	//of_property_read_u32(np, "wp-gpio", &nxp->cfg.wp_gpio);
+	nxp->cfg.wp_gpio = of_get_named_gpio(np, "gpios", 0);
 
 	if (!nxp->cfg.chip_delay) {
 		dev_err(dev, "nand parameters not specified correctly\n");
@@ -742,6 +760,7 @@ static int nand_probe(struct platform_device *pdev)
 		goto err_out;
 	}
 
+
 	if (pdev->dev.of_node)
 		ret = nxp_nand_parse_dt(&pdev->dev, nxp);
 	if (ret < 0) {
@@ -751,8 +770,7 @@ static int nand_probe(struct platform_device *pdev)
 		goto err_out;
 	}
 
-	nand_dev_init(nxp);
-
+	nand_dev_init(&pdev->dev, nxp);
 	platform_set_drvdata(pdev, nxp);
 
 	/* insert callbacks */

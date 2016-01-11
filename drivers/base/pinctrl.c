@@ -9,6 +9,7 @@
  *
  * License terms: GNU General Public License (GPL) version 2
  */
+//#define DEBUG
 
 #include <linux/device.h>
 #include <linux/pinctrl/devinfo.h>

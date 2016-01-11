@@ -121,6 +121,7 @@ static int dt_to_map_one_config(struct pinctrl *p, const char *statename,
 	for (;;) {
 		np_pctldev = of_get_next_parent(np_pctldev);
 		if (!np_pctldev || of_node_is_root(np_pctldev)) {
+			if (!np_pctldev) printk("np_pctldev is NULL");
 			dev_info(p->dev, "could not find pctldev for node %s, deferring probe\n",
 				np_config->full_name);
 			of_node_put(np_pctldev);

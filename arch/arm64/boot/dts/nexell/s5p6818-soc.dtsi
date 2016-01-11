@@ -21,6 +21,13 @@
     	alive:pins@10800 { device_type = "alive"; reg = <PHYS_BASE_ALIVE 0x1000>; };
 	};
 
+	pinctrl_0: pinctrl@1a000 {
+		compatible = "nexell,s5p6818-pinctrl";
+		reg = <PHYS_BASE_GPIOA 0x5000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+	};
+
 	clocks {
 		compatible = "nexell,s5pxx18,clocks";
 		reg = <0xc00bb000 0x30000>;
@@ -676,53 +683,6 @@
 			};
 		};
 
-		gpio_a:gpio@1a000 {
-			compatible = "nexell,nxp-gpio";
-			reg = <PHYS_BASE_GPIOA 0x1000>;
-			#gpio-cells = <2>;	/* Fix */
-			nexell,gpioid = <0>;
-			nexell,gpionums = <32>;
-		};
-
-		gpio_b:gpio@1b000 {
-			compatible = "nexell,nxp-gpio";
-			reg = <PHYS_BASE_GPIOB 0x1000>;
-			#gpio-cells = <2>;	/* Fix */
-			nexell,gpioid = <1>;
-			nexell,gpionums = <32>;
-		};
-
-		gpio_c:gpio@1c000 {
-			compatible = "nexell,nxp-gpio";
-			reg = <PHYS_BASE_GPIOC 0x1000>;
-			#gpio-cells = <2>;	/* Fix */
-			nexell,gpioid = <2>;
-			nexell,gpionums = <32>;
-		};
-
-		gpio_d:gpio@1d000 {
-			compatible = "nexell,nxp-gpio";
-			reg = <PHYS_BASE_GPIOD 0x1000>;
-			#gpio-cells = <2>;	/* Fix */
-			nexell,gpioid = <3>;
-			nexell,gpionums = <32>;
-		};
-
-		gpio_e:gpio@1e000 {
-			compatible = "nexell,nxp-gpio";
-			reg = <PHYS_BASE_GPIOE 0x1000>;
-			#gpio-cells = <2>;	/* Fix */
-			nexell,gpioid = <4>;
-			nexell,gpionums = <32>;
-		};
-
-		gpio_alive:gpio@10800 {
-			compatible = "nexell,nxp-gpio";
-			reg = <PHYS_BASE_ALIVE 0x1000>;
-			#gpio-cells = <2>;	/* Fix */
-			nexell,gpioid = <5>;
-			nexell,gpionums = <6>;
-		};
 	};
 
 

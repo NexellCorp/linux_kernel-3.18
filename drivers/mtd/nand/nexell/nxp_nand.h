@@ -126,6 +126,8 @@ struct nxp_nand {
 	uint8_t *verify_page;
 #endif
 	struct nxp_nand_cfg cfg;
+	struct pinctrl *pinctrl;
+	struct pinctrl_state *pins_default;
 };
 
 #ifdef CFG_NAND_ECCIRQ_MODE

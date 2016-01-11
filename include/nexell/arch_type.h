@@ -16,33 +16,63 @@
 #define PAD_ST_POS      16
 #define PAD_ST_MASK     0xF
 
-#define	PAD_MODE_ALT    		((0 & PAD_MD_MASK) << PAD_MD_POS)
-#define	PAD_MODE_IN     		((1 & PAD_MD_MASK) << PAD_MD_POS)
-#define	PAD_MODE_OUT    		((2 & PAD_MD_MASK) << PAD_MD_POS)
-#define	PAD_MODE_INT    		((3 & PAD_MD_MASK) << PAD_MD_POS)
+//
+#define	PIN_MODE_ALT    		(0)
+#define	PIN_MODE_IN     		(1)
+#define	PIN_MODE_OUT    		(2)
+#define	PIN_MODE_INT    		(3)
 
-#define	PAD_FUNC_ALT0  			((0 & PAD_FN_MASK) << PAD_FN_POS)
-#define	PAD_FUNC_ALT1  			((1 & PAD_FN_MASK) << PAD_FN_POS)
-#define	PAD_FUNC_ALT2  			((2 & PAD_FN_MASK) << PAD_FN_POS)
-#define	PAD_FUNC_ALT3  			((3 & PAD_FN_MASK) << PAD_FN_POS)
+#define	PIN_FUNC_ALT0  			(0)
+#define	PIN_FUNC_ALT1  			(1)
+#define	PIN_FUNC_ALT2  			(2)
+#define	PIN_FUNC_ALT3  			(3)
 
-#define PAD_LEVEL_LOW         	((0 & PAD_LV_MASK) << PAD_LV_POS)	/* if alive, async lowlevel */
-#define PAD_LEVEL_HIGH        	((1 & PAD_LV_MASK) << PAD_LV_POS)   /* if alive, async highlevel */
-#define PAD_LEVEL_FALLINGEDGE 	((2 & PAD_LV_MASK) << PAD_LV_POS)   /* if alive, async fallingedge */
-#define PAD_LEVEL_RISINGEDGE  	((3 & PAD_LV_MASK) << PAD_LV_POS)   /* if alive, async eisingedge */
-#define PAD_LEVEL_LOW_SYNC    	((4 & PAD_LV_MASK) << PAD_LV_POS)   /* if gpio , not support */
-#define PAD_LEVEL_HIGH_SYNC   	((5 & PAD_LV_MASK) << PAD_LV_POS)   /* if gpio , not support */
-#define PAD_LEVEL_BOTHEDGE    	((4 & PAD_LV_MASK) << PAD_LV_POS)   /* if alive, not support */
-#define PAD_LEVEL_ALT         	((6 & PAD_LV_MASK) << PAD_LV_POS)   /* if pad function is alt, not set */
+#define PIN_LEVEL_LOW         	(0)									/* if alive, async lowlevel */
+#define PIN_LEVEL_HIGH        	(1)									/* if alive, async highlevel */
+#define PIN_LEVEL_FALLINGEDGE 	(2)									/* if alive, async fallingedge */
+#define PIN_LEVEL_RISINGEDGE  	(3)									/* if alive, async eisingedge */
+#define PIN_LEVEL_LOW_SYNC    	(4)									/* if gpio , not support */
+#define PIN_LEVEL_HIGH_SYNC   	(5)									/* if gpio , not support */
+#define PIN_LEVEL_BOTHEDGE    	(4)									/* if alive, not support */
+#define PIN_LEVEL_ALT         	(6)									/* if pad function is alt, not set */
 
-#define PAD_PULL_DN     		((0 & PAD_PU_MASK) << PAD_PU_POS)   /* Do not support Alive-GPIO */
-#define PAD_PULL_UP     		((1 & PAD_PU_MASK) << PAD_PU_POS)
-#define PAD_PULL_OFF    		((2 & PAD_PU_MASK) << PAD_PU_POS)
+#define PIN_PULL_DN     		(0)									/* Do not support Alive-GPIO */
+#define PIN_PULL_UP     		(1)
+#define PIN_PULL_OFF    		(2)
 
-#define PAD_STRENGTH_0 			((0 & PAD_ST_MASK) << PAD_ST_POS)
-#define PAD_STRENGTH_1 			((1 & PAD_ST_MASK) << PAD_ST_POS)
-#define PAD_STRENGTH_2 			((2 & PAD_ST_MASK) << PAD_ST_POS)
-#define PAD_STRENGTH_3 			((3 & PAD_ST_MASK) << PAD_ST_POS)
+#define PIN_STRENGTH_0 			(0)
+#define PIN_STRENGTH_1 			(1)
+#define PIN_STRENGTH_2 			(2)
+#define PIN_STRENGTH_3 			(3)
+//
+
+#define	PAD_MODE_ALT    		((PIN_MODE_ALT & PAD_MD_MASK) << PAD_MD_POS)
+#define	PAD_MODE_IN     		((PIN_MODE_IN  & PAD_MD_MASK) << PAD_MD_POS)
+#define	PAD_MODE_OUT    		((PIN_MODE_OUT & PAD_MD_MASK) << PAD_MD_POS)
+#define	PAD_MODE_INT    		((PIN_MODE_INT & PAD_MD_MASK) << PAD_MD_POS)
+
+#define	PAD_FUNC_ALT0  			((PIN_FUNC_ALT0 & PAD_FN_MASK) << PAD_FN_POS)
+#define	PAD_FUNC_ALT1  			((PIN_FUNC_ALT1 & PAD_FN_MASK) << PAD_FN_POS)
+#define	PAD_FUNC_ALT2  			((PIN_FUNC_ALT2 & PAD_FN_MASK) << PAD_FN_POS)
+#define	PAD_FUNC_ALT3  			((PIN_FUNC_ALT3 & PAD_FN_MASK) << PAD_FN_POS)
+
+#define PAD_LEVEL_LOW         	((PIN_LEVEL_LOW         & PAD_LV_MASK) << PAD_LV_POS)	/* if alive, async lowlevel */
+#define PAD_LEVEL_HIGH        	((PIN_LEVEL_HIGH        & PAD_LV_MASK) << PAD_LV_POS)   /* if alive, async highlevel */
+#define PAD_LEVEL_FALLINGEDGE 	((PIN_LEVEL_FALLINGEDGE & PAD_LV_MASK) << PAD_LV_POS)   /* if alive, async fallingedge */
+#define PAD_LEVEL_RISINGEDGE  	((PIN_LEVEL_RISINGEDGE  & PAD_LV_MASK) << PAD_LV_POS)   /* if alive, async eisingedge */
+#define PAD_LEVEL_LOW_SYNC    	((PIN_LEVEL_LOW_SYNC    & PAD_LV_MASK) << PAD_LV_POS)   /* if gpio , not support */
+#define PAD_LEVEL_HIGH_SYNC   	((PIN_LEVEL_HIGH_SYNC   & PAD_LV_MASK) << PAD_LV_POS)   /* if gpio , not support */
+#define PAD_LEVEL_BOTHEDGE    	((PIN_LEVEL_BOTHEDGE    & PAD_LV_MASK) << PAD_LV_POS)   /* if alive, not support */
+#define PAD_LEVEL_ALT         	((PIN_LEVEL_ALT         & PAD_LV_MASK) << PAD_LV_POS)   /* if pad function is alt, not set */
+
+#define PAD_PULL_DN     		((PIN_PULL_DN    & PAD_PU_MASK) << PAD_PU_POS)   /* Do not support Alive-GPIO */
+#define PAD_PULL_UP     		((PIN_PULL_UP	 & PAD_PU_MASK) << PAD_PU_POS)
+#define PAD_PULL_OFF    		((PIN_PULL_OFF   & PAD_PU_MASK) << PAD_PU_POS)
+
+#define PAD_STRENGTH_0 			((PIN_STRENGTH_0 & PAD_ST_MASK) << PAD_ST_POS)
+#define PAD_STRENGTH_1 			((PIN_STRENGTH_1 & PAD_ST_MASK) << PAD_ST_POS)
+#define PAD_STRENGTH_2 			((PIN_STRENGTH_2 & PAD_ST_MASK) << PAD_ST_POS)
+#define PAD_STRENGTH_3 			((PIN_STRENGTH_3 & PAD_ST_MASK) << PAD_ST_POS)
 
 #define PAD_GET_GROUP(pin)      ((pin >> 0x5) & 0x07)       /* Divide 32 */
 #define PAD_GET_BITNO(pin)      (pin & 0x1F)

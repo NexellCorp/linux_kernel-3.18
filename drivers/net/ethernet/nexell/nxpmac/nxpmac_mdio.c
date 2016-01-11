@@ -140,7 +140,7 @@ static int stmmac_mdio_reset(struct mii_bus *bus)
 
 #ifdef CONFIG_OF
 	if (priv->device->of_node) {
-		int reset_gpio, active_low;
+		int reset_gpio;
 
 		if (data->reset_gpio < 0) {
 			struct device_node *np = priv->device->of_node;
@@ -148,33 +148,21 @@ static int stmmac_mdio_reset(struct mii_bus *bus)
 				return 0;
 
 			data->reset_gpio = of_get_named_gpio(np,
-						"reset-gpio", 0);
+						"nexell,reset-gpio", 0);
 			if (data->reset_gpio < 0)
 				return 0;
-
-			data->active_low = of_property_read_bool(np,
-						"reset-active-low");
-			of_property_read_u32_array(np,
-				"reset-delays-us", data->delays, 3);
 		}
 
 		reset_gpio = data->reset_gpio;
-		active_low = data->active_low;
 
-		if (!gpio_request(reset_gpio, "mdio-reset")) {
-			gpio_direction_output(reset_gpio, active_low ? 1 : 0);
-			if (data->delays[0])
-				msleep(DIV_ROUND_UP(data->delays[0], 1000));
-
-			gpio_set_value(reset_gpio, active_low ? 0 : 1);
-			if (data->delays[1])
-				msleep(DIV_ROUND_UP(data->delays[1], 1000));
-
-			gpio_set_value(reset_gpio, active_low ? 1 : 0);
-			if (data->delays[2])
-				msleep(DIV_ROUND_UP(data->delays[2], 1000));
+		if (reset_gpio >= 0) {
+			gpio_direction_output(reset_gpio, 1);
+			udelay(100);
+			gpio_direction_output(reset_gpio, 0);
+			udelay(100);
+			gpio_direction_output(reset_gpio, 1);
+			msleep(30);
 		}
-
 	}
 #endif
 

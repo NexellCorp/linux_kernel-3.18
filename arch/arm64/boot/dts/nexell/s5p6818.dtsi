@@ -123,7 +123,9 @@
 		i2s0 	= &i2s_0;
 		i2s1 	= &i2s_1;
 		i2s2 	= &i2s_2;
+		pinctrl0 = &pinctrl_0;
     };
+
 
 	soc {
 		compatible = "nexell,s5p6818-soc", "simple-bus";
@@ -464,7 +466,7 @@
 			clocks = <&bclk>;
 			clock-names = "sys-bbclk";
 			chip-delay = <10>;						/* unit: us */
-			/*gpios = <&piC 27 0>;*/
+			/*gpios = <&gpio_c 27 0>;*/
 			status = "disable";
 		};
 

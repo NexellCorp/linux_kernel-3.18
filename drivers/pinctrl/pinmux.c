@@ -11,6 +11,7 @@
  *
  * License terms: GNU General Public License (GPL) version 2
  */
+//#define DEBUG
 #define pr_fmt(fmt) "pinmux core: " fmt
 
 #include <linux/kernel.h>

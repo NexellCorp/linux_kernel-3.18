@@ -16,6 +16,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+//#define DEBUG
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -218,7 +220,7 @@ void nxp_soc_gpio_set_io_pull_enb(unsigned int io, int on)
 {
 	unsigned int grp = PAD_GET_GROUP(io);
 	unsigned int bit = PAD_GET_BITNO(io);
-	pr_debug("%s (%d.%02d)\n", __func__, grp, bit);
+	pr_debug("%s (%d.%02d) on:%d\n", __func__, grp, bit, on);
 
 	switch (io & ~(32-1)) {
 	case PAD_GPIO_A:
@@ -282,7 +284,7 @@ void nxp_soc_gpio_set_io_pull_sel(unsigned int io, int up)
 {
 	unsigned int grp = PAD_GET_GROUP(io);
 	unsigned int bit = PAD_GET_BITNO(io);
-	pr_debug("%s (%d.%02d)\n", __func__, grp, bit);
+	pr_debug("%s (%d.%02d) sel:%d\n", __func__, grp, bit, up);
 
 	switch (io & ~(32-1)) {
 	case PAD_GPIO_A:
@@ -362,6 +364,7 @@ void nxp_soc_gpio_set_io_drv(int gpio, int mode)
 
 	grp = PAD_GET_GROUP(gpio);
 	bit = PAD_GET_BITNO(gpio);
+	pr_debug("%s (%d.%02d) mode:%d\n", __func__, grp, bit, mode);
 
 	NX_GPIO_SetDriveStrength(grp, bit, (NX_GPIO_DRVSTRENGTH)mode); /* pad strength */
 }
@@ -383,6 +386,7 @@ int nxp_soc_gpio_get_io_drv(int gpio)
 
 	grp = PAD_GET_GROUP(gpio);
 	bit = PAD_GET_BITNO(gpio);
+	pr_debug("%s (%d.%02d)\n", __func__, grp, bit);
 
 	return (int)NX_GPIO_GetDriveStrength(grp, bit); /* pad strength */
 }
