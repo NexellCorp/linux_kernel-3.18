@@ -410,11 +410,11 @@ static int nexell_pinconf_rw(struct pinctrl_dev *pctldev, unsigned int pin,
 		cfg_value = PINCFG_UNPACK_VALUE(*config);
 		switch (cfg_type) {
 		case PINCFG_TYPE_PULL:
-			if (cfg_value == PAD_PULL_DN)
+			if (cfg_value == PIN_PULL_DN)
 				nxp_soc_gpio_set_io_pull_sel(io, 0);
-			else if (cfg_value == PAD_PULL_UP)
+			else if (cfg_value == PIN_PULL_UP)
 				nxp_soc_gpio_set_io_pull_sel(io, 1);
-			else if (cfg_value == PAD_PULL_OFF)
+			else if (cfg_value == PIN_PULL_OFF)
 				nxp_soc_gpio_set_io_pull_enb(io, 0);
 			break;
 		case PINCFG_TYPE_STRENGTH:
